@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.program.youtube.library" name="Youtube Library" version="1.0.0" provider-name="zag">
+    <requires>
+		<import addon="xbmc.python" version="2.14.0"/>
+	</requires>
+	<extension point="xbmc.python.pluginsource" library="addon.py">
+		<provides>video</provides>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<platform>all</platform>
+		<summary lang="en">Youtube Library</summary>
+		<description lang="en">Generates STRM and NFO files from youtube Channels, so you can add them in your library</description>
+		<license>GNU General Public License, v2</license>
+		<language></language>
+		<forum>http://forum.kodi.tv/showthread.php?tid=209948</forum>
+		<source>https://github.com/zag2me/plugin.program.hello.world</source>
+		<email>2darkdreams [at] gmail [dot] com</email>
+	</extension>
+</addon>

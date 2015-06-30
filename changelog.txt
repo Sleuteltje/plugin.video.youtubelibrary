@@ -1,0 +1,8 @@
+#Todo:
+- Addon Settings
+- Settings (the settings that the app will generate)
+- Writing STRM's
+- Writing NFO's
+- Run as Service
+
+1.0.0 Initial Release
