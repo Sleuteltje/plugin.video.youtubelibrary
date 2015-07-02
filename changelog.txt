@@ -1,8 +1,21 @@
 #Todo:
 - Addon Settings
-- Settings (the settings that the app will generate)
-- Writing STRM's
-- Writing NFO's
+X Settings (the settings that the app will generate)
+X Writing STRM's
+X Writing NFO's
 - Run as Service
+
+Features:
+- Rips entire youtube playlists to the Kodi Library
+- Creates NFO & STRM files (tvshow.nfo & [ep].nfo, [ep].strm)
+- Grabs artwork (fanart, banner, thumbnail) for the (youtube) tvshow
+- Grabs artwork (thumbnail) for each episode
+- Automatically fills in titles & descriptions for tvshow & episodes
+- Automatically grabs airdate for tvshow & episodes
+- Can set title for (youtube) tv show
+- Can set genres for (youtube) tv show
+- Automatically generates nice looking season numbering (year, number, regex) & episode numbering (playlist position, monthday, monthdayhour, monthdayhourminute, number, regex)
+- Can remove & strip text from titles and descriptions (text, regex)
+- Only rips videos you dont have yet. Videos already in the library are not rescanned everytime.
 
 1.0.0 Initial Release

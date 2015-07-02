@@ -46,6 +46,9 @@ xbmc.log(LPREF+'Running')
 #Run the Addon in Debug mode?
 DEBUGMODE = True
 
+#The link that should be written in the strm file, so the videoaddon can play
+ADDONLINK= 'plugin://plugin.video.youtube/play/?video_id='
+
 #Set the type of content view
 xbmcplugin.setContent(addon_handle, 'episodes')
 
@@ -347,7 +350,9 @@ def xml_add_playlist(id):
                 'maxlength'         : '',
                 'excludewords'    : '',
                 'onlyinclude'       : '',
-                #Strip Stuff from NFO information
+                #NFO information
+                'season'            : 'year',
+                'episode'           : 'monthday',
                 'striptitle'            : '',
                 'removetitle'       : '',
                 'stripdescription' : '',
@@ -605,19 +610,28 @@ def search_by_keyword(keyword):
 #Grabs the videos from a playlist by playlistId
 # Params: 
     # id: The id of the playlist which videos you want to retrieve
-def vids_by_playlist(id):
+    #nextpage: The nextpage token. Default: false. If set it will retrieve the page. That allows all videos to be parsed, instead of the 50 limit
+def vids_by_playlist(id, nextpage = False):
     youtube = build(
       YOUTUBE_API_SERVICE_NAME, 
       YOUTUBE_API_VERSION, 
       developerKey=API_KEY
     )
-    search_response = youtube.playlistItems().list(
-      part="snippet,contentDetails",
-      maxResults=50,
-      playlistId=id
-    ).execute()
+    if nextpage == False:
+        search_response = youtube.playlistItems().list(
+          part="snippet,contentDetails",
+          maxResults=50,
+          playlistId=id
+        ).execute()
+    else:
+        search_response = youtube.playlistItems().list(
+          part="snippet,contentDetails",
+          maxResults=50,
+          playlistId=id,
+          pageToken=nextpage
+        ).execute()
     
-    return search_response.get("items", [])
+    return search_response
 
     # for search_result in search_response.get("items", []):
       # additem(search_result['snippet']['title'], 'http://somevid.mkv', search_result['snippet']['thumbnails']['default']['url'])
@@ -628,13 +642,105 @@ def legal_filename(filename):
     import re
     return re.sub('[^\w\-_\. ]', '_', filename)
 
+#Converts youtube publishedAt date to list containing year, month, day, hour, minutes, seconds
+def convert_published(date):
+    d = {}
+    d['year'] = date[:4]
+    d['month'] = date[5:7]
+    d['day'] = date[8:10]
+    d['hour'] = date[11:13]
+    d['minute'] = date[14:16]
+    d['second'] = date[17:19]
+    return d
+    
+#Does a regex expression from the settings.xml. Will return None if it fails, the match otherwise    
+def reg(se, txt):
+    if se[:6] == 'regex(':
+        #match = re.match(se, 'regex\((.*)\)')
+        ma = se[6:]
+        ma = ma[:-1]
+        if ma is not None:
+            m = re.search( ma, txt)
+            #m = re.search( r'(\d+)', txt)
+            if m:
+                #Found the thing we were looking for with the given user regex
+                log('Regex '+ma+' found its match: '+m.group(0).encode('UTF-8')+' , '+m.group(1).encode('UTF-8'))
+                return m.group(1)
+            else:
+                #Regex not found, return None
+                log('Regex given by user has not found anything: '+ma+' on '+txt.encode('UTF-8'), True)
+                return None #Return the fallback
+        else:
+            log('Regex given by user in settings.xml is not valid!'+se, True)
+            return None
+    else:
+        return None #This is not a regex setting
+    
+#Generates the season and episode number
+    #Vid: The video response from the youtube api
+    #settings: The elementtree element containing the playlist settings
+    #totalresults = The total results of the playlist, so that the episode can be calculated if the episode recognisition is set to pos
+def episode_season(vid, settings, totalresults = False):
+    ep = settings.find('episode').text #Grab the episode settings from the xml
+    se = settings.find('season').text
+    
+    found = False
+    #See if there should be a regex search for the season
+    if se[:6] == 'regex(':
+        match = reg(se, vid['snippet']['title'])
+        if match != None:
+            season = match[0]
+            found = True
+
+    if found == False: #If the episode has not been found yet, either it is not regex, or regex failed
+        if se == 'year': #We want to save the season of the video as the year it is published
+            d = convert_published(vid['snippet']['publishedAt'])
+            season = d['year']
+        elif se.isdigit(): #If the season is set to a hardcoded number
+            season = str(se)
+        else:
+            log('Error: invalid season tag in settings.xml: '+se+', set season to 0', True)
+            season = '0'
+        
+    found = False
+    #See if there should be a regex search for the season
+    if ep[:6] == 'regex(':
+        match = reg(ep, vid['snippet']['title'])
+        if match != None:
+            episode = match
+            found = True
+    
+    if found == False:
+        if ep == 'monthday': #We want the episode to be the month number + day number
+            d = convert_published(vid['snippet']['publishedAt'])
+            episode = d['month']+d['day']
+        elif ep == 'monthdayhour': #month number + day number + hour number
+            d = convert_published(vid['snippet']['publishedAt'])
+            episode = d['month']+d['day']+d['hour']
+        elif ep == 'monthdayhourminute': #month + day + hour + minute numbers
+            d = convert_published(vid['snippet']['publishedAt'])
+            episode = d['month']+d['day']+d['hour']+d['minute']
+        elif ep == 'pos': #The position in the playlist as episode number
+            episode = str(int(totalresults) - int(vid['snippet']['position']))
+        elif ep.isdigit(): #A hardcoded number as episode number
+            episode = str(ep)
+        else:
+            log('Invalid episode setting in settings.xml! '+ep)
+            episode = '0'
+            
+    return [season, episode]
+
+    
+        
+    
+
 ###### STRM GENERATOR ##############
 #Creates a .strm file
 # Name : The name of the strm file
 # folder:   The name of the folder the strm file should be written in (Not the mainfolder, but the name of the show, so the strms get in that subdir)
 # videoid:  The videoid of the youtube video we want to make a strm off
 def write_strm(name, fold, videoid):
-    log('strm('+name+', '+fold+', '+videoid+')')
+    #log('strm('+name+', '+fold+', '+videoid+')')
     #movieLibrary        = os.path.join(xbmc.translatePath(getSetting("movie_library")),'')
     #movieLibrary  = os.path.join('E:/', "")
     movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
@@ -642,7 +748,7 @@ def write_strm(name, fold, videoid):
         #name = i
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
 
-    content = '%s?action=play&name=%s' % ( sys.argv[0], sysname) #Set the content of the strm file
+    content = ADDONLINK+'%s' % ( sysname) #Set the content of the strm file
 
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     
@@ -660,16 +766,7 @@ def write_strm(name, fold, videoid):
     #except:
         #pass          
         
-#Converts youtube publishedAt date to list containing year, month, day, hour, minutes, seconds
-def convert_published(date):
-    d = {}
-    d['year'] = date[:4]
-    d['month'] = date[5:7]
-    d['day'] = date[8:10]
-    d['hour'] = date[11:13]
-    d['minute'] = date[14:16]
-    d['second'] = date[17:19]
-    return d
+
         
 ###### NFO GENERATOR ##############
 #Creates a .nfo file
@@ -677,8 +774,10 @@ def convert_published(date):
 # folder:   The name of the folder the nfo file should be written in (Not the mainfolder, but the name of the show, so the nfo get in that subdir)
 # vid: THe video youtube response we want to add
 # settings:  The elementtree containing the settings from the playlist
-def write_nfo(name, fold, vid, settings):
-    log('write_nfo('+name+', '+fold+')')
+# season: The season of the episode
+#episode: The episode number
+def write_nfo(name, fold, vid, settings, season, episode):
+    #log('write_nfo('+name+', '+fold+')')
     movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
 
     snippet = vid['snippet']
@@ -694,9 +793,17 @@ def write_nfo(name, fold, vid, settings):
         if '|' in removetitle:
             strip = removetitle.split('|')
             for s in strip:
+                #Check if we should do regex
+                r = reg(s, title)
+                if r is not None:
+                    s = r
                 if s in title:
                     title = title.replace(s, '') #Remove this line from the title
         else:
+            #Check if this is a regex var of what should be removed
+            rem = reg(removetitle, title)
+            if rem is not None:
+                removetitle = rem #Regex was succesfull, set removetitle to the found string so it can be removed as normal
             if removetitle in title:
                 title = title.replace(removetitle, '')
     #See if we should do something to the title according to the settings
@@ -711,13 +818,53 @@ def write_nfo(name, fold, vid, settings):
                 if s in title:
                     title = title[:title.needle(s)] #Strip everything to the point where the line was found
         else:
+            #Check if this is a regex var of what should be removed
+            rem = reg(title, striptitle)
+            if rem is not None:
+                striptitle = rem #Regex was succesfull, set striptitle to the found string so it can be stripped as normal
             if striptitle in title:
-                title = title[:title.needle(striptitle)] #Strip everything to the point where the line was found
-    
-    
-    
-    
-    
+                title = title[:title.index(striptitle)] #Strip everything to the point where the line was found
+                
+                
+    #See if we should do something to the description according to the settings
+    description = snippet['description']
+    removedescription = settings.find('removedescription').text
+    if removedescription == None:
+        removedescription = ''
+    if len(removedescription) > 0:
+        #See if there are multiple lines
+        if '|' in removedescription:
+            strip = removedescription.split('|')
+            for s in strip:
+                if s in description:
+                    description = description.replace(s, '') #Remove this line from the description
+        else:
+            #Check if this is a regex var of what should be removed
+            rem = reg(description, removedescription)
+            if rem is not None:
+                removedescription = rem #Regex was succesfull, set removedescription to the found string so it can be removed as normal
+            if removedescription in description:
+                description = description.replace(removedescription, '')
+    #See if we should do something to the description according to the settings
+    stripdescription = settings.find('stripdescription').text
+    if stripdescription == None:
+        stripdescription = ''
+    if len(stripdescription) > 0:
+        #See if there are multiple lines
+        if '|' in stripdescription:
+            strip = stripdescription.split('|')
+            for s in strip:
+                if s in description:
+                    description = description[:description.needle(s)] #Strip everything to the point where the line was found
+        else:
+            #Check if this is a regex var of what should be removed
+            rem = reg(description, stripdescription)
+            if rem is not None:
+                stripdescription = rem #Regex was succesfull, set stripdescription to the found string so it can be stripped as normal
+            if stripdescription in description:
+                description = description[:description.index(stripdescription)] #Strip everything to the point where the line was found
+   
+   
     #Grab the best possible thumbnail
     #if 'maxres' in snippet['thumbnails']:
     #    thumbnail = snippet['thumbnails']['maxres']
@@ -736,13 +883,7 @@ def write_nfo(name, fold, vid, settings):
     d = convert_published(snippet['publishedAt'])
     normaldate = d['year']+'/'+d['month']+'/'+d['day']
     
-    #There are not really episode numbers on youtube
-    #But try to create an episode anyway
-    #We are going to use the year as the season
-    season = d['year']
-    # For the episode we are going to use the month+day+hour, cause if there are more then 1 video added each day, the videos will get the same episode number. If there are more videos then 1 added per hour, well, that just will make to long episode numbers, sorry
-    episode = d['month']+d['day']+d['hour']
-    
+    #Create the contents of the xml file
     content = """
         <episodedetails>
             <title>%(title)s</title>
@@ -758,12 +899,12 @@ def write_nfo(name, fold, vid, settings):
         </episodedetails>
     """ % {
         'title': title,
-        'plot': vid['snippet']['description'],
+        'plot': description,
         'channel': settings.find('channel').text,
         'thumb': thumbnail,
         'date': normaldate,
-        'season': '0',
-        'episode': '0'
+        'season': season,
+        'episode': episode
     }
     
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
@@ -776,9 +917,65 @@ def write_nfo(name, fold, vid, settings):
 
     stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
     file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
-    file.write(str(content)) #Write the content in the file
+    file.write(str(content.encode("utf-8"))) #Write the content in the file
     file.close() #Close the file
     log('write_nfo: Written nfo file: '+fold+'/'+enc_name+'.nfo')
+    #except:
+        #pass          
+        
+        
+        
+#Writes the NFO for the tvshow
+    #fold: The folder the nfo should be written to
+    #settings: The elementtree element containing the playlist xml settings
+def write_tvshow_nfo(fold, settings):
+    log('write_tvshow_nfo('+fold+')')
+    name = 'tvshow'
+    movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+
+    #Grab the published date and convert it to a normal date
+    d = convert_published(settings.find('published').text)
+    normaldate = d['year']+'-'+d['month']+'-'+d['day']
+    
+    #Create the contents of the xml file
+    content = """
+            <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+            <tvshow>
+                <title>%(title)s</title>
+                <showtitle>%(title)s</showtitle>
+                <year>%(year)s</year>
+                <plot>%(plot)s</plot>
+                <genre>%(genre)s</genre>
+                <premiered>%(date)s</premiered>
+                <aired>%(date)s</aired>
+                <studio>%(studio)s</studio>
+                <thumb>%(thumb)s</thumb>
+                <thumb aspect="banner">%(banner)s</thumb>
+                <fanart>
+                    <thumb>%(fanart)s</thumb>
+                </fanart>
+            </tvshow>
+    """ % {
+        'title': settings.find('title').text,
+        'plot': settings.find('description').text,
+        'year': d['year'],
+        'genre': settings.find('genre').text,
+        'studio': settings.find('channel').text,
+        'thumb': settings.find('thumb').text,
+        'banner': settings.find('banner').text,
+        'fanart': settings.find('fanart').text,
+        'date': normaldate,
+    }
+    
+    xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
+    enc_name = legal_filename(name) #Set the filename to a legal filename
+    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
+    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
+    file.write(str(content)) #Write the content in the file
+    file.close() #Close the file
+    log('write_tvshow_nfo: Written tvshow.nfo file: '+fold+'/'+enc_name+'.nfo')
     #except:
         #pass          
       
@@ -812,6 +1009,8 @@ def index():
     adddir('XML Create Test', url)
     url = build_url({'mode': 'strmtest', 'id': 'UUSc16oMxxlcJSb9SXkjwMjA'})
     adddir('STRM Test', url)
+    url = build_url({'mode': 'strmtest', 'id': 'PLV8Q_exbQpnYuouifDyV93_a_PlcwNM1l'})
+    adddir('STRM StukTV Opdrachten Test', url)
     # url = build_url({'mode': 'xmlupdate', 'foldername': 'xmlupdate'})
     # adddir('XML Update Test', url)
     # url = build_url({'mode': 'xmlnew', 'foldername': 'xmlcreate'})
@@ -832,7 +1031,7 @@ def manage_playlists():
         ##Route: show_playlists_by_channel
 def show_playlists_by_channel(Channelid):
     search_response = yt_get_channel_info(Channelid)
-
+    
     #Grab the playlists from the response
     playlists = search_response['items'][0]['contentDetails']['relatedPlaylists']
     
@@ -911,6 +1110,7 @@ def editPlaylist(id):
         else:
             url = build_url({'mode': 'editPlaylist', 'id': id, 'set': 'enable'})
             adddir('[COLOR red]Playlist is disabled![/COLOR]', url, thumb, fanart, 'The playlist is disabled, so you can change your settings before scanning into your Kodi Library. When youre done setting up this playlist, enable it so its gets scanned into the Kodi Library.')
+        
         #Title
         disp_setting('title', 'Title', 'The title as it will be displayed in Kodi and this Addon')
         #Description
@@ -931,7 +1131,11 @@ def editPlaylist(id):
         #Max Length
         disp_setting('maxlength', 'Max length', 'Only include videos under this maximum length')
         
-        #Strip text from title / description
+        #NFO Options
+        #Season recognisition setting
+        disp_setting('season', 'Season recognisition', 'Set to year to have the episode year upload date as its season. Set to a number to have a hardcoded season for every episode. To find a season from the video title using a regex. Please use regex(yourregexhere). If your regex fails to recognise a season it will fallback on calling it 0.')
+        #Episode recognisition setting
+        disp_setting('episode', 'Episode recognisition', 'Set to monthday to have the episode month & day upload date as its episode number. Set to pos to have it use its playlist position as its episode number (Know that when videos are removed from the playlist, episode numbering may not be correct for episodes already scanned into the library). Set to a number to have a hardcoded episode for every episode. To find a episode from the video title using a regex. Please use regex(yourregexhere). If your regex fails to recognise a episode it will fallback on calling it 0.')
         #Stripdescription
         disp_setting('stripdescription', 'Strip Description', 'Deletes every text in the description from and including the text filled in here. For instance, if a channel always has a long text in its description thats always the same, like: Check out our website (..). You fill that line in here, and only the part before that line will be included in the description of episodes. For multiple lines to scan for put them between |')
         #removedescription
@@ -973,9 +1177,76 @@ def editPlaylist(id):
         ##Route: addPlaylist calls this function
 
 
+#Writes the nfo & strm files for all playlists
+def update_playlists():
+    xml_get()
+    pl = document.findall('playlists/playlist')
+    if pl is not None: 
+        for child in pl: #Loop through each playlist
+            if child.attrib['enabled'] == 'yes': #Playlist has to be enabled
+                update_playlist(child.attrib['id']) #Update the nfo & strm files for this playlist
+        
+#Writes the nfo & strm files for the given playlist
+def update_playlist(id):
+    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
+    if settings is None:
+        log('Could not find playlist '+id+' in the settings.xml file')
+        return False
+    else:
+        #Check in which folder the show should be added
+        folder = settings.find('overwritefolder').text
+        if folder is None or folder == '':
+            folder = legal_filename(settings.find('title').text) #Overwrite folder is not set in settings.xml, so set the folder to the title of the show
+        
+        #Create the tvshow.nfo
+        write_tvshow_nfo(folder, settings)
+        
+        update_playlist_vids(id, folder, settings)
+    
+        return True
 
-
-
+#Updates the videos of a playlist
+    #the id of the playlist
+    #the folder where the strm & nfo files should go
+    #the elementtree element containing the playlist xml settings
+    #the id of the fist videoId, so it can save that one in the xml if it parsed all videos. Since the newest is the video it should be stopping the next time.
+def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False):
+    resp = vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
+    vids = resp.get("items", [])
+    if firstvid == False:
+        #Save the first videoId for later reference
+        for vid in vids:
+            firstvid = vid['contentDetails']['videoId']
+            break #we only want the first item
+            
+    lastvid = False
+    for vid in vids:
+        #Check if we already had this video, if so we should skip it
+        if vid['contentDetails']['videoId'] == settings.find('lastvideoId').text:
+            lastvid = True
+            log('Playlist is up to date in the library. Already have '+settings.find('lastvideoId').text+' in the library. So quitting scanner now')
+            break
+        #Check if this video is private or deleted. Deleted or private videos should not be added
+        if vid['snippet']['title'] == 'Private video' or vid['snippet']['title'] == 'Deleted Video':
+            continue #Skip this video
+        #Grab the correct season and episode number from this vid
+        se = episode_season(vid, settings, resp['pageInfo']['totalResults'])
+        season = se[0]
+        episode = se[1]
+        filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
+        
+        write_strm(filename, folder, vid['contentDetails']['videoId']) #Write the strm file for this episode
+        if settings.find('writenfo').text is not 'no':
+            write_nfo(filename, folder, vid, settings, season = season, episode = episode) #Write the nfo file for this episode
+        
+    
+    #If there is a nextPagetoken there are more videos to parse, call this function again so it can parse them to
+    if 'nextPageToken' in resp and lastvid is not True:
+        update_playlist_vids(id, folder, settings, resp['nextPageToken'], firstvid)
+    else:
+        if firstvid != False:
+            xml_update_playlist_setting(id, 'lastvideoId', firstvid) #Set the lastvideoId to this videoId so the playlist remembers the last video it has. This will save on API calls, since it will quit when it comes across a video that already has been set
+        log('Done ripping videos from playlist: '+id+' firstvid id: '+firstvid)
 
 
 
@@ -1042,7 +1313,6 @@ elif mode[0] == "editPlaylist":
             #Display a yes/no dialog to enable / disable
             dialog = xbmcgui.Dialog()
             i = dialog.yesno("Enable", "Would you like to enable this playlist?")
-
             if i == 0:
                 xml_update_playlist_attr(id, 'enabled', 'no')
                 #dialog.ok("Set to disabled", "Playlist is disabled.")
@@ -1061,26 +1331,27 @@ elif mode[0] == "editPlaylist":
     #Display the videos of this playlistID
     editPlaylist(id)
     xbmcplugin.endOfDirectory(addon_handle)
+
+
+## Update all playlists
+elif mode[0] == 'updateplaylists':
+    log('Mode is updateplaylists')
+    update_playlists() #Update all playlists
+    
+    url = build_url({'home': 'home'})
+    adddir('All playlists are now up to date', url, description = 'All playlists have been updated. Press this button to return home')
+    xbmcplugin.endOfDirectory(addon_handle)
     
     
 ## STRM TEST
 elif mode[0] == "strmtest":
     log('Mode is strm test')
     id = args['id'][0] #Grab the playlist id which we should be updating
-    
-    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
-    if settings is None:
-        log('Could not find playlist '+id+' in the settings.xml file')
-    else:
-        vids = vids_by_playlist(id) #Grab the videos belonging to this playlist
-        for vid in vids:
-            write_strm(vid['snippet']['title'], 'YourMovieSucks', vid['id'])
-            write_nfo(vid['snippet']['title'], 'YourMovieSucks', vid, settings)
-            log('Written '+vid['snippet']['title']+'.strm')
+    update_playlist(id) #Update the nfo & strm files for this playlist
         
-        url = build_url({'home': 'home'})
-        adddir('Done building strms', url, description = 'Done building all strm files. Press this button to return home')
-        xbmcplugin.endOfDirectory(addon_handle)
+    url = build_url({'home': 'home'})
+    adddir('Done building strms', url, description = 'Done building all strm files. Press this button to return home')
+    xbmcplugin.endOfDirectory(addon_handle)
 
 ## XML TESTS
 elif mode[0] == "xmlcreate":
