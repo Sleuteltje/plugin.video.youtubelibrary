@@ -1011,6 +1011,8 @@ def index():
     adddir('STRM Test', url)
     url = build_url({'mode': 'strmtest', 'id': 'PLV8Q_exbQpnYuouifDyV93_a_PlcwNM1l'})
     adddir('STRM StukTV Opdrachten Test', url)
+    url = build_url({'mode': 'updateplaylists'})
+    adddir('Update All Playlists (can take a while)', url, description='If playlists are never scanned before, expect a long wait.')
     # url = build_url({'mode': 'xmlupdate', 'foldername': 'xmlupdate'})
     # adddir('XML Update Test', url)
     # url = build_url({'mode': 'xmlnew', 'foldername': 'xmlcreate'})
@@ -1353,6 +1355,27 @@ elif mode[0] == "strmtest":
     adddir('Done building strms', url, description = 'Done building all strm files. Press this button to return home')
     xbmcplugin.endOfDirectory(addon_handle)
 
+## SERVICE
+elif mode[0] == "service":
+    log('SERVICE started')
+    import time
+
+    update_playlists()
+    
+    if __name__ == '__main__':
+        monitor = xbmc.Monitor()
+     
+        while True:
+            # Sleep/wait for abort for 5 minutes
+            if monitor.waitForAbort(5*60):
+                # Abort was requested while waiting. We should exit
+                break
+            log("SERVICE is running..! %s" % time.time())
+            update_playlists()
+    
+    
+    
+    
 ## XML TESTS
 elif mode[0] == "xmlcreate":
     log('Mode is xmlcreate')
