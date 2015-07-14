@@ -1255,6 +1255,11 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
 
       
 ########## ROUTES ##############      
+#Check if this is the first run of the addon
+if xbmcvfs.exists(os.path.join(settingsPath,"settings.xml")) == False: #If the settings.xml file can't be found, this is the first addon run
+    xbmcgui.Dialog('First Run', 'Please read the online instructions how to use this addon. See online how you can help this project. Have fun!')
+    create_xml()
+    
 #Grab which mode the plugin is in    
 mode = args.get('mode', None)
 
