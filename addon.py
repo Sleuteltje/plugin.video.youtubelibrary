@@ -58,6 +58,14 @@ addonPath = xbmcaddon.Addon().getAddonInfo("path")
 IMG_DIR = os.path.join(addonPath,'resources/media')
 gearArt = os.path.join(addonPath,'resources/media/gear.png')
 settingsPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Settings'), '')
+
+
+#Grab the addon settings
+service_interval = xbmcplugin.getSetting(addon_handle, "service_interval")
+tv_folder = os.path.join(xbmc.translatePath(xbmcplugin.getSetting(addon_handle, "tv_folder")), '')
+
+
+
 #IMG_DIR = os.path.join(xbmc.translatePath('special://addons/plugin.video.youtubelibrary/resources/media'), '')
 #IMG_DIR = os.path.join(settings.getAddonInfo("path"),"resources", "media")
 
@@ -146,11 +154,11 @@ def media(img):
 #                                                       #
 # name        name of export excluding any extension    #
 #                                                       #
-def GUIEditExportName(name):
+def GUIEditExportName(name, title='Enter input'):
 
     kb = xbmc.Keyboard('default', 'heading')
     kb.setDefault(name) # optional
-    kb.setHeading('Search Channels') # optional
+    kb.setHeading(title) # optional
     #kb.setHiddenInput(True) # optional
     kb.doModal()
     if (kb.isConfirmed()):
@@ -741,11 +749,9 @@ def episode_season(vid, settings, totalresults = False):
 # videoid:  The videoid of the youtube video we want to make a strm off
 def write_strm(name, fold, videoid):
     #log('strm('+name+', '+fold+', '+videoid+')')
-    #movieLibrary        = os.path.join(xbmc.translatePath(getSetting("movie_library")),'')
-    #movieLibrary  = os.path.join('E:/', "")
-    movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
-    #try:
-        #name = i
+    #movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+    movieLibrary = tv_folder #The path we should save in is the tv_folder setting from the addon settings
+    
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
 
     content = ADDONLINK+'%s' % ( sysname) #Set the content of the strm file
@@ -778,7 +784,8 @@ def write_strm(name, fold, videoid):
 #episode: The episode number
 def write_nfo(name, fold, vid, settings, season, episode):
     #log('write_nfo('+name+', '+fold+')')
-    movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+    #movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+    movieLibrary = tv_folder #Use the directory from the addon settings
 
     snippet = vid['snippet']
     
@@ -1279,7 +1286,7 @@ elif mode[0] == 'folder':
         xbmcplugin.endOfDirectory(addon_handle)
     ## Search Channel
     elif foldername == 'searchchannel':
-        result = GUIEditExportName('YourMovieSucksDotOrg')
+        result = GUIEditExportName('', 'Search for Channel')
         if len(result) > 0:
             search_channel(result)
         xbmcplugin.endOfDirectory(addon_handle)
@@ -1304,9 +1311,14 @@ elif mode[0] == "deletePlaylist":
     log('Mode is deletePlaylist')
     #Remove this playlist
     id = args['id'][0]
-    if xml_remove_playlist(id) is True:
-        xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
-    index() #Load the index view
+    dialog = xbmcgui.Dialog()
+    i = dialog.yesno("Delete Playlist", "Are you sure you want to delete this playlist?")
+    if i == 0:
+        editPlaylist(id)
+    else:    
+        if xml_remove_playlist(id) is True:
+            xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
+        index() #Load the index view
     xbmcplugin.endOfDirectory(addon_handle)
 ## editPlaylist
 elif mode[0] == "editPlaylist":
@@ -1372,12 +1384,13 @@ elif mode[0] == "service":
         monitor = xbmc.Monitor()
      
         while True:
-            # Sleep/wait for abort for 5 minutes
-            if monitor.waitForAbort(5*60):
+            # Sleep/wait for abort for number of hours that is set in the addon settings
+            if monitor.waitForAbort(service_interval*60*60):
                 # Abort was requested while waiting. We should exit
                 break
-            log("SERVICE is running..! %s" % time.time())
+            log("SERVICE is running..! %s, will update again in %s hours" % (time.time(), service_interval))
             update_playlists()
+        log("Kodi not running anymore, Service terminated")
     
     
     
