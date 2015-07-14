@@ -1067,7 +1067,7 @@ def show_playlists_by_channel(Channelid):
 def disp_setting(setting, title, description):
     #build url
     if elem.find(setting) != None:
-        val = str(elem.find(setting).text)
+        val = elem.find(setting).text
     if val == None or val == 'None':
         val = ''
     url = build_url({'mode': 'editPlaylist', 'id': plid, 'set': setting})
