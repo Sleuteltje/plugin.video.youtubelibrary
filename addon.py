@@ -58,7 +58,9 @@ addonPath = xbmcaddon.Addon().getAddonInfo("path")
 IMG_DIR = os.path.join(addonPath,'resources/media')
 gearArt = os.path.join(addonPath,'resources/media/gear.png')
 settingsPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Settings'), '')
-
+#Addonname and icon
+__addonname__ = xbmcaddon.Addon().getAddonInfo('name')
+__icon__ = xbmcaddon.Addon().getAddonInfo('icon')
 
 #Grab the addon settings
 service_interval = xbmcplugin.getSetting(addon_handle, "service_interval")
@@ -97,9 +99,9 @@ pafy.set_api_key(API_KEY)
 #Log function
 #Params
 #   Message:  The message to display in the log
-#   Debug: Is this a debug message? If so, only display if debug mode is on
+#   Debug: Also display this message if debugmode is off?
 def log(message, debug=None):
-    if debug is None:
+    if debug is True:
         xbmc.log(LPREF+message)
     else:
         if DEBUGMODE == True:
@@ -609,8 +611,6 @@ def search_by_keyword(keyword):
       maxResults=50
     ).execute()
     
-    videos = []
-
     for search_result in search_response.get("items", []):
       #videos.append(search_result)
       additem(search_result['snippet']['title'], 'http://somevid.mkv', search_result['snippet']['thumbnails']['default']['url'])
@@ -644,6 +644,44 @@ def vids_by_playlist(id, nextpage = False):
     # for search_result in search_response.get("items", []):
       # additem(search_result['snippet']['title'], 'http://somevid.mkv', search_result['snippet']['thumbnails']['default']['url'])
 
+#Grabs the duration of a list of youtube video IDs (you can add a max of 50 videoIDs to each call)
+def get_duration_vids(vid_ids):
+    log('Grabbing duration of youtube videos', True)
+    
+    #Create a seperated string of vid_ids to give to the API
+    idlist = ''
+    for id in vid_ids:
+        idlist += id+','
+    idlist = idlist[:-1]
+    
+    youtube = build(
+      YOUTUBE_API_SERVICE_NAME, 
+      YOUTUBE_API_VERSION, 
+      developerKey=API_KEY
+    )
+    search_response = youtube.videos().list(
+      part="contentDetails",
+      maxResults=50,
+      id=idlist
+    ).execute()
+
+    #Get the duration of each video in the response
+    durations = {}
+    for vid in search_response.get("items", []):      
+        dur = vid['contentDetails']['duration']
+        dur = dur[2:] #Strip PT from the duration
+        log('Duration of video: '+dur)
+        
+        seconds = hms_to_sec(dur)
+
+        log('Which makes the video %s seconds long' % seconds)
+        vidid = vid['id']
+        durations[vidid] = seconds
+        #except Exception as e:
+            #log("Couldnt extract time: %s" % e)
+            #pass
+    
+    return durations
 
 ################## Generators ####################
 def legal_filename(filename):
@@ -945,7 +983,7 @@ def write_tvshow_nfo(fold, settings):
     normaldate = d['year']+'-'+d['month']+'-'+d['day']
     
     #Create the contents of the xml file
-    content = """
+    content = u"""
             <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
             <tvshow>
                 <title>%(title)s</title>
@@ -957,6 +995,7 @@ def write_tvshow_nfo(fold, settings):
                 <aired>%(date)s</aired>
                 <studio>%(studio)s</studio>
                 <thumb>%(thumb)s</thumb>
+                <thumb aspect="poster">%(thumb)s</thumb>
                 <thumb aspect="banner">%(banner)s</thumb>
                 <fanart>
                     <thumb>%(fanart)s</thumb>
@@ -979,9 +1018,15 @@ def write_tvshow_nfo(fold, settings):
     folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
     xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
     stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
-    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
-    file.write(str(content)) #Write the content in the file
-    file.close() #Close the file
+    
+    import codecs
+    # process Unicode text
+    with codecs.open(stream,'w',encoding='utf8') as f:
+        f.write(content)
+        f.close()
+    #file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
+    #file.write(str(content)) #Write the content in the file
+    #file.close() #Close the file
     log('write_tvshow_nfo: Written tvshow.nfo file: '+fold+'/'+enc_name+'.nfo')
     #except:
         #pass          
@@ -1154,6 +1199,10 @@ def editPlaylist(id):
         disp_setting('striptitle', 'Strip Title', 'Same as stripdescription but for the title')
         #Removetitle
         disp_setting('removetitle', 'Remove Title', 'Same as removedescription but for the title')
+
+        #Overwritefolder
+        disp_setting('overwritefolder', 'Folder', 'Use this directory to write the strm & nfo files to. If this is not filled in it will use the title as it will be displayed in the Addon and the Kodi Library')
+
         
         #Not used (yet)
         #Type
@@ -1162,8 +1211,6 @@ def editPlaylist(id):
         disp_setting('delete', 'Delete older', '(NOT USED YET) Removes videos older then this many hours.')
         #Scansince
         disp_setting('scansince', 'From date', '(NOT USED YET) Skip videos published under this date. But doesnt remove the nfo & strm files like Delete older')
-        #Overwritefolder
-        disp_setting('overwritefolder', 'Folder', '(NOT USED YET) Use this directory as the path to write the strm & nfo files to. Please specify the full path. Example: E:/Shows/Youtube Channel/')
  
         #List the rest of the settings
         #Grab the gear icon
@@ -1178,7 +1225,33 @@ def editPlaylist(id):
             # else:
                 # adddir(child.tag+': '+txt, url, elem.find('fanart').text)
         
-        
+            #Displays and saves the user input if something from editplaylist should be set
+def setEditPlaylist(id, set):
+    if set == 'enable':
+        #Display a yes/no dialog to enable / disable
+        i = xbmcgui.Dialog().yesno("Enable", "Would you like to enable this playlist?")
+        if i == 0:
+            xml_update_playlist_attr(id, 'enabled', 'no')
+            #dialog.ok("Set to disabled", "Playlist is disabled.")
+        else:
+            xml_update_playlist_attr(id, 'enabled', 'yes')
+            #dialog.ok("Set to enabled", "Playlist will now be picked up by the scanner")
+    elif set == 'writenfo':
+        #Display a yes/no dialog to enable / disable
+        i = xbmcgui.Dialog().yesno("WriteNFO", "Write NFO files for this playlist?")
+        if i == 0:
+            xml_update_playlist_setting(id, 'writenfo', 'no')
+        else:
+            xml_update_playlist_setting(id, 'writenfo', 'Yes')
+    else:
+        #Its another setting, so its normal text
+        elem = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
+        setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
+        if setting == None or setting == 'None':
+            setting = ''
+        result = GUIEditExportName(setting, 'Change setting '+set) #Ask the user to put in the new setting
+        xml_update_playlist_setting(id, set, result) #Save the new setting
+
 
 
 
@@ -1186,30 +1259,60 @@ def editPlaylist(id):
     
         ##Route: addPlaylist calls this function
 
+#Recalculates 00h00m00s back to number of seconds
+def hms_to_sec(hms):
+    m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
+    if m:
+        log('All matches on %s:  %s, %s, %s, %s, %s, %s,' % (hms, m.group(0), m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)))
+        hours = m.group(2)
+        minutes = m.group(4)
+        seconds = m.group(6)
+        if seconds is None:
+            seconds = '0' #Seconds was not set in the setting, so we start with 0 seconds
+        seconds = int(seconds)
+        log('Seconds is '+str(seconds))
+        if minutes is not None: #If minutes are specified
+            log('minutes is '+minutes)
+            sm = int(minutes) * 60
+            seconds = seconds + sm
+        if hours is not None:
+            log('hours is '+hours)
+            sh = int(seconds) * 60 * 60
+            seconds = seconds + sh
+        return seconds
+    else:
+        log('Could not extract seconds from hms format: '+hms, True)
+        return None
 
 #Writes the nfo & strm files for all playlists
 def update_playlists():
+    xbmcgui.Dialog().notification(__addonname__, 'Updating Youtube Playlists...', __icon__, 3000)
     xml_get()
     pl = document.findall('playlists/playlist')
     if pl is not None: 
         for child in pl: #Loop through each playlist
             if child.attrib['enabled'] == 'yes': #Playlist has to be enabled
                 update_playlist(child.attrib['id']) #Update the nfo & strm files for this playlist
+    xbmcgui.Dialog().notification(__addonname__, 'Done Updating Youtube Playlists', __icon__, 3000)
         
 #Writes the nfo & strm files for the given playlist
 def update_playlist(id):
     settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
     if settings is None:
-        log('Could not find playlist '+id+' in the settings.xml file')
+        log('Could not find playlist '+id+' in the settings.xml file', True)
         return False
     else:
         #Check in which folder the show should be added
         folder = settings.find('overwritefolder').text
         if folder is None or folder == '':
             folder = legal_filename(settings.find('title').text) #Overwrite folder is not set in settings.xml, so set the folder to the title of the show
+        else:
+            folder = legal_filename(folder)
         
         #Create the tvshow.nfo
-        write_tvshow_nfo(folder, settings)
+        writenfo = settings.find('writenfo').text
+        if writenfo != 'no':
+            write_tvshow_nfo(folder, settings)
         
         update_playlist_vids(id, folder, settings)
     
@@ -1230,6 +1333,33 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
             break #we only want the first item
             
     lastvid = False
+    
+    #Grab settings from the settings.xml for this playlist
+    minlength = settings.find('minlength').text
+    maxlength = settings.find('maxlength').text
+    
+    if minlength is not '' and minlength is not None:
+        #Recalculate minlength
+        minlength = hms_to_sec(minlength)
+    else:
+        minlength = None
+    if maxlength is not '' and maxlength is not None:
+        #Recalculate maxlength
+        maxlength = hms_to_sec(maxlength)
+    else:
+        maxlength = None
+    
+        
+    
+    #If the minlength and maxlength options are set for this playlist, we should also know extra information about this videos
+    if minlength is not None or maxlength is not None:
+        log('minlength or maxlength is set in playlist settings. Will grab duration length of videos')
+        all_vidids = []
+        for vid in vids:
+            if vid['snippet']['title'] != 'Private video' and vid['snippet']['title'] != 'Deleted Video':
+                all_vidids.append(vid['contentDetails']['videoId']) #Collect all videoids in one list
+        duration = get_duration_vids(all_vidids) #Get all the duration of the videos
+    
     for vid in vids:
         #Check if we already had this video, if so we should skip it
         if vid['contentDetails']['videoId'] == settings.find('lastvideoId').text:
@@ -1239,6 +1369,48 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         #Check if this video is private or deleted. Deleted or private videos should not be added
         if vid['snippet']['title'] == 'Private video' or vid['snippet']['title'] == 'Deleted Video':
             continue #Skip this video
+        #Check if the filters in the settings prevent this video from being added
+        if settings.find('onlyinclude').text is not '' and settings.find('onlyinclude').text is not None:
+            found = False
+            #Check if there are | ,if so we should loop through each onlyinclude word
+            if '|' in settings.find('onlyinclude').text:
+                strip = settings.find('onlyinclude').text.split('|')
+            else:
+                strip = []
+                strip.append(settings.find('onlyinclude').text)
+            for s in strip:
+                if s in vid['snippet']['title']:
+                    found = True
+                    break #We found one of the words in the title, so this one is safe to add
+            #Check if the word has been found, cause if not, we should not add this video to the library
+            if found == False:
+                continue #Skip this video
+        #Check if the filters in the settings prevent this video from being added
+        if settings.find('excludewords').text is not '' and settings.find('excludewords').text is not None:
+            found = False
+            #Check if there are | ,if so we should loop through each onlyinclude word
+            if '|' in settings.find('excludewords').text:
+                strip = settings.find('excludewords').text.split('|')
+            else:
+                strip = []
+                strip.append(settings.find('excludewords').text)
+            for s in strip:
+                if s in vid['snippet']['title']:
+                    found = True
+                    break #We found one of the words in the title, so this one should not be added
+            #Check if the word has been found, cause if so, we should not add this video to the library
+            if found == True:
+                continue #Skip this video
+        #See if this video is smaller or larger than the min-/maxlength specified in the settings
+        if minlength is not None:
+            if int(minlength) > int(duration[vid['contentDetails']['videoId']]):
+                continue #Skip this video
+        if maxlength is not None:
+            if int(maxlength) < int(duration[vid['contentDetails']['videoId']]):
+                continue #Skip this video
+                
+        
+                
         #Grab the correct season and episode number from this vid
         se = episode_season(vid, settings, resp['pageInfo']['totalResults'])
         season = se[0]
@@ -1246,9 +1418,8 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
         
         write_strm(filename, folder, vid['contentDetails']['videoId']) #Write the strm file for this episode
-        if settings.find('writenfo').text is not 'no':
+        if settings.find('writenfo').text != 'no':
             write_nfo(filename, folder, vid, settings, season = season, episode = episode) #Write the nfo file for this episode
-        
     
     #If there is a nextPagetoken there are more videos to parse, call this function again so it can parse them to
     if 'nextPageToken' in resp and lastvid is not True:
@@ -1318,6 +1489,10 @@ elif mode[0] == "deletePlaylist":
     else:    
         if xml_remove_playlist(id) is True:
             xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
+            #i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the episodes from your library?')
+            #if i != 0:
+            #    removeshow()
+            #    xbmcgui.Dialog().ok('Removed from library', 'Deleted this show from your library')
         index() #Load the index view
     xbmcplugin.endOfDirectory(addon_handle)
 ## editPlaylist
@@ -1329,25 +1504,7 @@ elif mode[0] == "editPlaylist":
     if set != None:
         set = set[0]
         #We should set a value
-        if set == 'enable':
-            #Display a yes/no dialog to enable / disable
-            dialog = xbmcgui.Dialog()
-            i = dialog.yesno("Enable", "Would you like to enable this playlist?")
-            if i == 0:
-                xml_update_playlist_attr(id, 'enabled', 'no')
-                #dialog.ok("Set to disabled", "Playlist is disabled.")
-            else:
-                xml_update_playlist_attr(id, 'enabled', 'yes')
-                #dialog.ok("Set to enabled", "Playlist will now be picked up by the scanner")
-        else:
-            #Its another setting, so its normal text
-            elem = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
-            setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
-            if setting == None or setting == 'None':
-                setting = ''
-            result = GUIEditExportName(setting) #Ask the user to put in the new setting
-            xml_update_playlist_setting(id, set, result) #Save the new setting
-            
+        setEditPlaylist(id, set)
     #Display the videos of this playlistID
     editPlaylist(id)
     xbmcplugin.endOfDirectory(addon_handle)
@@ -1375,22 +1532,24 @@ elif mode[0] == "strmtest":
 
 ## SERVICE
 elif mode[0] == "service":
-    log('SERVICE started')
+    log('SERVICE started updates again in '+service_interval+' ('+str(service_interval)+') hours')
     import time
 
     update_playlists()
     
-    if __name__ == '__main__':
-        monitor = xbmc.Monitor()
-     
-        while True:
-            # Sleep/wait for abort for number of hours that is set in the addon settings
-            if monitor.waitForAbort(service_interval*60*60):
-                # Abort was requested while waiting. We should exit
-                break
-            log("SERVICE is running..! %s, will update again in %s hours" % (time.time(), service_interval))
-            update_playlists()
-        log("Kodi not running anymore, Service terminated")
+    monitor = xbmc.Monitor()
+    service_interval = xbmcplugin.getSetting(addon_handle, 'service_interval')
+    xbmcgui.Dialog().ok('Service started', 'Service started will run again in '+service_interval)
+ 
+    while True:
+        # Sleep/wait for abort for number of hours that is set in the addon settings
+        if monitor.waitForAbort(service_interval*60*60):
+        #if monitor.waitForAbort(5*60):
+            # Abort was requested while waiting. We should exit
+            break
+        log("SERVICE is running..! will update again in %s hours" % service_interval)
+        update_playlists()
+    log("Kodi not running anymore, Service terminated")
     
     
     
