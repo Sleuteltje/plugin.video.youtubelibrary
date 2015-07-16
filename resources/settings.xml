@@ -3,7 +3,9 @@
     <!--General-->
     <category label="30100">
 		<setting id="service_interval" type="number" label="30101" default="12" />
-		<setting id="tv_folder" type="folder" label="30102" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
+		<setting id="update_videolibrary" type="bool" label="30102" default="true"/>
+		<setting label="30103" type="lsep"/>
+		<setting id="tv_folder" type="folder" label="30104" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
     </category>
     <!-- Default Playlist Settings -->
     <category label="30200">

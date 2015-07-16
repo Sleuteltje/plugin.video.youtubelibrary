@@ -62,17 +62,17 @@ settingsPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/pl
 __addonname__ = xbmcaddon.Addon().getAddonInfo('name')
 __icon__ = xbmcaddon.Addon().getAddonInfo('icon')
 
-#Grab the addon settings
+##Grab the addon settings
 __settings__ = xbmcaddon.Addon("plugin.video.youtubelibrary")
-service_interval = __settings__.getSetting("service_interval")
-#Convert service interval back to a integer
+service_interval = __settings__.getSetting("service_interval") #The interval at which the service will run & update
+#Convert service interval back to an integer
 if service_interval == '':
     service_interval = 12 #Default service_interval
 else:
     service_interval = int(service_interval)
-tv_folder = os.path.join(xbmc.translatePath(__settings__.getSetting("tv_folder")), '')
-
-
+tv_folder_path = xbmc.translatePath(__settings__.getSetting("tv_folder"))
+tv_folder = os.path.join(tv_folder_path, '') #The directory where all the tv-shows .strm & nfo files will be added
+update_videolibrary = __settings__.getSetting("update_videolibrary") #Should we update the video library after updating all playlists?
 
 #IMG_DIR = os.path.join(xbmc.translatePath('special://addons/plugin.video.youtubelibrary/resources/media'), '')
 #IMG_DIR = os.path.join(settings.getAddonInfo("path"),"resources", "media")
@@ -1299,6 +1299,10 @@ def update_playlists():
             if child.attrib['enabled'] == 'yes': #Playlist has to be enabled
                 update_playlist(child.attrib['id']) #Update the nfo & strm files for this playlist
     xbmcgui.Dialog().notification(__addonname__, 'Done Updating Youtube Playlists', __icon__, 3000)
+    #Should we also update the video library?
+    if update_videolibrary == "true":
+        log('Updating video library is enabled. Updating librarys directory %s' % tv_folder_path, True)
+        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+tv_folder_path+')')
         
 #Writes the nfo & strm files for the given playlist
 def update_playlist(id):

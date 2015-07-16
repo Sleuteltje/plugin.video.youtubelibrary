@@ -5,8 +5,9 @@
     <string id="30200">Default Playlist Settings</string>
     <!--General-->
     <string id="30101">Scan for new videos every X hours</string>
-    <string id="30102">TV Shows Directory</string>
-    <string id="30103">Advanced Mode</string>
+    <string id="30102">Update Video Library after updating new youtube vids</string>
+    <string id="30103">Add these directories to your Kodi Library</string>
+    <string id="30104">TV Shows Directory</string>
     <!--Default Playlist Settings-->
     <string id="30201">Default settings for playlists</string>
     <string id="30202">Generate NFO files</string>
