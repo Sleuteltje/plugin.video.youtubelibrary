@@ -63,8 +63,14 @@ __addonname__ = xbmcaddon.Addon().getAddonInfo('name')
 __icon__ = xbmcaddon.Addon().getAddonInfo('icon')
 
 #Grab the addon settings
-service_interval = xbmcplugin.getSetting(addon_handle, "service_interval")
-tv_folder = os.path.join(xbmc.translatePath(xbmcplugin.getSetting(addon_handle, "tv_folder")), '')
+__settings__ = xbmcaddon.Addon("plugin.video.youtubelibrary")
+service_interval = __settings__.getSetting("service_interval")
+#Convert service interval back to a integer
+if service_interval == '':
+    service_interval = 12 #Default service_interval
+else:
+    service_interval = int(service_interval)
+tv_folder = os.path.join(xbmc.translatePath(__settings__.getSetting("tv_folder")), '')
 
 
 
@@ -1263,7 +1269,6 @@ def setEditPlaylist(id, set):
 def hms_to_sec(hms):
     m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
     if m:
-        log('All matches on %s:  %s, %s, %s, %s, %s, %s,' % (hms, m.group(0), m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)))
         hours = m.group(2)
         minutes = m.group(4)
         seconds = m.group(6)
@@ -1532,15 +1537,15 @@ elif mode[0] == "strmtest":
 
 ## SERVICE
 elif mode[0] == "service":
-    log('SERVICE started updates again in '+service_interval+' ('+str(service_interval)+') hours')
+    log('SERVICE started updates again in % hours' % service_interval)
     import time
 
     update_playlists()
     
     monitor = xbmc.Monitor()
-    service_interval = xbmcplugin.getSetting(addon_handle, 'service_interval')
-    xbmcgui.Dialog().ok('Service started', 'Service started will run again in '+service_interval)
- 
+    #service_interval = xbmcplugin.getSetting(addon_handle, 'service_interval')
+    xbmcgui.Dialog().ok('Service started', 'Service started will run again in %s hours' % service_interval)
+    
     while True:
         # Sleep/wait for abort for number of hours that is set in the addon settings
         if monitor.waitForAbort(service_interval*60*60):
