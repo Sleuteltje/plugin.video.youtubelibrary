@@ -1,4 +1,10 @@
-﻿import os
+﻿######################################
+### Kodi Addon : Youtube Library
+### Adds youtube channels as tv shows in the library
+###
+### Author: M. Roffel (c) 2015
+######################################
+import os, shutil
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcvfs
 import urllib
 import urllib2
@@ -13,18 +19,6 @@ from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import SubElement
 # For prettyfing the XML
 from xml.dom import minidom
-
-
-
-
-#Piece of code to import resource/lib directorys
-#my_addon = xbmcaddon.Addon('plugin.video.youtubelibrary')
-#addon_dir = xbmc.translatePath( my_addon.getAddonInfo('path') )
-
-#sys.path.append(os.path.join( addon_dir, 'resources', 'lib' ) )
-
-
-
 #For youtube api
 import httplib2
 import six
@@ -42,17 +36,24 @@ args = urlparse.parse_qs(sys.argv[2][1:])
 LPREF = 'MICHS YoutubeLibrary:::::::: '
 #Tell the log that our addon is running
 xbmc.log(LPREF+'Running')
-
 #Run the Addon in Debug mode?
 DEBUGMODE = True
-
 #The link that should be written in the strm file, so the videoaddon can play
 ADDONLINK= 'plugin://plugin.video.youtube/play/?video_id='
-
 #Set the type of content view
 xbmcplugin.setContent(addon_handle, 'episodes')
 
-#settings = xbmcaddon.Addon(id='plugin.video.youtubelibrary')
+# Set API_KEY to the "API key" value from the "Access" tab of the
+# Google APIs Console http://code.google.com/apis/console#access
+# Please ensure that you have enabled the YouTube Data API and Freebase API
+# for your project.
+API_KEY = "AIzaSyBtO0Bl38DJKCuPh9e4mRW3-1UcGPPnQfs"
+YOUTUBE_API_SERVICE_NAME = "youtube"
+YOUTUBE_API_VERSION = "v3"
+#Set the youtube api key for pafy to
+pafy.set_api_key(API_KEY)
+
+##NONCONFIGURABLE
 #Paths
 addonPath = xbmcaddon.Addon().getAddonInfo("path")
 IMG_DIR = os.path.join(addonPath,'resources/media')
@@ -74,23 +75,11 @@ tv_folder_path = xbmc.translatePath(__settings__.getSetting("tv_folder"))
 tv_folder = os.path.join(tv_folder_path, '') #The directory where all the tv-shows .strm & nfo files will be added
 update_videolibrary = __settings__.getSetting("update_videolibrary") #Should we update the video library after updating all playlists?
 
-#IMG_DIR = os.path.join(xbmc.translatePath('special://addons/plugin.video.youtubelibrary/resources/media'), '')
-#IMG_DIR = os.path.join(settings.getAddonInfo("path"),"resources", "media")
 
 
-# Set API_KEY to the "API key" value from the "Access" tab of the
-# Google APIs Console http://code.google.com/apis/console#access
-# Please ensure that you have enabled the YouTube Data API and Freebase API
-# for your project.
-API_KEY = "AIzaSyBtO0Bl38DJKCuPh9e4mRW3-1UcGPPnQfs"
-YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"
-#Set the youtube api key for pafy to
-pafy.set_api_key(API_KEY)
 
 
-#NONCONFIGURABLE
-#root = '' #Keep a global root variable to store the xml in
+
 
 
 
@@ -174,13 +163,13 @@ def GUIEditExportName(name, title='Enter input'):
     return(text)
    
 ############################ XML SETTINGS #################################### 
-#Loads the xnl document        
+#Loads the xml document        
 def xml_get():
     log('XML_get')
     global document #Set the document variable as global, so every function can reach it
     document = ElementTree.parse( settingsPath+'settings.xml' )
     
-    
+
 # Converts the elementtree element to prettified xml and stores it in the settings.xml file
 def write_xml(elem):
     xbmcvfs.mkdir(settingsPath) #Create the settings dir if it does not exist already
@@ -652,7 +641,7 @@ def vids_by_playlist(id, nextpage = False):
 
 #Grabs the duration of a list of youtube video IDs (you can add a max of 50 videoIDs to each call)
 def get_duration_vids(vid_ids):
-    log('Grabbing duration of youtube videos', True)
+    log('Grabbing duration of youtube videos')
     
     #Create a seperated string of vid_ids to give to the API
     idlist = ''
@@ -982,7 +971,7 @@ def write_nfo(name, fold, vid, settings, season, episode):
 def write_tvshow_nfo(fold, settings):
     log('write_tvshow_nfo('+fold+')')
     name = 'tvshow'
-    movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+    movieLibrary = tv_folder #Use the directory from the addon settings
 
     #Grab the published date and convert it to a normal date
     d = convert_published(settings.find('published').text)
@@ -1071,6 +1060,8 @@ def index():
     adddir('STRM StukTV Opdrachten Test', url)
     url = build_url({'mode': 'updateplaylists'})
     adddir('Update All Playlists (can take a while)', url, description='If playlists are never scanned before, expect a long wait.')
+    url = build_url({'mode': 'deletetest'})
+    adddir('Deletetest', url, description='Test the deleting of an entire directory')
     # url = build_url({'mode': 'xmlupdate', 'foldername': 'xmlupdate'})
     # adddir('XML Update Test', url)
     # url = build_url({'mode': 'xmlnew', 'foldername': 'xmlcreate'})
@@ -1163,6 +1154,9 @@ def editPlaylist(id):
         #Delete playlist
         url = build_url({'mode': 'deletePlaylist', 'id': id})
         adddir('[COLOR red]Delete playlist[/COLOR]', url, media('delete'), fanart, '<!> Careful! <!> This will delete all the settings from this playlist & this playlist will not be scanned into your library anymore')
+        #Refresh playlist
+        url = build_url({'mode': 'refreshPlaylist', 'id': id})
+        adddir('[COLOR red]Refresh playlist[/COLOR]', url, media('delete'), fanart, '<!> Careful! <!> This will refresh all the episodes from this playlist. Only use this if previous episodes are not scanned properly due to wrong playlist settings.')
         
         #Build the Playlist enable/disable button depending on current state
         if elem.attrib['enabled'] == 'yes':
@@ -1218,18 +1212,7 @@ def editPlaylist(id):
         #Scansince
         disp_setting('scansince', 'From date', '(NOT USED YET) Skip videos published under this date. But doesnt remove the nfo & strm files like Delete older')
  
-        #List the rest of the settings
-        #Grab the gear icon
-        #gear = media('gear')\
-        # for child in elem.getchildren():
-            # if child.tag in ['lastvideoId', 'thumb', 'fanart', 'banner', 'overwritefolder', 'epsownfanart', 'delete']:
-                # continue
-            # url = build_url({'mode': 'editPlaylist', 'id': id, 'set': child.tag})
-            # txt = child.text
-            # if txt is None:
-                # adddir(name=child.tag+': ', url=url, thumb=media('gear'), fanart=elem.find('fanart').text, description='You can change this setting')
-            # else:
-                # adddir(child.tag+': '+txt, url, elem.find('fanart').text)
+
         
             #Displays and saves the user input if something from editplaylist should be set
 def setEditPlaylist(id, set):
@@ -1438,13 +1421,69 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
             xml_update_playlist_setting(id, 'lastvideoId', firstvid) #Set the lastvideoId to this videoId so the playlist remembers the last video it has. This will save on API calls, since it will quit when it comes across a video that already has been set
         log('Done ripping videos from playlist: '+id+' firstvid id: '+firstvid)
 
+        
+#Deletes a playlist and has an option to remove the directory containing the file to
+def delete_playlist(id):
+    #Grab the settings from this playlist
+    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
+    if settings is None:
+        log('deletePlaylist: Could not find playlist '+id+' in the settings.xml file', True)
+        return False
+    else:         
+        i = xbmcgui.Dialog().yesno("Delete Playlist", "Are you sure you want to delete this playlist?")
+        if i == 0:
+            editPlaylist(id)
+        else:
+            if xml_remove_playlist(id) is True:
+                xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
+                i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the episodes from your library?')
+                if i != 0:
+                    #Check in which folder the show resides
+                    folder = settings.find('overwritefolder').text
+                    if folder is None or folder == '':
+                        folder = legal_filename(settings.find('title').text) #Overwrite folder is not set in settings.xml, so set the folder to the title of the show
+                    else:
+                        folder = legal_filename(folder)
+                    movieLibrary = tv_folder #Use the directory from the addon settings
+                    dir = os.path.join(movieLibrary, folder) #Set the folder to the maindir/dir
+                    
+                    success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory
+                    xbmcgui.Dialog().ok('Removed from library', 'Deleted this show from your library (You should clean your library, otherwise they will still show in your library)')
+            index() #Load the index view
+    
+#Refresh a playlist and has an option to remove the directory containing the file to
+def refresh_playlist(id):
+    #Grab the settings from this playlist
+    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
+    if settings is None:
+        log('refreshPlaylist: Could not find playlist '+id+' in the settings.xml file', True)
+        return False
+    else:         
+        i = xbmcgui.Dialog().yesno("Refresh Playlist", "Are you sure you want to refresh this playlist?")
+        if i != 0:
+            xml_update_playlist_setting(id, 'lastvideoId', '')
+            xbmcgui.Dialog().ok('Refreshed Playlist', 'Succesfully refreshed playlist '+id)
+            i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the previous episodes from your library?')
+            if i != 0:
+                #Check in which folder the show resides
+                folder = settings.find('overwritefolder').text
+                if folder is None or folder == '':
+                    folder = legal_filename(settings.find('title').text) #Overwrite folder is not set in settings.xml, so set the folder to the title of the show
+                else:
+                    folder = legal_filename(folder)
+                movieLibrary = tv_folder #Use the directory from the addon settings
+                dir = os.path.join(movieLibrary, folder) #Set the folder to the maindir/dir
+                
+                success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory
+                xbmcgui.Dialog().ok('Removed from library', 'Deleted the previous episodes from your library (You should clean your library, otherwise they will still show in your library)')
+            editPlaylist(id) #Load the editplaylist view
 
-
+    
       
 ########## ROUTES ##############      
 #Check if this is the first run of the addon
 if xbmcvfs.exists(os.path.join(settingsPath,"settings.xml")) == False: #If the settings.xml file can't be found, this is the first addon run
-    xbmcgui.Dialog('First Run', 'Please read the online instructions how to use this addon. See online how you can help this project. Have fun!')
+    xbmcgui.Dialog().ok('First Run', 'Please read the online instructions how to use this addon. See online how you can help this project. Have fun!')
     create_xml()
     
 #Grab which mode the plugin is in    
@@ -1491,18 +1530,14 @@ elif mode[0] == "deletePlaylist":
     log('Mode is deletePlaylist')
     #Remove this playlist
     id = args['id'][0]
-    dialog = xbmcgui.Dialog()
-    i = dialog.yesno("Delete Playlist", "Are you sure you want to delete this playlist?")
-    if i == 0:
-        editPlaylist(id)
-    else:    
-        if xml_remove_playlist(id) is True:
-            xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
-            #i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the episodes from your library?')
-            #if i != 0:
-            #    removeshow()
-            #    xbmcgui.Dialog().ok('Removed from library', 'Deleted this show from your library')
-        index() #Load the index view
+    delete_playlist(id) #Remove this playlist
+    xbmcplugin.endOfDirectory(addon_handle)
+## RefreshPlaylist
+elif mode[0] == "refreshPlaylist":
+    log('Mode is refreshPlaylist')
+    #Refresh this playlist
+    id = args['id'][0]
+    refresh_playlist(id) #Remove this playlist
     xbmcplugin.endOfDirectory(addon_handle)
 ## editPlaylist
 elif mode[0] == "editPlaylist":
@@ -1526,8 +1561,7 @@ elif mode[0] == 'updateplaylists':
     
     url = build_url({'home': 'home'})
     adddir('All playlists are now up to date', url, description = 'All playlists have been updated. Press this button to return home')
-    xbmcplugin.endOfDirectory(addon_handle)
-    
+    xbmcplugin.endOfDirectory(addon_handle)    
     
 ## STRM TEST
 elif mode[0] == "strmtest":
@@ -1573,7 +1607,17 @@ elif mode[0] == "xmlcreate":
     xbmcplugin.endOfDirectory(addon_handle)
     
     
-    
+## DELETE TESTS
+elif mode[0] == "deletetest":
+    #success = xbmcvfs.rmdir('C:/Users/Mich/AppData/Roaming/Kodi/userdata/addon_data/plugin.video.youtubelibrary/Streams/R_mi GAILLARD') #Remove the directory
+    #success = xbmcvfs.rmtree('C:/Users/Mich/AppData/Roaming/Kodi/userdata/addon_data/plugin.video.youtubelibrary/Streams/R_mi GAILLARD/') #Remove the directory
+    success = shutil.rmtree('C:/Users/Mich/AppData/Roaming/Kodi/userdata/addon_data/plugin.video.youtubelibrary/Streams/R_mi GAILLARD/', ignore_errors=True) #Remove the directory
+    if success:
+        xbmcgui.Dialog().ok('Removed from library', 'Deleted this show from your library')
+    url = build_url({'mode': 'deletetest', 'foldername': 'deletetest'})
+    adddir('Delete test', url)
+    xbmcplugin.endOfDirectory(addon_handle)
+  
     
     
     
