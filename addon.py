@@ -25,6 +25,13 @@ import six
 from apiclient.discovery import build
 import sys
 #from googleapiclient.discovery import build
+#For database connections to store the resume point and watched flag
+#Import database libs
+try:
+    from sqlite3 import dbapi2 as database
+except:
+    from pysqlite2 import dbapi2 as database
+
 
 #Kodi Settings
 base_url = sys.argv[0]
@@ -36,10 +43,8 @@ args = urlparse.parse_qs(sys.argv[2][1:])
 LPREF = 'MICHS YoutubeLibrary:::::::: '
 #Tell the log that our addon is running
 xbmc.log(LPREF+'Running')
-#Run the Addon in Debug mode?
-DEBUGMODE = True
 #The link that should be written in the strm file, so the videoaddon can play
-ADDONLINK= 'plugin://plugin.video.youtube/play/?video_id='
+KODI_ADDONLINK= 'plugin://plugin.video.youtube/play/?video_id='
 #Set the type of content view
 xbmcplugin.setContent(addon_handle, 'episodes')
 
@@ -54,6 +59,13 @@ YOUTUBE_API_VERSION = "v3"
 pafy.set_api_key(API_KEY)
 
 ##NONCONFIGURABLE
+addonInfo = xbmcaddon.Addon().getAddonInfo
+skinPath = xbmc.translatePath('special://skin/')
+dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
+databaseFile = os.path.join(dataPath, 'settings.db')
+cachesourcesFile = os.path.join(dataPath, 'sources.db')
+cachemetaFile = os.path.join(dataPath, 'metacache.db')
+cacheFile = os.path.join(dataPath, 'cache.db')
 #Paths
 addonPath = xbmcaddon.Addon().getAddonInfo("path")
 IMG_DIR = os.path.join(addonPath,'resources/media')
@@ -99,7 +111,7 @@ def log(message, debug=None):
     if debug is True:
         xbmc.log(LPREF+message)
     else:
-        if DEBUGMODE == True:
+        if __settings__.getSetting("debugmode") == 'true':
             xbmc.log(LPREF+message)
 
 
@@ -151,7 +163,7 @@ def media(img):
 #                                                       #
 # name        name of export excluding any extension    #
 #                                                       #
-def GUIEditExportName(name, title='Enter input'):
+def user_input(name, title='Enter input'):
 
     kb = xbmc.Keyboard('default', 'heading')
     kb.setDefault(name) # optional
@@ -780,20 +792,24 @@ def episode_season(vid, settings, totalresults = False):
 # Name : The name of the strm file
 # folder:   The name of the folder the strm file should be written in (Not the mainfolder, but the name of the show, so the strms get in that subdir)
 # videoid:  The videoid of the youtube video we want to make a strm off
-def write_strm(name, fold, videoid):
+# show: The name of the show (needed for a .strm file to this addon)
+# season: The season of this episode
+# episode: The episode number of this episode
+#
+# Returns the filename (without .strm)
+def write_strm(name, fold, videoid, show=None, season=None, episode=None):
     #log('strm('+name+', '+fold+', '+videoid+')')
-    #movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
     movieLibrary = tv_folder #The path we should save in is the tv_folder setting from the addon settings
-    
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
-
-    content = ADDONLINK+'%s' % ( sysname) #Set the content of the strm file
+    enc_name = legal_filename(name) #Encode the filename to a legal filename
+    
+    if __settings__.getSetting("strm_link") == "Youtube Library":
+        content = 'plugin://plugin.video.youtubelibrary/?mode=play&id=%s&show=%s&season=%s&episode=%s&filename=%s' % (sysname, show, season, episode, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
+    else:
+        content = KODI_ADDONLINK+'%s' % ( sysname) #Set the content of the strm file with a link to the official Kodi Youtube Addon
 
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     
-
-    #enc_name = name.translate('\/:*?"<>|').strip('.') #Escape special characters in the name
-    enc_name = legal_filename(name)
     folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
     xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
 
@@ -802,8 +818,7 @@ def write_strm(name, fold, videoid):
     file.write(str(content)) #Write the content in the file
     file.close() #Close the file
     log('write_strm: Written strm file: '+fold+'/'+enc_name+'.strm')
-    #except:
-        #pass          
+    return enc_name
         
 
         
@@ -815,9 +830,9 @@ def write_strm(name, fold, videoid):
 # settings:  The elementtree containing the settings from the playlist
 # season: The season of the episode
 #episode: The episode number
-def write_nfo(name, fold, vid, settings, season, episode):
+#duration: The duration of the video
+def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
     #log('write_nfo('+name+', '+fold+')')
-    #movieLibrary = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
     movieLibrary = tv_folder #Use the directory from the addon settings
 
     snippet = vid['snippet']
@@ -923,6 +938,9 @@ def write_nfo(name, fold, vid, settings, season, episode):
     d = convert_published(snippet['publishedAt'])
     normaldate = d['year']+'/'+d['month']+'/'+d['day']
     
+    #Convert the duration (seconds) in number of minutes
+    durationminutes = int(int(duration) / 60)
+    
     #Create the contents of the xml file
     content = """
         <episodedetails>
@@ -936,6 +954,12 @@ def write_nfo(name, fold, vid, settings, season, episode):
             <aired>%(date)s</aired>
             <premiered>%(date)s</premiered>
             <studio>Youtube</studio>
+            <runtime>%(durationminutes)s</runtime>
+            <fileinfo>
+                <streamdetails>
+                    <durationinseconds>%(duration)s</durationinseconds>
+                </streamdetails>
+            </fileinfo>
         </episodedetails>
     """ % {
         'title': title,
@@ -944,7 +968,9 @@ def write_nfo(name, fold, vid, settings, season, episode):
         'thumb': thumbnail,
         'date': normaldate,
         'season': season,
-        'episode': episode
+        'episode': episode,
+        'durationminutes': durationminutes,
+        'duration': duration
     }
     
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
@@ -1054,6 +1080,8 @@ def index():
     adddir('Search Channel', url)
     url = build_url({'mode': 'xmlcreate', 'foldername': 'xmlcreate'})
     adddir('XML Create Test', url)
+    url = build_url({'mode': 'play', 'id': 'HdaEePsLIc0'})
+    adddir('PLAY Test', url)
     url = build_url({'mode': 'strmtest', 'id': 'UUSc16oMxxlcJSb9SXkjwMjA'})
     adddir('STRM Test', url)
     url = build_url({'mode': 'strmtest', 'id': 'PLV8Q_exbQpnYuouifDyV93_a_PlcwNM1l'})
@@ -1238,16 +1266,14 @@ def setEditPlaylist(id, set):
         setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
         if setting == None or setting == 'None':
             setting = ''
-        result = GUIEditExportName(setting, 'Change setting '+set) #Ask the user to put in the new setting
+        result = user_input(setting, 'Change setting '+set) #Ask the user to put in the new setting
         xml_update_playlist_setting(id, set, result) #Save the new setting
 
 
 
 
 
-    
-        ##Route: addPlaylist calls this function
-
+#### PLAYLIST FUNCTIONS   
 #Recalculates 00h00m00s back to number of seconds
 def hms_to_sec(hms):
     m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
@@ -1342,16 +1368,16 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         maxlength = None
     
         
+    #Grab the duration of the videos. We will need it for the minlength and maxlength filters, and for the duration tag in the .nfo file
+    #We are gonna grab the duration of all 50 videos, saving on youtube api calls.
+    log('Grabbing duration of videos')
+    all_vidids = []
+    for vid in vids:
+        if vid['snippet']['title'] != 'Private video' and vid['snippet']['title'] != 'Deleted Video':
+            all_vidids.append(vid['contentDetails']['videoId']) #Collect all videoids in one list
+    duration = get_duration_vids(all_vidids) #Get all the duration of the videos
     
-    #If the minlength and maxlength options are set for this playlist, we should also know extra information about this videos
-    if minlength is not None or maxlength is not None:
-        log('minlength or maxlength is set in playlist settings. Will grab duration length of videos')
-        all_vidids = []
-        for vid in vids:
-            if vid['snippet']['title'] != 'Private video' and vid['snippet']['title'] != 'Deleted Video':
-                all_vidids.append(vid['contentDetails']['videoId']) #Collect all videoids in one list
-        duration = get_duration_vids(all_vidids) #Get all the duration of the videos
-    
+    #Loop through all 50< vids and check with filters if we should add it
     for vid in vids:
         #Check if we already had this video, if so we should skip it
         if vid['contentDetails']['videoId'] == settings.find('lastvideoId').text:
@@ -1409,9 +1435,9 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         episode = se[1]
         filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
         
-        write_strm(filename, folder, vid['contentDetails']['videoId']) #Write the strm file for this episode
+        write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode
         if settings.find('writenfo').text != 'no':
-            write_nfo(filename, folder, vid, settings, season = season, episode = episode) #Write the nfo file for this episode
+            write_nfo(filename, folder, vid, settings, season = season, episode = episode, duration = duration[vid['contentDetails']['videoId']]) #Write the nfo file for this episode
     
     #If there is a nextPagetoken there are more videos to parse, call this function again so it can parse them to
     if 'nextPageToken' in resp and lastvid is not True:
@@ -1478,6 +1504,198 @@ def refresh_playlist(id):
                 xbmcgui.Dialog().ok('Removed from library', 'Deleted the previous episodes from your library (You should clean your library, otherwise they will still show in your library)')
             editPlaylist(id) #Load the editplaylist view
 
+            
+##### PLAY VIDEO 
+#Plays a youtube video by id
+def playYoutubeVid(id, meta=None, poster=None):
+    #Resolve the youtube video url for ourselves
+    v = pafy.new(id)
+    if meta is None:
+        #Create an empty meta, so we can fill it with the information grabbed from youtube
+        meta = {}
+    if 'title' not in meta:
+        meta['title'] = v.title #Store the youtube title in the meta  
+    if poster is None:
+        poster = 'Default.png'
+    
+    
+    #xbmc.Player().play(v.getbest().url) #Play this video
+    liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
+    liz.setInfo( type="Video", infoLabels=meta )
+    liz.setPath(v.getbest().url)
+    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
+            
+#Plays the requested Youtube Video
+def playVid(id, filename=None, season = None, episode = None, show = None):    
+    import time
+    import json
+    
+    #Check if its PseudoTV that's playing this file, if so, we shouldn't do anything else than play the video
+    if xbmcgui.Window(10000).getProperty('PseudoTVRunning') == 'True':
+        log('PseudoTV is running, so just play the video')
+        return playYoutubeVid(id)
+
+
+    #Prepare the information
+    loadingTime = time.time()
+    totalTime = 0 ; currentTime = 0
+    folderPath = xbmc.getInfoLabel('Container.FolderPath')
+    name = filename
+    filename = filename + '.strm'
+    filename = filename.translate(None, '\/:*?"<>|').strip('.')
+
+    #Grab the metadata of this episode
+    meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"filter":{"and": [{"field": "season", "operator": "is", "value": "%s"}, {"field": "episode", "operator": "is", "value": "%s"}]}, "properties": ["title", "season", "episode", "showtitle", "firstaired", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (season, episode))
+    meta = unicode(meta, 'utf-8', errors='ignore')
+    meta = json.loads(meta)['result']['episodes']
+    for i in meta:
+        log('Meta: '+i['file'])
+        log('Looking for :'+filename)
+        if i['file'].endswith(filename):
+            log('Found the episode we are looking for')
+            meta = i
+            break
+    DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
+
+    meta = {'title': meta['title'], 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'], 'premiered' : meta['firstaired'], 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director'])), 'writer': str(' / '.join(meta['writer'])), 'plot': meta['plot']}
+
+    poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle)
+    poster = unicode(poster, 'utf-8', errors='ignore')
+    poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+
+    #If resume playback is set in the settings, display a resume menu
+    try:
+        if xbmcaddon.Addon().getSetting('resume_playback') == 'true':
+            log('Resume Playback is turned on. Grab resume point..')
+            offset = getBookmark(name)
+            log('Offset is %s' % offset)
+            if offset == '0': raise Exception()
+            log('Grabbing minutes and seconds')
+            minutes, seconds = divmod(float(offset), 60) ; hours, minutes = divmod(minutes, 60)
+            log('Showing yesno. Minutes: %s, seconds: %s' % (minutes, seconds))
+            #yes = yesnoDialog('%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), '', '', self.name, 'Resume', 'Start From Beginning')
+            yes = xbmcgui.Dialog().yesno('Resume', '%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), nolabel = 'Resume', yeslabel = 'Start From Beginning')
+            log('Chose option: %s' % yes)
+            if yes: offset = '0'
+    except:
+        pass
+
+    
+    #Play the youtube video with the meta data just acquired
+    playYoutubeVid(id, meta, poster)
+    
+    #Play the youtube video
+    
+    
+    #Check if the video is still playing and store the time it is currently playing
+    for i in range(0, 300):
+        if xbmc.Player().isPlayingVideo():
+            #Set the offset of the video
+            try:
+                if offset == '0': raise Exception()
+                xbmc.Player().seekTime(float(offset))
+            except:
+                pass
+            break
+        xbmc.sleep(100)
+    while xbmc.Player().isPlayingVideo():
+        try: totalTime = xbmc.Player().getTotalTime()
+        except: pass
+        try: currentTime = xbmc.Player().getTime()
+        except: pass
+        xbmc.sleep(1000)
+    
+    diff = currentTime / totalTime #Calculate how much of the video has been watced
+    #The video has stopped playing
+    log('Ended Video Playback (%s) @ %s (percentage: %s)' % (totalTime, currentTime, diff))
+    
+    #Delete the previous bookmark where we were and store the new one
+    try:
+        deleteBookmark(name) #Delete the previous saved bookmark
+        log('Deleted the previous bookmark')
+        ok = int(currentTime) > 60 and (currentTime / totalTime) <= .9 #Has the video been playing long enough and is it viewed less then 90%?
+        if ok:
+            addBookmark(currentTime, name) #Add the new bookmark
+            log('Added new bookmark @ %s' % currentTime)
+    except:
+        pass
+    
+    #Mark the episode as watched if enough was watched
+    ok = diff >= .9 #Did the episode get watched for 90% or more?
+    if ok:
+        log('Episode has been watched for %s, mark as watched' % diff)
+        mark_as_watched(DBID, folderPath) #Mark the episode as watched
+    else:
+        log('Episode has been watched for %s, dont mark as watched' % diff)
+    
+def mark_as_watched(DBID, folderPath):    
+    #Mark the video as watched through the JSON of Kodi
+    try:
+        xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.SetEpisodeDetails", "params": {"episodeid" : %s, "playcount" : 1 }, "id": 1 }' % str(DBID))
+        if not folderPath.startswith('plugin://'): xbmc.executebuiltin('Container.Refresh')
+    except:
+        pass
+  
+def yesnoDialog(line1, line2, line3, heading=xbmcaddon.Addon().getAddonInfo('name'), nolabel='', yeslabel=''):
+    return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel, yeslabel)
+    
+def getBookmark(name, imdb='0'):
+    import hashlib
+    log('getBookmark(%s)' % name)
+    offset = '0'
+    log('getBookmark 1')
+    idFile = hashlib.md5()
+    log('getBookmark 2')
+    for i in name: idFile.update(str(i))
+    log('getBookmark 3')
+    for i in imdb: idFile.update(str(i))
+    log('getBookmark 4')
+    idFile = str(idFile.hexdigest())
+    log('getBookmark: idFile calculated: %s' % idFile)
+    xbmcvfs.mkdir(xbmc.translatePath(addonInfo('profile')).decode('utf-8')) #Create the directory if it does not yet exist
+    dbcon = database.connect(os.path.join(dataPath, 'settings.db'))
+    dbcur = dbcon.cursor()
+    dbcur.execute("SELECT * FROM bookmark WHERE idFile = '%s'" % idFile)
+    match = dbcur.fetchone()
+    offset = str(match[1])
+    dbcon.commit()
+    return offset
+   
+def addBookmark(currentTime, name, imdb='0'):
+    import hashlib
+    log('addBookmark(%s)' % name)
+    try:
+        idFile = hashlib.md5()
+        for i in name: idFile.update(str(i))
+        for i in imdb: idFile.update(str(i))
+        idFile = str(idFile.hexdigest())
+        log('addBookmark: idFile calculated: %s' % idFile)
+        timeInSeconds = str(currentTime)
+        xbmcvfs.mkdir(xbmc.translatePath(addonInfo('profile')).decode('utf-8')) #Create the directory if it does not yet exist
+        dbcon = database.connect(os.path.join(dataPath, 'settings.db'))
+        dbcur = dbcon.cursor()
+        dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""idFile TEXT, ""timeInSeconds TEXT, ""UNIQUE(idFile)"");")
+        dbcur.execute("DELETE FROM bookmark WHERE idFile = '%s'" % idFile)
+        dbcur.execute("INSERT INTO bookmark Values (?, ?)", (idFile, timeInSeconds))
+        dbcon.commit()
+    except:
+        pass
+
+def deleteBookmark(name, imdb='0'):
+    import hashlib
+    try:
+        idFile = hashlib.md5()
+        for i in name: idFile.update(str(i))
+        for i in imdb: idFile.update(str(i))
+        idFile = str(idFile.hexdigest())
+        control.makeFile(control.dataPath)
+        dbcon = database.connect(os.path.join(dataPath, 'settings.db'))
+        dbcur = dbcon.cursor()
+        dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""idFile TEXT, ""timeInSeconds TEXT, ""UNIQUE(idFile)"");")
+        dbcur.execute("DELETE FROM bookmark WHERE idFile = '%s'" % idFile)
+        dbcon.commit()
+    except:
+        pass
     
       
 ########## ROUTES ##############      
@@ -1494,7 +1712,6 @@ if mode is None:
     log('Mode is Index', True)
     index()
     xbmcplugin.endOfDirectory(addon_handle)
-
 ##Folder
 elif mode[0] == 'folder':
     foldername = args['foldername'][0]
@@ -1505,11 +1722,10 @@ elif mode[0] == 'folder':
         xbmcplugin.endOfDirectory(addon_handle)
     ## Search Channel
     elif foldername == 'searchchannel':
-        result = GUIEditExportName('', 'Search for Channel')
+        result = user_input('', 'Search for Channel')
         if len(result) > 0:
             search_channel(result)
         xbmcplugin.endOfDirectory(addon_handle)
-        
 ## Channels
 elif mode[0] == "pickedChannel":
     log('Picked a channel')
@@ -1563,6 +1779,16 @@ elif mode[0] == 'updateplaylists':
     adddir('All playlists are now up to date', url, description = 'All playlists have been updated. Press this button to return home')
     xbmcplugin.endOfDirectory(addon_handle)    
     
+## PLAY VIDEO
+elif mode[0] == "play":
+    log('Mode is Play')
+    id = args['id'][0] #Grab the vid id which we should be playing
+    show = args['show'][0] #Grab the show
+    season = args['season'][0] #Grab the season
+    episode = args['episode'][0] #Grab the episode
+    filename = args['filename'][0] #Grab the filename
+    
+    playVid(id, filename, season, episode, show) #Update the nfo & strm files for this playlist
 ## STRM TEST
 elif mode[0] == "strmtest":
     log('Mode is strm test')
@@ -1580,13 +1806,12 @@ elif mode[0] == "service":
 
     update_playlists()
     
-    monitor = xbmc.Monitor()
     #service_interval = xbmcplugin.getSetting(addon_handle, 'service_interval')
-    xbmcgui.Dialog().ok('Service started', 'Service started will run again in %s hours' % service_interval)
+    #xbmcgui.Dialog().ok('Service started', 'Service started will run again in %s hours' % service_interval)
     
     while True:
         # Sleep/wait for abort for number of hours that is set in the addon settings
-        if monitor.waitForAbort(service_interval*60*60):
+        if xbmc.Monitor().waitForAbort(service_interval*60*60):
         #if monitor.waitForAbort(5*60):
             # Abort was requested while waiting. We should exit
             break
@@ -1617,64 +1842,3 @@ elif mode[0] == "deletetest":
     url = build_url({'mode': 'deletetest', 'foldername': 'deletetest'})
     adddir('Delete test', url)
     xbmcplugin.endOfDirectory(addon_handle)
-  
-    
-    
-    
-    
-    
-    
-    
-        # ## Folder One
-    # if foldername == 'Folder One':
-        # #Grab Video Info
-        # v = pafy.new("sdBLSTSN1HI")
-        
-        # #foldername = args['foldername'][0]
-        # #url = 'plugin://plugin.video.youtube/play/?video_id=sdBLSTSN1HI'
-        # url = v.getbest().url
-        # additem(v.title, url, v.thumb)
-        # xbmcplugin.endOfDirectory(addon_handle)
-    # #Which folder should be loaded?
-    # ## Youtube Plugin Test
-    # elif foldername == 'Youtube Plugin Test':
-        
-        # xbmc.log(LPREF+'Running Youtube Plugin')
-        # xbmc.executebuiltin('RunPlugin(plugin://plugin.video.youtube/?id=sdBLSTSN1HI)')
-    # ## See All
-    # elif foldername == 'See All':
-        # #Show all videos from the youtube playlist
-        # plurl = "https://youtu.be/hyZnd_2JYuM?list=UUSc16oMxxlcJSb9SXkjwMjA"
-        # plurl = "https://www.youtube.com/watch?v=mOYZaiDZ7BM&list=RD0rNa8EObKJ0&index=2&spfreload=1"
-        # playlist = pafy.get_playlist(plurl)
-        
-        # playlist['title']
-        
-        # for item in playlist['items']:
-            # i = item['pafy']
-            # additem(i.title, 'http://somevid.mkv', i.thumb)
-        
-        # xbmcplugin.endOfDirectory(addon_handle)
-    # ## Cat
-    # elif foldername == 'Cat':
-        # search_by_keyword('cat')
-        # xbmcplugin.endOfDirectory(addon_handle)
-    # ## StukTV
-    # elif foldername == 'StukTV':
-        # library_movie_strm('Testing', 'Test', 'IDTEST')
-        # write_settings()
-        # vids_by_playlist('UUK5Fn7Z6-iFMdxEye2FsKXg')
-        # xbmcplugin.endOfDirectory(addon_handle)
-    # ## Readsettings
-    # elif foldername == 'readsettings':
-        # #read_settings()
-        # update_settings()
-    # ## DisplayChannels
-    # elif foldername == 'displaychannels':
-        # display_channels()
-    # ## Search
-    # elif foldername == 'search':
-        # result = GUIEditExportName('YourMovieSucksDotOrg')
-        # if len(result) > 0:
-            # search_by_keyword(result)
-        # xbmcplugin.endOfDirectory(addon_handle)

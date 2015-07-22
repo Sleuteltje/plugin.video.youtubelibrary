@@ -6,7 +6,10 @@
 		<setting id="update_videolibrary" type="bool" label="30102" default="true"/>
 		<setting label="30103" type="lsep"/>
 		<setting id="tv_folder" type="folder" label="30104" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
-    </category>
+		<setting id="resume_playback" type="bool" label="30105" default="true" />
+		<setting id="strm_link" type="select" label="30106" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
+		<setting id="debugmode" type="bool" label="30107" default="false" />
+	</category>
     <!-- Default Playlist Settings -->
     <category label="30200">
 		<setting label="30201" type="lsep"/>

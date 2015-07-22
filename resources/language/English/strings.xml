@@ -8,6 +8,9 @@
     <string id="30102">Update Video Library after updating new youtube vids</string>
     <string id="30103">Add these directories to your Kodi Library</string>
     <string id="30104">TV Shows Directory</string>
+    <string id="30105">Resume Playback</string>
+    <string id="30106">Play videos from library with</string>	
+    <string id="30107">Debug Mode</string>	
     <!--Default Playlist Settings-->
     <string id="30201">Default settings for playlists</string>
     <string id="30202">Generate NFO files</string>
