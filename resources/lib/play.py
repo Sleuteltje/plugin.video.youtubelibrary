@@ -27,7 +27,7 @@ from resources.lib import bookmarks
 ##### PLAY VIDEO 
 #Plays a youtube video by id
 def playYoutubeVid(id, meta=None, poster=None):
-    import pafy
+    from resources.lib import pafy
     pafy.set_api_key(vars.API_KEY)
     #Resolve the youtube video url for ourselves
     v = pafy.new(id)

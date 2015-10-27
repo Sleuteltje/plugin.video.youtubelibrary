@@ -1,1 +1,0 @@
-plugin://plugin.video.youtubelibrary/?mode=play&id=SKJDlx94l&filename=new_strm_example&season=2&episode=7&show=VICE

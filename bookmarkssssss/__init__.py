@@ -1,1 +1,0 @@
-from .bookmarks import getBookmark

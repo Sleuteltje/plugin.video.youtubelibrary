@@ -25,7 +25,6 @@ import urllib2
 import urlparse
 import httplib
 #For ripping youtube information & url's
-import pafy 
 #For XML Reading & Writing
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -35,7 +34,7 @@ from xml.dom import minidom
 #For youtube api
 import httplib2
 import six
-from apiclient.discovery import build
+#from apiclient.discovery import build
 import sys
 #from googleapiclient.discovery import build
 #For database connections to store the resume point and watched flag

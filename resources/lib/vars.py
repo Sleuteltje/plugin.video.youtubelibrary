@@ -23,8 +23,7 @@ import urllib2
 import re
 import urlparse
 import httplib
-#For ripping youtube information & url's
-import pafy 
+
 #For XML Reading & Writing
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -34,7 +33,7 @@ from xml.dom import minidom
 #For youtube api
 import httplib2
 import six
-from apiclient.discovery import build
+#from apiclient.discovery import build
 import sys
 #from googleapiclient.discovery import build
 #For database connections to store the resume point and watched flag
@@ -74,8 +73,7 @@ xbmcplugin.setContent(addon_handle, 'episodes')
 API_KEY = "AIzaSyBtO0Bl38DJKCuPh9e4mRW3-1UcGPPnQfs"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-#Set the youtube api key for pafy to
-pafy.set_api_key(API_KEY)
+
 
 ##NONCONFIGURABLE
 addonInfo = xbmcaddon.Addon().getAddonInfo

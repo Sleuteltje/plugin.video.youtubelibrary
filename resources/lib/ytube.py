@@ -17,9 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #For youtube api
-import httplib2
-import six
-from apiclient.discovery import build
+#import httplib2
+#import six
+from googleapiclient.discovery import build
 import sys
 
 import re
