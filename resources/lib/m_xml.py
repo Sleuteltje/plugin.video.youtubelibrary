@@ -28,6 +28,7 @@ from xml.dom import minidom
 
 from resources.lib import dev
 from resources.lib import vars
+from resources.lib import ytube
 
 document = ''
 
@@ -160,7 +161,7 @@ def xml_add_playlist(id):
         
         
         #Grab the channel information 
-        response = yt_get_channel_info(res['channelId'])
+        response = ytube.yt_get_channel_info(res['channelId'])
         snippet = response['items'][0]['snippet']
         brand = response['items'][0]['brandingSettings']
         #Check if we should do a better thumbnail

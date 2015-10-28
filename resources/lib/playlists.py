@@ -24,6 +24,7 @@ from resources.lib import vars
 from resources.lib import dev
 from resources.lib import m_xml
 
+
 #Displays the editplaylist list item
 def disp_setting(setting, title, description):
     #build url
@@ -183,7 +184,7 @@ def delete_playlist(id):
                     
                     success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory
                     xbmcgui.Dialog().ok('Removed from library', 'Deleted this show from your library (You should clean your library, otherwise they will still show in your library)')
-            index() #Load the index view
+            
 
 #Refresh a playlist and has an option to remove the directory containing the file to
 def refresh_playlist(id):

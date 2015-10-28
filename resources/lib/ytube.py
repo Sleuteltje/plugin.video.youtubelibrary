@@ -20,8 +20,8 @@
 #import httplib2
 #import six
 from googleapiclient.discovery import build
+#from apiclient.discovery import build
 import sys
-
 import re
 
 from resources.lib import vars
@@ -70,8 +70,8 @@ def yt_get_playlist_info(id):
       url = build_url({'mode': 'addPlaylist', 'id': value})
       adddir(key, url, search_response['items'][0]['snippet']['thumbnails']['default']['url'])
     '''
-    
-    
+
+
 #Grabs the playlists that the given channelid has created
 def yt_get_playlists_by_channel(id):
     #Connect to youtube API
@@ -132,7 +132,7 @@ def search_channel(keyword):
     for search_result in search_response.get("items", []):
       #videos.append(search_result)
       url = dev.build_url({'mode': 'pickedChannel', 'id': search_result['id']['channelId']})
-      dev.adddir(search_result['snippet']['title'], url, search_result['snippet']['thumbnails']['default']['url'])
+      dev.adddir(search_result['snippet']['title'], url, search_result['snippet']['thumbnails']['high']['url'], fanart=search_result['snippet']['thumbnails']['high']['url'], description=search_result['snippet']['description'])
 
       
 #Searches for Youtube videos by a given keyword

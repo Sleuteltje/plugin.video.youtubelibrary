@@ -17,32 +17,8 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import os, shutil
+import os
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcvfs
-import urllib
-import urllib2
-
-import urlparse
-import httplib
-#For ripping youtube information & url's
-#For XML Reading & Writing
-from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import SubElement
-# For prettyfing the XML
-from xml.dom import minidom
-#For youtube api
-import httplib2
-import six
-#from apiclient.discovery import build
-import sys
-#from googleapiclient.discovery import build
-#For database connections to store the resume point and watched flag
-#Import database libs
-try:
-    from sqlite3 import dbapi2 as database
-except:
-    from pysqlite2 import dbapi2 as database
 
 #import Functions
 from resources.lib import bookmarks
@@ -53,6 +29,7 @@ from resources.lib import m_xml
 from resources.lib import generators    
 from resources.lib import routes    
 from resources.lib import play    
+from resources.lib import playlists  
 
 
 xbmcplugin.setContent(vars.addon_handle, 'episodes')
@@ -62,7 +39,7 @@ xbmcplugin.setContent(vars.addon_handle, 'episodes')
 if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings.xml")) == False: #If the settings.xml file can't be found, this is the first addon run
     xbmcgui.Dialog().ok('First Run', 'Please read the online instructions how to use this addon. See online how you can help this project. Have fun!')
     m_xml.create_xml()
-      
+
 ########## ROUTES ##############      
 #Grab which mode the plugin is in    
 mode = vars.args.get('mode', None)
@@ -91,16 +68,12 @@ elif mode[0] == 'folder':
 elif mode[0] == "deletePlaylist":
     dev.log('Mode is deletePlaylist')
     #Remove this playlist
-    id = vars.args['id'][0]
-    playlists.delete_playlist(id) #Remove this playlist
-    xbmcplugin.endOfDirectory(vars.addon_handle)
+    routes.deletePlaylist()
 ## RefreshPlaylist
 elif mode[0] == "refreshPlaylist":
     dev.log('Mode is refreshPlaylist')
     #Refresh this playlist
-    id = vars.args['id'][0]
-    playlists.refresh_playlist(id) #Remove this playlist
-    xbmcplugin.endOfDirectory(vars.addon_handle)
+    routes.refreshPlaylist()
 ## editPlaylist
 elif mode[0] == "editPlaylist":
     dev.log('Mode is editPlaylist')

@@ -48,12 +48,19 @@ def run_service():
 
 
 ##Index
-def index():      
+def index():
+    index_dir()
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+def index_dir():      
     url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists'})
-    dev.adddir('Manage Playlists', url)    
+    dev.adddir('Manage Playlists', url, description='Manage the Channels Playlists you have added as a Tv Show in the Kodi Library')    
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel'})
-    dev.adddir('Search Channel', url)
+    dev.adddir('Add new Channel as TV Show', url, description='Search by channel name for a new Channel to add as Tv Show to your Kodi Library')
     url = dev.build_url({'mode': 'xmlcreate', 'foldername': 'xmlcreate'})
+    dev.adddir('Update All Playlists (can take a while)', url, description='If playlists are never scanned before, expect a long wait.')
+    url = dev.build_url({'mode': 'deletetest'})
+    '''
     dev.adddir('XML Create Test', url)
     url = dev.build_url({'mode': 'play', 'id': 'HdaEePsLIc0'})
     dev.adddir('PLAY Test', url)
@@ -62,10 +69,9 @@ def index():
     url = dev.build_url({'mode': 'strmtest', 'id': 'PLV8Q_exbQpnYuouifDyV93_a_PlcwNM1l'})
     dev.adddir('STRM StukTV Opdrachten Test', url)
     url = dev.build_url({'mode': 'updateplaylists'})
-    dev.adddir('Update All Playlists (can take a while)', url, description='If playlists are never scanned before, expect a long wait.')
-    url = dev.build_url({'mode': 'deletetest'})
-    dev.adddir('Deletetest', url, description='Test the deleting of an entire directory')
-    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+    dev.adddir('Deletetest', url, description='Test the deleting of an entire directory')'''
+
 
 
 
@@ -91,7 +97,7 @@ def show_playlists_by_channel(Channelid):
       number_vids = str(pl['items'][0]['contentDetails']['itemCount'])
       #videos.append(search_result)
       url = dev.build_url({'mode': 'addPlaylist', 'id': value})
-      dev.adddir(key.capitalize()+' ('+number_vids+')', url, search_response['items'][0]['snippet']['thumbnails']['default']['url'])
+      dev.adddir(key.capitalize()+' ('+number_vids+')', url, search_response['items'][0]['snippet']['thumbnails']['high']['url'], fanart=search_response['items'][0]['snippet']['thumbnails']['high']['url'], description='Press Ok to add this playlist to your list of Youtube Kodi Tv Shows \n--------\nPlaylist Description:\n'+search_response['items'][0]['snippet']['description'])
     
     # Grab other playlists this user has created to
     response = ytube.yt_get_playlists_by_channel(Channelid)
@@ -102,15 +108,16 @@ def show_playlists_by_channel(Channelid):
           #videos.append(search_result)
           title = playlist['snippet']['title']+' ('+str(playlist['contentDetails']['itemCount'])+')'
           url = dev.build_url({'mode': 'addPlaylist', 'id': playlist['id']})
-          dev.adddir(title, url, playlist['snippet']['thumbnails']['default']['url'])
+          dev.adddir(title, url, playlist['snippet']['thumbnails']['high']['url'], fanart=playlist['snippet']['thumbnails']['high']['url'], description='Press Ok to add this playlist to your list of Youtube Kodi Tv Shows \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
     xbmcplugin.endOfDirectory(vars.addon_handle)#Adds a playlist & loads the view to edit it
-    
-    
+
+
 #Ads a playlist & loads the view to edit it
 def add_playlist(id):
     m_xml.xml_add_playlist(id)
-    editPlaylist(id) #Load the view to edit this playlist
-    xbmcplugin.endOfDirectory(vars.addon_handle)
+    playlists.editPlaylist(id) #Load the view to edit this playlist
+    xbmc.executebuiltin("Container.Update")
+    #xbmcplugin.endOfDirectory(vars.addon_handle)
 
 ##Route: Manage Playlists
 def manage_playlists():
@@ -132,8 +139,25 @@ def edit_playlist(id, set):
         playlists.setEditPlaylist(id, set)
     #Display the videos of this playlistID
     playlists.editPlaylist(id)
-    xbmcplugin.endOfDirectory(vars.addon_handle)
+    if set == None:
+        xbmcplugin.endOfDirectory(vars.addon_handle)
+    else:
+        xbmc.executebuiltin("Container.Refresh")
 
+def deletePlaylist():
+    id = vars.args['id'][0]
+    playlists.delete_playlist(id) #Remove this playlist
+    xbmc.executebuiltin("Container.Refresh")
+    #index_dir() #Load the index view
+    #url = dev.build_url({'home': 'home'})
+    #xbmc.executebuiltin("Action(PreviousMenu)")    
+    #xbmc.executebuiltin("Container.Update("+url+","+url+")")
+    #xbmcplugin.endOfDirectory(vars.addon_handle)
+
+def refreshPlaylist():
+    id = vars.args['id'][0]
+    playlists.refresh_playlist(id) #Remove this playlist
+    xbmc.executebuiltin("Container.Refresh")
     
     
 ###TESTS
