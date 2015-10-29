@@ -101,6 +101,9 @@ elif mode[0] == "addPlaylist":
 elif mode[0] == 'updateplaylists':
     dev.log('Mode is updateplaylists')
     routes.update_all_playlists()
+elif mode[0] == 'updateplaylist':
+    dev.log('Mode is updateplaylist')
+    routes.update_playlist()
 ## PLAY VIDEO
 elif mode[0] == "play":
     dev.log('Mode is Play')

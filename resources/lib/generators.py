@@ -53,7 +53,8 @@ def reg(se, txt):
     #Vid: The video response from the youtube api
     #settings: The elementtree element containing the playlist settings
     #totalresults = The total results of the playlist, so that the episode can be calculated if the episode recognisition is set to pos
-def episode_season(vid, settings, totalresults = False):
+    #playlist = the id of the playlist we are checking episode numbers for
+def episode_season(vid, settings, totalresults = False, playlist = False):
     ep = settings.find('episode').text #Grab the episode settings from the xml
     se = settings.find('season').text
     
@@ -64,7 +65,6 @@ def episode_season(vid, settings, totalresults = False):
         if match != None:
             season = match[0]
             found = True
-
     if found == False: #If the episode has not been found yet, either it is not regex, or regex failed
         if se == 'year': #We want to save the season of the video as the year it is published
             d = ytube.convert_published(vid['snippet']['publishedAt'])
@@ -84,7 +84,17 @@ def episode_season(vid, settings, totalresults = False):
             found = True
     
     if found == False:
-        if ep == 'monthday': #We want the episode to be the month number + day number
+        if ep == 'default':
+            if playlist == False:
+                dev.log('episode_season: Error: episode recognisition set to default, but no playlist id given')
+                return [season, '0']
+            #Get the current episode number from episodes.xml
+            from resources.lib import m_xml
+            episode = m_xml.number_of_episodes(playlist, season)
+            if episode == None:
+                episode = 0
+            episode = str(episode + 1)
+        elif ep == 'monthday': #We want the episode to be the month number + day number
             d = ytube.convert_published(vid['snippet']['publishedAt'])
             episode = d['month']+d['day']
         elif ep == 'monthdayhour': #month number + day number + hour number

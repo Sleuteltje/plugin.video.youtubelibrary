@@ -46,6 +46,17 @@ def run_service():
         service.update_playlists()
     dev.log("Kodi not running anymore, Service terminated")
 
+#Force the running of the service    
+def update_all_playlists():
+    service.update_playlists() #Update all playlists
+
+#Force the updating of 1 playlist
+def update_playlist():
+    id = vars.args['id'][0]
+    name = vars.args['name'][0]
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Playlist '+name, vars.__icon__, 3000)
+    service.update_playlist(id)
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating Playlist '+name, vars.__icon__, 3000)
 
 ##Index
 def index():
@@ -54,24 +65,13 @@ def index():
 
 def index_dir():      
     url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists'})
-    dev.adddir('Manage Playlists', url, description='Manage the Channels Playlists you have added as a Tv Show in the Kodi Library')    
+    context_url = dev.build_url({'mode': 'updateplaylists'})
+    commands = []
+    commands.append(( 'Update Now', 'XBMC.RunPlugin('+context_url+')', ))
+    dev.adddir('Manage Playlists', url, description='Manage the Channels Playlists you have added as a Tv Show in the Kodi Library', context=commands)
+    
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel'})
     dev.adddir('Add new Channel as TV Show', url, description='Search by channel name for a new Channel to add as Tv Show to your Kodi Library')
-    url = dev.build_url({'mode': 'xmlcreate', 'foldername': 'xmlcreate'})
-    dev.adddir('Update All Playlists (can take a while)', url, description='If playlists are never scanned before, expect a long wait.')
-    url = dev.build_url({'mode': 'deletetest'})
-    '''
-    dev.adddir('XML Create Test', url)
-    url = dev.build_url({'mode': 'play', 'id': 'HdaEePsLIc0'})
-    dev.adddir('PLAY Test', url)
-    url = dev.build_url({'mode': 'strmtest', 'id': 'UUSc16oMxxlcJSb9SXkjwMjA'})
-    dev.adddir('STRM Test', url)
-    url = dev.build_url({'mode': 'strmtest', 'id': 'PLV8Q_exbQpnYuouifDyV93_a_PlcwNM1l'})
-    dev.adddir('STRM StukTV Opdrachten Test', url)
-    url = dev.build_url({'mode': 'updateplaylists'})
-
-    dev.adddir('Deletetest', url, description='Test the deleting of an entire directory')'''
-
 
 
 
@@ -128,7 +128,11 @@ def manage_playlists():
     if pl is not None: 
         for child in pl: #Loop through each playlist
             url = dev.build_url({'mode': 'editPlaylist', 'id': child.attrib['id']})
-            dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text)
+            #Build the contextmenu item to force the updating of one playlist
+            context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id'], 'name': child.find('title').text})
+            commands = []
+            commands.append(( 'Update Now', 'XBMC.RunPlugin('+context_url+')', ))
+            dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text, context=commands)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     
 #Loads the view of editing a playlist
@@ -161,9 +165,3 @@ def refreshPlaylist():
     
     
 ###TESTS
-#Force the running of the service    
-def update_all_playlists():
-    service.update_playlists() #Update all playlists
-    url = dev.build_url({'home': 'home'})
-    dev.adddir('All playlists are now up to date', url, description = 'All playlists have been updated. Press this button to return home')
-    xbmcplugin.endOfDirectory(vars.addon_handle)    

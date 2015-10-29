@@ -52,13 +52,18 @@ def build_url(query):
 #   name: The name of the directory
 #   url     : The url the directory should point to
 #   thumb: The link to the thumbnail image
-def adddir(name, url, thumb='DefaultFolder.png', fanart = None, description = ''):
+#   fanart: The fanart to display
+#   description: The description of the directory
+#   context: List containing the contextmenu items
+def adddir(name, url, thumb='DefaultFolder.png', fanart = None, description = '', context = False):
     li = xbmcgui.ListItem(name, iconImage=thumb, thumbnailImage = thumb)
     #Set type to video and give a description and such
     li.setInfo( type="Video", infoLabels={ "Title": name,"Plot":description} )
     if fanart is None:
         fanart = vars.__fanart__
     li.setProperty('fanart_image', fanart)
+    if context != False:
+        li.addContextMenuItems( context )
     xbmcplugin.addDirectoryItem(handle=vars.addon_handle, url=url,
                                 listitem=li, isFolder=True)
                                 

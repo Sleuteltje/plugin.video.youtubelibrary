@@ -31,22 +31,25 @@ from resources.lib import vars
 from resources.lib import ytube
 
 document = ''
+playlistdocument = ''
 
 #Loads the xml document        
 def xml_get():
     dev.log('XML_get')
     global document #Set the document variable as global, so every function can reach it
     document = ElementTree.parse( vars.settingsPath+'settings.xml' )
-
+    
 # Converts the elementtree element to prettified xml and stores it in the settings.xml file
-def write_xml(elem):
+def write_xml(elem, dir='', output='settings.xml'):
     xbmcvfs.mkdir(vars.settingsPath) #Create the settings dir if it does not exist already
+    if dir is not '': xbmcvfs.mkdir(vars.settingsPath+dir) #Create the settings dir if it does not exist already
     #Write these settings to a .xml file in the addonfolder
-    output_file = os.path.join(vars.settingsPath, 'settings.xml') #Set the outputfile to settings.xml
+    output_file = os.path.join(vars.settingsPath+dir, output) #Set the outputfile to settings.xml
 
     indent( elem ) #Prettify the xml so its not on one line
     tree = ElementTree.ElementTree( elem ) #Convert the xml back to an element
     tree.write(output_file, xml_declaration=True, encoding='utf-8', method="xml") #Save the XML in the settings file
+    
 
 #Pretty Print the xml    
 def indent(elem, level=0):
@@ -79,6 +82,7 @@ def create_xml():
         'settings'      : {
             'type'                  : 'TV',
             'title'                   : 'Exampleplaylist',
+            
             'description'        : 'This is an example of a youtube playlist xml config for use with Youtube Library',
             'genre'                : 'Action/Comedy',
             'published'          : '2010',
@@ -115,6 +119,23 @@ def create_xml():
     #Write this new xml to the settings.xml file
     write_xml(root)
     dev.log('Create_xml: Created new settings.xml file')
+
+# Builds and returns an playlist element that can be added to the playlist element
+def xml_create_playlist(options):    
+    #       <playlist id="">
+    attr = { 'id' : options['id'], 'enabled' : options['enabled'] }
+    elem = Element('playlist', attr)
+    
+    #               <settingname>setting</settingname>
+    # Loop through all settings and set them accordingly
+    for key, value in options['settings'].iteritems():
+        SubElement(elem, key).text = value
+    
+    return elem #Return this element
+
+    
+
+    
 
     
 #Deletes a playlist from the xml and saves it
@@ -225,7 +246,7 @@ def xml_add_playlist(id):
                 'onlyinclude'       : '',
                 #NFO information
                 'season'            : 'year',
-                'episode'           : 'monthday',
+                'episode'           : 'pos',
                 'striptitle'            : '',
                 'removetitle'       : '',
                 'stripdescription' : '',
@@ -243,18 +264,6 @@ def xml_add_playlist(id):
     else:
         dev.log('XML_add_playlist: not added playlist '+id+' since the playlist already exists')    
     
-# Builds and returns an playlist element that can be added to the playlist element
-def xml_create_playlist(options):    
-    #       <playlist id="">
-    attr = { 'id' : options['id'], 'enabled' : options['enabled'] }
-    elem = Element('playlist', attr)
-    
-    #               <settingname>setting</settingname>
-    # Loop through all settings and set them accordingly
-    for key, value in options['settings'].iteritems():
-        SubElement(elem, key).text = value
-    
-    return elem #Return this element
 
 
 # Updates a playlist that already exists
@@ -322,11 +331,15 @@ def xml_update_playlist_setting(id, tag, newsetting):
         # tag:  The tag that should be found (In the examples case: user)
         # whereAttrib: The element that should be found should contain the following attribute at the following value. (In the examples case: {name: someuser}
         # whereTxt: The element that should be found should contain this text. (In the examples case: 'sometext' would find the correct user       
-def xml_get_elem(path, tag, whereAttrib=False, whereTxt=False):    
+def xml_get_elem(path, tag, whereAttrib=False, whereTxt=False, playlist=False):    
     dev.log('XML_get_elem')
-    xml_get() # Grab the xml file
+    if playlist == False:
+        xml_get() # Grab the xml file
+        doc = document
+    else:
+        doc = playlist_xml_get(playlist) #Grab the episodes.xml file of this playlist
     
-    for child in document.findall(path):
+    for child in doc.findall(path):
         check = True # Use this var to check if this element meets all requirements. Set it by default to true, so it can be set to False if it fails some requirement
         #Check if this element has the tag we are looking for
         if child.tag == tag:
@@ -355,3 +368,102 @@ def xml_get_elem(path, tag, whereAttrib=False, whereTxt=False):
     
     #If the code has made it here, that means it has failed to find the xml element, so return None
     return None   
+
+    
+    
+'''
+    PLAYLIST EPISODENUMBERING 
+'''
+# Creates the episodes.xml file
+def playlist_create_xml(playlist):
+    dev.log('playlist_create_xml')
+    
+    #<playlists>
+    root = Element('seasons')
+    #attr = { 'number' : season }
+    #newxml = SubElement(root, 'season', attr)
+    #attr = { 'id' : videoId}
+    #elem = SubElement(newxml, 'episode', attr)
+    
+    #playlist = xml_create_playlist(example)
+    #Append this playlist to the new created xml file
+    #newxml.append(playlist)
+    #Write this new xml to the settings.xml file
+    write_xml(root, 'episodenr', playlist+'.xml')
+    dev.log('playlist_create_xml: Created new episodenr/'+playlist+'.xml')
+
+#Loads the playlist episodes xml document        
+def playlist_xml_get(playlist):
+    dev.log('playlist_XML_get')
+    if xbmcvfs.exists(os.path.join(vars.settingsPath,"episodenr/"+playlist+".xml")) == False: #If the episodes.xml file can't be found, we should create this file
+        playlist_create_xml(playlist)
+    
+    global playlistdocument #Set the document variable as global, so every function can reach it
+    playlistdocument = ElementTree.parse( vars.settingsPath+'episodenr/'+playlist+'.xml' )
+    return playlistdocument
+
+
+#Returns the number of episodes in a season
+def number_of_episodes(playlist, season):
+    s = xml_get_elem('season', 'season', {'number': season}, playlist=playlist)
+    if s == None:
+        dev.log('number_of_episodes: Could not find season '+season+' in playlist '+playlist)
+        return None
+    dev.log('number_of_episodes: Found '+str(len(s))+' episodes in season '+season)
+    return len(s)
+    
+#Does the episode already exist
+def episode_exists(playlist, episode):
+    dev.log('episode_exists('+playlist+', '+episode+')')
+    #Quicker way to check if this episode already exists
+    doc = playlist_xml_get(playlist)
+    e = doc.findall("*/episode[@id='"+episode+"']")
+    if len(e) == 0:
+        dev.log('episode '+episode+' is not yet present in episodenr file')
+        return False
+    dev.log('Already present: '+episode)
+    return True
+
+
+
+#Adds the playlist to the xml if it does not exist yet, and retrieves information about the playlist
+def playlist_add_season(playlist, season):
+    dev.log('playlist_add_season('+season+')')
+    #Check if this playlist isnt in the xml file yet
+    #if xml_get_elem('season', 'episode', {'id' : id}, playlist=playlist) is None:
+    #Build the playlist
+    doc = playlist_xml_get(playlist)
+    
+    attr = { 'number' : season}
+    elem = Element('season', attr)
+    root = doc.getroot()
+    root.insert(0, elem)
+    write_xml(root, dir='episodenr', output=playlist+'.xml')
+    dev.log('Added season '+season+' in episodenr/'+playlist+'.xml')
+    #else:
+        #dev.log('playlist_add_episode: not added episode '+id+' since the episode already exists')    #Adds the playlist to the xml if it does not exist yet, and retrieves information about the playlist
+
+def playlist_add_episode(playlist, season, id):
+    dev.log('playlist_add_episode('+season+','+id+')')
+    #Check if this playlist isnt in the xml file yet
+    #if xml_get_elem('season', 'episode', {'id' : id}, playlist=playlist) is None:
+    #Build the playlist
+    doc = playlist_xml_get(playlist)
+    
+    s = doc.find("season[@number='"+season+"']")
+    if s is None:
+        playlist_add_season(playlist, season)
+        doc = playlist_xml_get(playlist)
+        s = doc.find("season[@number='"+season+"']")
+        
+    
+    attr = { 'id' : id}
+    elem = Element('episode', attr)
+    
+    s.insert(0, elem)
+    root = doc.getroot()
+    
+    write_xml(root, dir='episodenr', output=playlist+'.xml')
+    dev.log('Added the episode '+id+' to season '+season+' in episodenr/'+playlist+'.xml')
+    #else:
+        #dev.log('playlist_add_episode: not added episode '+id+' since the episode already exists')    

@@ -55,13 +55,31 @@ def setEditPlaylist(id, set):
         else:
             m_xml.xml_update_playlist_setting(id, 'writenfo', 'Yes')
     else:
-        #Its another setting, so its normal text
-        elem = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
-        setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
-        if setting == None or setting == 'None':
-            setting = ''
-        result = dev.user_input(setting, 'Change setting '+set) #Ask the user to put in the new setting
-        m_xml.xml_update_playlist_setting(id, set, result) #Save the new setting
+        if set == 'episode':
+            i = xbmcgui.Dialog().select('Choose Episode Numbering', ['Default', 'monthday', 'pos', 'number', 'regex'])
+            if i == 0:
+                i = 'default'
+            elif i == 1:
+                i = 'monthday'
+            elif i == 2:
+                i = 'pos'
+            elif i == 3:
+                i = xbmcgui.Dialog().numeric(0, 'Set a hardcoded episode number')
+            elif i == 4:
+                i = dev.user_input('', 'Set a regular expression')
+            #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+        elif set == 'minlength':
+            i = xbmcgui.Dialog().numeric(2, 'Set a minimum length for videos')
+        elif set == 'maxlength':
+            i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
+        else:
+            #Its another setting, so its normal text
+            elem = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
+            setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
+            if setting == None or setting == 'None':
+                setting = ''
+            i = dev.user_input(setting, 'Change setting '+set) #Ask the user to put in the new setting
+        m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
 
         
         
@@ -114,7 +132,7 @@ def editPlaylist(id):
         #Description
         disp_setting('description', 'Description', 'The description as it will be displayed in Kodi and this Addon')
         #Genres
-        disp_setting('genre', 'Genre', 'Settings as displayed in Kodi. For multiple genres use genre1/genre2/genre3')
+        disp_setting('genre', 'Genre', 'Settings as displayed in Kodi. For multiple genres use genre1 / genre2 / genre3 (note the space between each / )')
         #WriteNFO
         url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'writenfo'})
         dev.adddir('[COLOR blue]Write NFO:[/COLOR] '+elem.find('writenfo').text, url, gear, fanart, 'NFO Files are needed for Kodi to recognise the youtube episodes as episodes, so it can scan it in its library. If you only want strm files, set this to No')
@@ -131,9 +149,25 @@ def editPlaylist(id):
         
         #NFO Options
         #Season recognisition setting
-        disp_setting('season', 'Season recognisition', 'Set to year to have the episode year upload date as its season. Set to a number to have a hardcoded season for every episode. To find a season from the video title using a regex. Please use regex(yourregexhere). If your regex fails to recognise a season it will fallback on calling it 0.')
+        description = """Set to [COLOR blue]year[/COLOR] to have the episode year upload date as its season.
+-------
+Set to a [COLOR blue]number[/COLOR] to have a hardcoded season for every episode. 
+-------
+To find a season from the video title using a [COLOR blue]regex[/COLOR]. Please use regex(yourregexhere). If your regex fails to recognise a season it will fallback on calling it 0.
+        """
+        disp_setting('season', 'Season recognisition', description)
         #Episode recognisition setting
-        disp_setting('episode', 'Episode recognisition', 'Set to monthday to have the episode month & day upload date as its episode number. Set to pos to have it use its playlist position as its episode number (Know that when videos are removed from the playlist, episode numbering may not be correct for episodes already scanned into the library). Set to a number to have a hardcoded episode for every episode. To find a episode from the video title using a regex. Please use regex(yourregexhere). If your regex fails to recognise a episode it will fallback on calling it 0.')
+        description = """'[COLOR blue]Default[/COLOR] will only number the episodes scanned in the library starting with 1 each season.
+------
+[COLOR blue]monthday[/COLOR] to have the month & day upload date as its episode number. 
+------
+[COLOR blue]pos[/COLOR] to have it use its playlist position as its episode number (Know that when videos are removed from the playlist, episode numbering may not be correct for episodes already scanned into the library). 
+------
+Set to a [COLOR blue]number[/COLOR] to have a hardcoded episode for every episode. 
+------
+Use [COLOR blue]regex[/COLOR] to type in a regular expression. Please use regex(yourregexhere). If your regex fails to recognise a episode it will fallback on calling it 0.'
+"""
+        disp_setting('episode', 'Episode recognisition', description)
         #Stripdescription
         disp_setting('stripdescription', 'Strip Description', 'Deletes every text in the description from and including the text filled in here. For instance, if a channel always has a long text in its description thats always the same, like: Check out our website (..). You fill that line in here, and only the part before that line will be included in the description of episodes. For multiple lines to scan for put them between |')
         #removedescription
@@ -145,15 +179,14 @@ def editPlaylist(id):
 
         #Overwritefolder
         disp_setting('overwritefolder', 'Folder', 'Use this directory to write the strm & nfo files to. If this is not filled in it will use the title as it will be displayed in the Addon and the Kodi Library')
-
         
         #Not used (yet)
         #Type
-        disp_setting('type', 'Type', '(NOT USED YET) What kind of playlist is this? Possible choices: tv/music/music videos')
+        #disp_setting('type', 'Type', '(NOT USED YET) What kind of playlist is this? Possible choices: tv/music/music videos')
         #Delete
-        disp_setting('delete', 'Delete older', '(NOT USED YET) Removes videos older then this many hours.')
+        #disp_setting('delete', 'Delete older', '(NOT USED YET) Removes videos older then this many hours.')
         #Scansince
-        disp_setting('scansince', 'From date', '(NOT USED YET) Skip videos published under this date. But doesnt remove the nfo & strm files like Delete older')
+        #disp_setting('scansince', 'From date', '(NOT USED YET) Skip videos published under this date. But doesnt remove the nfo & strm files like Delete older')
 
         
 #### DELETES A PLAYLIST ####
