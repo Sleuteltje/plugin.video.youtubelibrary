@@ -34,6 +34,22 @@ def update_playlists():
     if pl is not None: 
         for child in pl: #Loop through each playlist
             if child.attrib['enabled'] == 'yes': #Playlist has to be enabled
+                #Check when this playlist was last updated, and if it is time for this playlist to be updated again
+                import datetime
+                try:
+                    s = child.attrib['scansince']
+                    scansince = datetime.datetime.strptime(s,"%d/%m/%Y %H:%M:%S")
+                except:
+                    scansince = datetime.datetime.now() - datetime.timedelta(days=3*365)
+                timenow = datetime.datetime.now()
+                dev.log('Playlist last scanned on: '+str(scansince)+', now: '+str(timenow), 1)
+                diff = (timenow-scansince).total_seconds()
+                dev.log('Difference is '+str(diff))
+                if diff < (int(vars.__settings__.getSetting("service_interval")) * 60 * 60):
+                    dev.log('Difference '+str(diff)+' was not enough, '+str(int(vars.__settings__.getSetting("service_interval")) * 60 * 60)+' seconds needed. This Playlist will not be updated now.')
+                    continue
+                
+            
                 update_playlist(child.attrib['id']) #Update the nfo & strm files for this playlist
     xbmcgui.Dialog().notification(vars.__addonname__, 'Done Updating Youtube Playlists', vars.__icon__, 3000)
     #Should we also update the video library?
@@ -62,6 +78,11 @@ def update_playlist(id):
             generators.write_tvshow_nfo(folder, settings)
         
         update_playlist_vids(id, folder, settings)
+        
+        #Save the time this playlist got updated in the xml
+        import datetime
+        d=datetime.datetime.now()
+        m_xml.xml_update_playlist_attr(id, 'scansince', d.strftime("%d/%m/%Y %H:%M:%S"))
     
         return True
 

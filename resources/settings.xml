@@ -2,9 +2,10 @@
 <settings>
     <!--General-->
     <category label="30100">
-		<setting id="resume_playback" type="bool" label="30101" default="true" />
-		<setting id="strm_link" type="select" label="30102" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
-		<setting id="debugmode" type="bool" label="30103" default="false" />
+		<setting id="download_images" type="bool" label="30101" default="true"/>
+		<setting id="resume_playback" type="bool" label="30102" default="true" />
+		<setting id="strm_link" type="select" label="30103" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
+		<setting id="debugmode" type="bool" label="30104" default="false" />
 	</category>
     <!--Library Settings-->
     <category label="30200">

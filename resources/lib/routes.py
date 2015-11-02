@@ -67,14 +67,15 @@ def index():
     xbmcplugin.endOfDirectory(vars.addon_handle)
 
 def index_dir():      
+    import xbmcaddon
     url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists'})
     context_url = dev.build_url({'mode': 'updateplaylists'})
     commands = []
-    commands.append(( 'Update Now', 'XBMC.RunPlugin('+context_url+')', ))
-    dev.adddir('Manage Playlists', url, description='Manage the Channels Playlists you have added as a Tv Show in the Kodi Library', context=commands)
+    commands.append(( dev.lang(31003), 'XBMC.RunPlugin('+context_url+')', ))
+    dev.adddir(dev.lang(31001), url, description=dev.lang(31002), context=commands)
     
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel'})
-    dev.adddir('Add new Channel as TV Show', url, description='Search by channel name for a new Channel to add as Tv Show to your Kodi Library')
+    dev.adddir(dev.lang(31004), url, description=dev.lang(31005))
 
 
 
@@ -135,8 +136,8 @@ def manage_playlists():
             context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id']})
             context_url2 = dev.build_url({'mode': 'deletePlaylist', 'id': child.attrib['id']})
             commands = []
-            commands.append(( 'Update Now', 'XBMC.RunPlugin('+context_url+')', ))
-            commands.append(( 'Delete playlist', 'XBMC.RunPlugin('+context_url2+')', ))
+            commands.append(( dev.lang(31006), 'XBMC.RunPlugin('+context_url+')', ))
+            commands.append(( dev.lang(31007), 'XBMC.RunPlugin('+context_url2+')', ))
             dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text, context=commands)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     

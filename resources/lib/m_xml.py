@@ -123,7 +123,7 @@ def create_xml():
 # Builds and returns an playlist element that can be added to the playlist element
 def xml_create_playlist(options):    
     #       <playlist id="">
-    attr = { 'id' : options['id'], 'enabled' : options['enabled'] }
+    attr = { 'id' : options['id'], 'enabled' : options['enabled'], 'scansince' : '' }
     elem = Element('playlist', attr)
     
     #               <settingname>setting</settingname>
@@ -252,7 +252,6 @@ def xml_add_playlist(id):
                 'removedescription' : '',
                 #Scan Settings
                 'lastvideoId'       : '',
-                'scansince'        : ''
             }
         }
         pl = xml_create_playlist(playlist)
@@ -280,7 +279,9 @@ def xml_update_playlist_attr(id, attr, val):
         
         
         #Update this attribute to the new val
-        del playlist.attrib[attr]  
+        try: 
+            del playlist.attrib[attr]  
+        except: pass
         playlist.attrib[attr] = val
         #playlist.set(attr, val)
         #Write this to the xml

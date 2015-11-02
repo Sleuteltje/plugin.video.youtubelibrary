@@ -299,7 +299,7 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
         'episode': episode,
         'durationminutes': durationminutes,
         'duration': duration
-    }
+    }    
     
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     
@@ -314,8 +314,7 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
     file.write(str(content.encode("utf-8"))) #Write the content in the file
     file.close() #Close the file
     dev.log('write_nfo: Written nfo file: '+fold+'/'+enc_name+'.nfo')
-    #except:
-        #pass          
+
         
         
         
@@ -377,5 +376,10 @@ def write_tvshow_nfo(fold, settings):
     #file.write(str(content)) #Write the content in the file
     #file.close() #Close the file
     dev.log('write_tvshow_nfo: Written tvshow.nfo file: '+fold+'/'+enc_name+'.nfo')
-    #except:
-        #pass          
+    
+    #If the setting download_images is true, we should also download the images as actual files into the directory
+    if vars.__settings__.getSetting("download_images") == "true":
+        dev.log('download_images enabled, so downloading images to '+folder)
+        urllib.urlretrieve(settings.find('thumb').text, folder+"/folder.jpg")
+        urllib.urlretrieve(settings.find('banner').text, folder+"/banner.jpg")
+        urllib.urlretrieve(settings.find('fanart').text, folder+"/fanart.jpg")

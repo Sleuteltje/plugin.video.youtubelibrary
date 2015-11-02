@@ -105,3 +105,7 @@ def user_input(name, title='Enter input'):
 #Displays a yes/no dialog    
 def yesnoDialog(line1, line2, line3, heading=xbmcaddon.Addon().getAddonInfo('name'), nolabel='', yeslabel=''):
     return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel, yeslabel)
+    
+#Returns a string from strings.xml
+def lang(id):
+    return xbmcaddon.Addon().getLocalizedString(id)

@@ -37,7 +37,7 @@ xbmcplugin.setContent(vars.addon_handle, 'episodes')
 
 #Check if this is the first run of the addon
 if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings.xml")) == False: #If the settings.xml file can't be found, this is the first addon run
-    xbmcgui.Dialog().ok('First Run', 'Please read the online instructions how to use this addon. See online how you can help this project. Have fun!')
+    xbmcgui.Dialog().ok(dev.lang(31101), dev.lang(31102))
     m_xml.create_xml()
 
 ########## ROUTES ##############      
