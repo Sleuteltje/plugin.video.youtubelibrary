@@ -38,7 +38,15 @@ xbmcplugin.setContent(vars.addon_handle, 'episodes')
 #Check if this is the first run of the addon
 if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings.xml")) == False: #If the settings.xml file can't be found, this is the first addon run
     xbmcgui.Dialog().ok(dev.lang(31101), dev.lang(31102))
+    #Create the Streams/TV directory
+    xbmcvfs.mkdir(vars.addondataPath) #Create the settings dir if it does not exist already
+    #xbmcvfs.mkdir(vars.settingsPath) #Create the settings dir if it does not exist already
+    #open(os.path.join(vars.settingsPath, "settings.xml"), 'a').close() #Write the settings.xml file
+    xbmcvfs.mkdir(vars.streamsPath) #Create the streams dir if it does not exist already
+    xbmcvfs.mkdir(vars.streamsPath+'TV') #Create the streams TV dir if it does not exist already
+    
     m_xml.create_xml()
+
 
 ########## ROUTES ##############      
 #Grab which mode the plugin is in    

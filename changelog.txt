@@ -1,9 +1,4 @@
-#Todo:
-- Addon Settings
-X Settings (the settings that the app will generate)
-X Writing STRM's
-X Writing NFO's
-- Run as Service
+0.9.0 - First Public Release
 
 Features:
 - Rips entire youtube playlists to the Kodi Library
@@ -14,8 +9,10 @@ Features:
 - Automatically grabs airdate for tvshow & episodes
 - Can set title for (youtube) tv show
 - Can set genres for (youtube) tv show
-- Automatically generates nice looking season numbering (year, number, regex) & episode numbering (playlist position, monthday, monthdayhour, monthdayhourminute, number, regex)
+- Automatically generates nice looking season numbering (year, number, regex) & episode numbering (default, playlist position, monthday, monthdayhour, monthdayhourminute, number, regex)
 - Can remove & strip text from titles and descriptions (text, regex)
 - Only rips videos you dont have yet. Videos already in the library are not rescanned everytime.
-
-1.0.0 Initial Release
+- Has a Service that will scan new episodes automatically into the library
+- Plays Youtube Videos (max. 720p now)
+- Marks episodes as watched automatically
+- Remembers where you ended the episode, so you can choose to resume the video

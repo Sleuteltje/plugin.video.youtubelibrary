@@ -18,7 +18,7 @@
 		<license>GNU General Public License, v2</license>
 		<language></language>
 		<forum>http://forum.kodi.tv/showthread.php?tid=209948</forum>
-		<source>https://github.com/zag2me/plugin.program.hello.world</source>
+		<source>https://bitbucket.org/Sleuteltje/plugin.video.youtubelibrary</source>
 		<email>mailsleuteltje [at] gmail [dot] com</email>
 	</extension>
 </addon>
