@@ -101,6 +101,8 @@ def yt_get_channel_info(Channelid):
       vars.YOUTUBE_API_VERSION, 
       developerKey=vars.API_KEY
     )
+    dev.log('GET yt_get_channel_info: https://www.googleapis.com/youtube/v3/channels?part=snippet%2C+contentDetails%2C+brandingSettings&maxResults=50&id='+Channelid+'&key='+vars.API_KEY)
+
     #Search for the channels with the following parameters
     search_response = youtube.channels().list(
       part="brandingSettings,snippet,contentDetails",

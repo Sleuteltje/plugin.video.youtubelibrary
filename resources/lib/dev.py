@@ -28,7 +28,7 @@ from resources.lib import vars
 #       Message:  The message to display in the log
 #       Debug: Also display this message if debugmode is off?
 def log(message, debug=None):
-    if debug is True:
+    if debug is not None:
         xbmc.log(vars.LPREF+message)
     else:
         if vars.__settings__.getSetting("debugmode") == 'true':

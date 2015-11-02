@@ -2,18 +2,21 @@
 <settings>
     <!--General-->
     <category label="30100">
-		<setting id="service_interval" type="number" label="30101" default="12" />
-		<setting id="update_videolibrary" type="bool" label="30102" default="true"/>
-		<setting label="30103" type="lsep"/>
-		<setting id="tv_folder" type="folder" label="30104" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
-		<setting id="resume_playback" type="bool" label="30105" default="true" />
-		<setting id="strm_link" type="select" label="30106" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
-		<setting id="debugmode" type="bool" label="30107" default="false" />
+		<setting id="resume_playback" type="bool" label="30101" default="true" />
+		<setting id="strm_link" type="select" label="30102" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
+		<setting id="debugmode" type="bool" label="30103" default="false" />
+	</category>
+    <!--Library Settings-->
+    <category label="30200">
+		<setting id="service_interval" type="select" label="30201" values="4|8|12|24|48|168" default="12" />
+		<setting id="update_videolibrary" type="bool" label="30202" default="true"/>
+		<setting label="30203" type="lsep"/>
+		<setting id="tv_folder" type="folder" label="30204" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
 	</category>
     <!-- Default Playlist Settings -->
-    <category label="30200">
-		<setting label="30201" type="lsep"/>
-        <setting id="generate_nfo" label="30202" type="bool" default="true" />
+    <category label="30300">
+		<setting label="30301" type="lsep"/>
+        <setting id="generate_nfo" label="30302" type="bool" default="true" />
     </category>    
 </settings>
 

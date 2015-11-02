@@ -48,7 +48,7 @@ def update_playlist(id):
         dev.log('Could not find playlist '+id+' in the settings.xml file', True)
         return False
     else:
-        dev.log('Updating playlist %s (Id: %s)' % (settings.find('title').text, id))
+        dev.log('Updating playlist %s (Id: %s)' % (settings.find('title').text.encode('utf-8'), id))
         #Check in which folder the show should be added
         folder = settings.find('overwritefolder').text
         if folder is None or folder == '':

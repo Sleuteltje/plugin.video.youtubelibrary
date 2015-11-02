@@ -105,8 +105,6 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     #Play the youtube video with the meta data just acquired
     playYoutubeVid(id, meta, poster)
     
-    #Play the youtube video
-    
     
     #Check if the video is still playing and store the time it is currently playing
     for i in range(0, 300):
@@ -132,11 +130,11 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     
     #Delete the previous bookmark where we were and store the new one
     try:
-        deleteBookmark(name) #Delete the previous saved bookmark
+        bookmarks.deleteBookmark(name) #Delete the previous saved bookmark
         dev.log('Deleted the previous bookmark')
         ok = int(currentTime) > 60 and (currentTime / totalTime) <= .9 #Has the video been playing long enough and is it viewed less then 90%?
         if ok:
-            addBookmark(currentTime, name) #Add the new bookmark
+            bookmarks.addBookmark(currentTime, name) #Add the new bookmark
             dev.log('Added new bookmark @ %s' % currentTime)
     except:
         pass

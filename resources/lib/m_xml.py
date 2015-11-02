@@ -179,29 +179,28 @@ def xml_add_playlist(id):
                 thumbnail = res['thumbnails']['medium']['url']
             elif 'default' in res['thumbnails']:
                 thumbnail = res['thumbnails']['default']['url']
-        
-        
+            dev.log('The thumbnail: '+thumbnail)
+            
         #Grab the channel information 
         response = ytube.yt_get_channel_info(res['channelId'])
         snippet = response['items'][0]['snippet']
         brand = response['items'][0]['brandingSettings']
         #Check if we should do a better thumbnail
-        if thumbnail is False:
-            if 'thumbnails' in snippet:
-                #if 'maxres' in snippet['thumbnails']:
-                #    thumbnail = snippet['thumbnails']['maxres']
-                if 'standard' in snippet['thumbnails']:
-                    thumbnail = snippet['thumbnails']['standard']['url']
-                elif 'high' in snippet['thumbnails']:
-                    thumbnail = snippet['thumbnails']['high']['url']
-                elif 'medium' in snippet['thumbnails']:
-                    thumbnail = snippet['thumbnails']['medium']['url']
-                elif 'default' in snippet['thumbnails']:
-                    thumbnail = snippet['thumbnails']['default']['url']
+        #if thumbnail is False:
+        if 'thumbnails' in snippet:
+            #if 'maxres' in snippet['thumbnails']:
+            #    thumbnail = snippet['thumbnails']['maxres']
+            if 'standard' in snippet['thumbnails']:
+                thumbnail = snippet['thumbnails']['standard']['url']
+            elif 'high' in snippet['thumbnails']:
+                thumbnail = snippet['thumbnails']['high']['url']
+            elif 'medium' in snippet['thumbnails']:
+                thumbnail = snippet['thumbnails']['medium']['url']
+            elif 'default' in snippet['thumbnails']:
+                thumbnail = snippet['thumbnails']['default']['url']
         if thumbnail is False:
             thumbnail = ''
-
-            
+        dev.log('The thumbnail now: '+thumbnail)
         #Check what the better description is
         if len(res['description']) > 0:
             description = res['description']
@@ -246,7 +245,7 @@ def xml_add_playlist(id):
                 'onlyinclude'       : '',
                 #NFO information
                 'season'            : 'year',
-                'episode'           : 'pos',
+                'episode'           : 'default',
                 'striptitle'            : '',
                 'removetitle'       : '',
                 'stripdescription' : '',
@@ -260,9 +259,9 @@ def xml_add_playlist(id):
         root = document.getroot()
         root[0].insert(0, pl)
         write_xml(root)
-        dev.log('Added the playlist '+id+' to the settings.xml')
+        dev.log('Added the playlist '+id+' to the settings.xml', 1)
     else:
-        dev.log('XML_add_playlist: not added playlist '+id+' since the playlist already exists')    
+        dev.log('XML_add_playlist: not added playlist '+id+' since the playlist already exists', 2)    
     
 
 

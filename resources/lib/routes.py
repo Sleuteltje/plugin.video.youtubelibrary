@@ -53,10 +53,13 @@ def update_all_playlists():
 #Force the updating of 1 playlist
 def update_playlist():
     id = vars.args['id'][0]
-    name = vars.args['name'][0]
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Playlist '+name, vars.__icon__, 3000)
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Playlist '+id, vars.__icon__, 3000)
     service.update_playlist(id)
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating Playlist '+name, vars.__icon__, 3000)
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating Playlist '+id, vars.__icon__, 3000)
+    #Should we also update the video library?
+    if vars.update_videolibrary == "true":
+        dev.log('Updating video library is enabled. Updating librarys directory %s' % vars.tv_folder_path, True)
+        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+vars.tv_folder_path+')')
 
 ##Index
 def index():
@@ -116,8 +119,8 @@ def show_playlists_by_channel(Channelid):
 def add_playlist(id):
     m_xml.xml_add_playlist(id)
     playlists.editPlaylist(id) #Load the view to edit this playlist
-    xbmc.executebuiltin("Container.Update")
-    #xbmcplugin.endOfDirectory(vars.addon_handle)
+    #xbmc.executebuiltin("Container.Update")
+    xbmcplugin.endOfDirectory(vars.addon_handle, updateListing=True)
 
 ##Route: Manage Playlists
 def manage_playlists():
@@ -129,9 +132,11 @@ def manage_playlists():
         for child in pl: #Loop through each playlist
             url = dev.build_url({'mode': 'editPlaylist', 'id': child.attrib['id']})
             #Build the contextmenu item to force the updating of one playlist
-            context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id'], 'name': child.find('title').text})
+            context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id']})
+            context_url2 = dev.build_url({'mode': 'deletePlaylist', 'id': child.attrib['id']})
             commands = []
             commands.append(( 'Update Now', 'XBMC.RunPlugin('+context_url+')', ))
+            commands.append(( 'Delete playlist', 'XBMC.RunPlugin('+context_url2+')', ))
             dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text, context=commands)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     

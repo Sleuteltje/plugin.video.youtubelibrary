@@ -2,16 +2,18 @@
 <strings>
     <!--Category-->
     <string id="30100">General</string>
-    <string id="30200">Default Playlist Settings</string>
+    <string id="30200">Library Settings</string>
+    <string id="30300">Default Playlist Settings</string>
     <!--General-->
-    <string id="30101">Scan for new videos every X hours</string>
-    <string id="30102">Update Video Library after updating new youtube vids</string>
-    <string id="30103">Add these directories to your Kodi Library</string>
-    <string id="30104">TV Shows Directory</string>
-    <string id="30105">Resume Playback</string>
-    <string id="30106">Play videos from library with</string>	
-    <string id="30107">Debug Mode</string>	
+    <string id="30101">Resume Playback</string>
+    <string id="30102">Play videos from library with</string>	
+    <string id="30103">Debug Mode</string>	
+	<!--Library Settings-->
+	<string id="30201">Scan for new videos every X hours</string>
+    <string id="30202">Update Video Library after updating new youtube vids</string>
+    <string id="30203">Add these directories to your Kodi Library</string>
+    <string id="30204">TV Shows Directory</string>
     <!--Default Playlist Settings-->
-    <string id="30201">Default settings for playlists</string>
-    <string id="30202">Generate NFO files</string>
+    <string id="30301">Default settings for playlists</string>
+    <string id="30302">Generate NFO files</string>
 </strings>

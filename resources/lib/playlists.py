@@ -203,6 +203,11 @@ def delete_playlist(id):
             editPlaylist(id)
         else:
             if m_xml.xml_remove_playlist(id) is True:
+                #Remove the episodenr xml file to
+                file = os.path.join(vars.settingsPath+'episodenr', id+'.xml' )
+                if os.path.isfile(file):
+                    success = os.remove(file) #Remove the episodenr xml file
+                
                 xbmcgui.Dialog().ok('Removed Playlist', 'Succesfully removed playlist '+id)
                 i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the episodes from your library?')
                 if i != 0:

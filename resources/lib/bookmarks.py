@@ -11,9 +11,8 @@ from resources.lib import dev
 
 # Gets the bookmark of the given episode
 def getBookmark(name, imdb='0'):
-    xbmc.log('MICHS YOTUUBE LIBRARY: : getbookmark is running')
     import hashlib
-    #log('getBookmark(%s)' % name)
+    dev.log('getBookmark(%s)' % name)
     offset = '0'
     #log('getBookmark 1')
     idFile = hashlib.md5()
@@ -56,6 +55,7 @@ def addBookmark(currentTime, name, imdb='0'):
 
 #Deletes a bookmark from the database
 def deleteBookmark(name, imdb='0'):
+    dev.log('deleteBookmark(%s)' % name)
     import hashlib
     try:
         idFile = hashlib.md5()
