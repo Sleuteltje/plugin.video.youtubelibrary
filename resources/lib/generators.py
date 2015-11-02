@@ -199,7 +199,7 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
             strip = striptitle.split('|')
             for s in strip:
                 if s in title:
-                    title = title[:title.needle(s)] #Strip everything to the point where the line was found
+                    title = title[:title.index(s)] #Strip everything to the point where the line was found
         else:
             #Check if this is a regex var of what should be removed
             rem = reg(title, striptitle)
@@ -238,7 +238,7 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
             strip = stripdescription.split('|')
             for s in strip:
                 if s in description:
-                    description = description[:description.needle(s)] #Strip everything to the point where the line was found
+                    description = description[:description.index(s)] #Strip everything to the point where the line was found
         else:
             #Check if this is a regex var of what should be removed
             rem = reg(description, stripdescription)
