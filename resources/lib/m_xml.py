@@ -48,7 +48,7 @@ def write_xml(elem, dir='', output='settings.xml'):
 
     indent( elem ) #Prettify the xml so its not on one line
     tree = ElementTree.ElementTree( elem ) #Convert the xml back to an element
-    tree.write(output_file, xml_declaration=True, encoding='utf-8', method="xml") #Save the XML in the settings file
+    tree.write(output_file, encoding='utf-8', method="xml") #Save the XML in the settings file
     
 
 #Pretty Print the xml    
