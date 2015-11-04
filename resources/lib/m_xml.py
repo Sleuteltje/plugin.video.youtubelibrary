@@ -48,7 +48,7 @@ def write_xml(elem, dir='', output='settings.xml'):
 
     indent( elem ) #Prettify the xml so its not on one line
     tree = ElementTree.ElementTree( elem ) #Convert the xml back to an element
-    tree.write(output_file, encoding='utf-8', method="xml") #Save the XML in the settings file
+    tree.write(output_file) #Save the XML in the settings file
     
 
 #Pretty Print the xml    
@@ -330,7 +330,8 @@ def xml_update_playlist_setting(id, tag, newsetting):
         # path: Path to the xml element you would like to parse. (In the examples case: 'users/user')
         # tag:  The tag that should be found (In the examples case: user)
         # whereAttrib: The element that should be found should contain the following attribute at the following value. (In the examples case: {name: someuser}
-        # whereTxt: The element that should be found should contain this text. (In the examples case: 'sometext' would find the correct user       
+        # whereTxt: The element that should be found should contain this text. (In the examples case: 'sometext' would find the correct user     
+        # playlist: The playlist id if we should grab a episodenr/playlist.xml instead of the settings.xml
 def xml_get_elem(path, tag, whereAttrib=False, whereTxt=False, playlist=False):    
     dev.log('XML_get_elem')
     if playlist == False:
@@ -416,9 +417,11 @@ def number_of_episodes(playlist, season):
 def episode_exists(playlist, episode):
     dev.log('episode_exists('+playlist+', '+episode+')')
     #Quicker way to check if this episode already exists
-    doc = playlist_xml_get(playlist)
-    e = doc.findall("*/episode[@id='"+episode+"']")
-    if len(e) == 0:
+    #doc = playlist_xml_get(playlist)
+    #e = doc.findall("*/episode[@id='"+episode+"']")
+    e = xml_get_elem('season/episode', 'episode', {'id' : episode}, playlist=playlist)
+    #if len(e) == 0:
+    if e == None:
         dev.log('episode '+episode+' is not yet present in episodenr file')
         return False
     dev.log('Already present: '+episode)
@@ -448,20 +451,23 @@ def playlist_add_episode(playlist, season, id):
     #Check if this playlist isnt in the xml file yet
     #if xml_get_elem('season', 'episode', {'id' : id}, playlist=playlist) is None:
     #Build the playlist
-    doc = playlist_xml_get(playlist)
+    #doc = playlist_xml_get(playlist)
     
-    s = doc.find("season[@number='"+season+"']")
+    #s = doc.find("season[@number='"+season+"']")
+    s = xml_get_elem('season', 'season', {'number': season}, playlist=playlist)
     if s is None:
         playlist_add_season(playlist, season)
-        doc = playlist_xml_get(playlist)
-        s = doc.find("season[@number='"+season+"']")
+        #doc = playlist_xml_get(playlist)
+        #s = doc.find("season[@number='"+season+"']")
+        s = xml_get_elem('season', 'season', {'number': season}, playlist=playlist)
         
-    
+    #doc = playlist_xml_get(playlist)
+    global playlistdocument
     attr = { 'id' : id}
     elem = Element('episode', attr)
     
     s.insert(0, elem)
-    root = doc.getroot()
+    root = playlistdocument.getroot()
     
     write_xml(root, dir='episodenr', output=playlist+'.xml')
     dev.log('Added the episode '+id+' to season '+season+' in episodenr/'+playlist+'.xml')
