@@ -43,7 +43,8 @@ def update_playlists():
                     scansince = datetime.datetime.now() - datetime.timedelta(days=3*365)
                 timenow = datetime.datetime.now()
                 dev.log('Playlist last scanned on: '+str(scansince)+', now: '+str(timenow), 1)
-                diff = (timenow-scansince).total_seconds()
+                #diff = (timenow-scansince).total_seconds()
+                diff = dev.timedelta_total_seconds(timenow-scansince)
                 dev.log('Difference is '+str(diff))
                 if diff < (int(vars.__settings__.getSetting("service_interval")) * 60 * 60):
                     dev.log('Difference '+str(diff)+' was not enough, '+str(int(vars.__settings__.getSetting("service_interval")) * 60 * 60)+' seconds needed. This Playlist will not be updated now.')

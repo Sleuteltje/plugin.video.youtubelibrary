@@ -109,3 +109,9 @@ def yesnoDialog(line1, line2, line3, heading=xbmcaddon.Addon().getAddonInfo('nam
 #Returns a string from strings.xml
 def lang(id):
     return xbmcaddon.Addon().getLocalizedString(id)
+    
+#Replacement for .total_seconds() for python 2.6
+def timedelta_total_seconds(timedelta):
+    return (
+        timedelta.microseconds + 0.0 +
+        (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
