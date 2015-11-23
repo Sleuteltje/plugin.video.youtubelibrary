@@ -17,7 +17,18 @@
     <!-- Default Playlist Settings -->
     <category label="30300">
 		<setting label="30301" type="lsep"/>
-        <setting id="generate_nfo" label="30302" type="bool" default="true" />
-    </category>    
+		<setting id="default_genre" label="30303" type="text" default="Youtube" />
+		<setting id="default_season" type="select" label="30304" values="year|s2e12|02x12" default="year" />
+		<setting id="default_episode" type="select" label="30305" values="default|s2e12|02x12|monthday|pos|" default="default" />
+		<setting id="default_minlength" type="time" label="30306" default=""/>
+		<setting id="default_maxlength" type="time" label="30307" default=""/>
+		<setting id="default_onlyinclude" label="30308" type="text" default="" />
+		<setting id="default_excludewords" label="30309" type="text" default="" />
+		<setting id="default_stripdescription" label="30310" type="text" default="" />
+		<setting id="default_removedescription" label="30311" type="text" default="" />
+		<setting id="default_striptitle" label="30312" type="text" default="" />
+		<setting id="default_removetitle" label="30313" type="text" default="" />
+        <setting id="default_generate_nfo" label="30302" type="bool" default="true" />
+	</category>    
 </settings>
 

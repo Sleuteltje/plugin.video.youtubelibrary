@@ -1,3 +1,24 @@
+0.9.4
+- Added Feature: Tags
+- Added Feature: s02e12 / 02x12 from the youtube vid title as your season/episode numbering
+- Added Feature: You can change the publication date of the show
+- Added Feature: You can now set default settings for playlists (shows) you add
+- Fixed Error: when adding youtube channel without TV Channel Banner
+- Fixed Error: when playing vids from library when not retrieving meta information from database
+- Fixed Bug: min-/maxlength is ignored
+- Fixed Bug: Episodenr listing will be deleted if you refresh a playlist (episodenumbering will be reset)
+- Fixed Bug: Videos longer than 1 hour returned a wrong runtime of minutes
+- removetitle is now case-insensitive
+
+v0.9.3
+- Fixed delta_time error on Android (python 2.6)
+
+v0.9.2
+- Added support for Android (python 2.6)
+
+v0.9.1
+- Removed .git folder & removed xml_declaration, so hopefully systems running python 2.6< will work to
+
 0.9.0 - First Public Release
 
 Features:

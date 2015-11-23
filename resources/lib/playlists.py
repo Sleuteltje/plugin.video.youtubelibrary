@@ -23,13 +23,18 @@ import shutil
 from resources.lib import vars
 from resources.lib import dev
 from resources.lib import m_xml
+from resources.lib import ytube
 
 
 #Displays the editplaylist list item
 def disp_setting(setting, title, description):
     #build url
+    val = None
     if elem.find(setting) != None:
         val = elem.find(setting).text
+        if setting == 'published':
+            d = ytube.convert_published(val)
+            val = d['day']+'-'+d['month']+'-'+d['year']
     if val == None or val == 'None':
         val = ''
     url = dev.build_url({'mode': 'editPlaylist', 'id': plid, 'set': setting})
@@ -43,43 +48,83 @@ def setEditPlaylist(id, set):
         i = xbmcgui.Dialog().yesno("Enable", "Would you like to enable this playlist?")
         if i == 0:
             m_xml.xml_update_playlist_attr(id, 'enabled', 'no')
+            return
             #dialog.ok("Set to disabled", "Playlist is disabled.")
         else:
             m_xml.xml_update_playlist_attr(id, 'enabled', 'yes')
+            return
             #dialog.ok("Set to enabled", "Playlist will now be picked up by the scanner")
     elif set == 'writenfo':
         #Display a yes/no dialog to enable / disable
         i = xbmcgui.Dialog().yesno("WriteNFO", "Write NFO files for this playlist?")
         if i == 0:
-            m_xml.xml_update_playlist_setting(id, 'writenfo', 'no')
+            i = 'no'
+            #m_xml.xml_update_playlist_setting(id, 'writenfo', 'no')
         else:
-            m_xml.xml_update_playlist_setting(id, 'writenfo', 'Yes')
+            i = 'Yes'
+            #m_xml.xml_update_playlist_setting(id, 'writenfo', 'Yes')            
+    elif set == 'published':
+        elem = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
+        setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
+        if setting == None or setting == 'None':
+            setting = '01/01/1901'
+        d = ytube.convert_published(setting)
+        prev_setting = d['day']+'/'+d['month']+'/'+d['year']
+        i = xbmcgui.Dialog().input('Change Published Date', prev_setting, 2)
+        if i == '':
+            i = prev_setting
+        else:
+            d = ytube.convert_published(i)
+            i = d['day']+'-'+d['month']+'-'+d['year']
+    elif set == 'season':
+        i = xbmcgui.Dialog().select('Choose Season Numbering', ['year', 's02e12', '02x12', 'number', 'regex'])
+        if i == 0:
+            i = 'year'
+        elif i == 1:
+            i = 's02e12'
+            m_xml.xml_update_playlist_setting(id, 'episode', i) #Set this for episode as well
+        elif i == 2:
+            i = '02x12'
+            m_xml.xml_update_playlist_setting(id, 'episode', i) #Set this for episode as well
+        elif i == 3:
+            i = xbmcgui.Dialog().numeric(0, 'Set a hardcoded episode number')
+        elif i == 4:
+            i = dev.user_input('', 'Set a regular expression')
+        #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+    elif set == 'episode':
+        i = xbmcgui.Dialog().select('Choose Episode Numbering', ['Default', 's02e12', '02x12', 'monthday', 'pos', 'number', 'regex'])
+        if i == 0:
+            i = 'default'
+        elif i == 1:
+            i = 's02e12'
+            m_xml.xml_update_playlist_setting(id, 'season', i) #Set this for season as well
+        elif i == 2:
+            i = '02x12'
+            m_xml.xml_update_playlist_setting(id, 'season', i) #Set this for season as well
+        elif i == 3:
+            i = 'monthday'
+        elif i == 4:
+            i = 'pos'
+        elif i == 5:
+            i = xbmcgui.Dialog().numeric(0, 'Set a hardcoded episode number')
+        elif i == 6:
+            i = dev.user_input('', 'Set a regular expression')
+        #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+    elif set == 'minlength':
+        i = xbmcgui.Dialog().numeric(2, 'Set a minimum length for videos')
+    elif set == 'maxlength':
+        i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
     else:
-        if set == 'episode':
-            i = xbmcgui.Dialog().select('Choose Episode Numbering', ['Default', 'monthday', 'pos', 'number', 'regex'])
-            if i == 0:
-                i = 'default'
-            elif i == 1:
-                i = 'monthday'
-            elif i == 2:
-                i = 'pos'
-            elif i == 3:
-                i = xbmcgui.Dialog().numeric(0, 'Set a hardcoded episode number')
-            elif i == 4:
-                i = dev.user_input('', 'Set a regular expression')
-            #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
-        elif set == 'minlength':
-            i = xbmcgui.Dialog().numeric(2, 'Set a minimum length for videos')
-        elif set == 'maxlength':
-            i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
-        else:
-            #Its another setting, so its normal text
-            elem = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
+        #Its another setting, so its normal text
+        elem = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Find this playlist so we can grab the value of the settings
+        setting = None
+        if elem.find(set) != None:
             setting = str(elem.find(set).text) #Convert the setting to a string so we can input it safely
-            if setting == None or setting == 'None':
-                setting = ''
-            i = dev.user_input(setting, 'Change setting '+set) #Ask the user to put in the new setting
-        m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+        if setting == None or setting == 'None':
+            setting = ''
+        i = dev.user_input(setting, 'Change setting '+set) #Ask the user to put in the new setting
+    
+    m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
 
         
         
@@ -133,6 +178,10 @@ def editPlaylist(id):
         disp_setting('description', 'Description', 'The description as it will be displayed in Kodi and this Addon')
         #Genres
         disp_setting('genre', 'Genre', 'Settings as displayed in Kodi. For multiple genres use genre1 / genre2 / genre3 (note the space between each / )')
+        #Tags
+        disp_setting('tags', 'Tags', 'Tags for Kodi. For multiple tags use tag1 / tag2 / tag3 (note the space between each / )')
+        #Published
+        disp_setting('published', 'Published', 'The date the show first aired')
         #WriteNFO
         url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'writenfo'})
         dev.adddir('[COLOR blue]Write NFO:[/COLOR] '+elem.find('writenfo').text, url, gear, fanart, 'NFO Files are needed for Kodi to recognise the youtube episodes as episodes, so it can scan it in its library. If you only want strm files, set this to No')
@@ -151,13 +200,21 @@ def editPlaylist(id):
         #Season recognisition setting
         description = """Set to [COLOR blue]year[/COLOR] to have the episode year upload date as its season.
 -------
-Set to a [COLOR blue]number[/COLOR] to have a hardcoded season for every episode. 
+[COLOR blue]s02e12[/COLOR] to grab the season/episode numbering as s02e12 from the title. 
+-------
+[COLOR blue]02x12[/COLOR] to grab the season/episode numbering as 02x12 from the title. 
+-------
+Set to a [COLOR blue]number[/COLOR] to have a hardcoded season for every season. 
 -------
 To find a season from the video title using a [COLOR blue]regex[/COLOR]. Please use regex(yourregexhere). If your regex fails to recognise a season it will fallback on calling it 0.
         """
         disp_setting('season', 'Season recognisition', description)
         #Episode recognisition setting
         description = """'[COLOR blue]Default[/COLOR] will only number the episodes scanned in the library starting with 1 each season.
+------
+[COLOR blue]s02e12[/COLOR] to grab the season/episode numbering as s02e12 from the title. 
+------
+[COLOR blue]02x12[/COLOR] to grab the season/episode numbering as 02x12 from the title. 
 ------
 [COLOR blue]monthday[/COLOR] to have the month & day upload date as its episode number. 
 ------
@@ -235,6 +292,12 @@ def refresh_playlist(id):
         i = xbmcgui.Dialog().yesno("Refresh Playlist", "Are you sure you want to refresh this playlist?")
         if i != 0:
             m_xml.xml_update_playlist_setting(id, 'lastvideoId', '')
+            #Delete the .xml containing all scanned videoId's as well
+            file = os.path.join(vars.settingsPath, 'episodenr')
+            file = os.path.join(file, id+'.xml')
+            if os.path.isfile(file):
+                success = os.remove(file) #Remove the episodenr xml file
+            
             xbmcgui.Dialog().ok('Refreshed Playlist', 'Succesfully refreshed playlist '+id)
             i = xbmcgui.Dialog().yesno('Delete from library', 'Do you also want to delete the previous episodes from your library?')
             if i != 0:

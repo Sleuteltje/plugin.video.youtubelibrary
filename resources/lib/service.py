@@ -113,10 +113,9 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
                 uptodate = True
                 continue #continue to the next video in the list
             
-            all_vids.append(vid) #Append this video to the all_vids list
-            if vid['snippet']['title'] != 'Private video' and vid['snippet']['title'] != 'Deleted Video':
+            if vid['snippet']['title'].lower() != 'private video' and vid['snippet']['title'].lower() != 'deleted video' and vid['snippet']['description'].lower() != 'this video is unavailable.':
                 all_vidids.append(vid['contentDetails']['videoId']) #Collect all videoids in one list
-
+                all_vids.append(vid) #Append this video to the all_vids list
             
         ##Grab the duration of the videos. We will need it for the minlength and maxlength filters, and for the duration tag in the .nfo file
         #We are gonna grab the duration of all 50 videos, saving on youtube api calls.
@@ -135,13 +134,12 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
     ##Grab settings from the settings.xml for this playlist
     minlength = settings.find('minlength').text
     maxlength = settings.find('maxlength').text
-    
-    if minlength is not '' and minlength is not None:
+    if minlength is not '' and minlength is not None and minlength is not '00:00':
         #Recalculate minlength
         minlength = ytube.hms_to_sec(minlength)
     else:
         minlength = None
-    if maxlength is not '' and maxlength is not None:
+    if maxlength is not '' and maxlength is not None and maxlength is not '00:00':
         #Recalculate maxlength
         maxlength = ytube.hms_to_sec(maxlength)
     else:
@@ -156,9 +154,6 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         if m_xml.episode_exists(id, vid['contentDetails']['videoId']):
             dev.log('Episode '+vid['contentDetails']['videoId']+' is already scanned into the library')
             continue
-        #Check if this video is private or deleted. Deleted or private videos should not be added
-        if vid['snippet']['title'] == 'Private video' or vid['snippet']['title'] == 'Deleted Video':
-            continue #Skip this video
         ##Check if the filters in the settings prevent this video from being added
         #Check if the word has been found, cause if not, we should not add this video to the library
         if onlyinclude(vid, settings) == False:
@@ -177,9 +172,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         dev.log('TEST duration '+str(duration[vid['contentDetails']['videoId']]))
         
         #Grab the correct season and episode number from this vid
-        se = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
-        season = se[0]
-        episode = se[1]
+        season, episode, vid = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
         filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
         
         generators.write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode

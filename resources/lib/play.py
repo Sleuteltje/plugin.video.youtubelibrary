@@ -68,42 +68,47 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     #Grab the metadata of this episode
     meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"filter":{"and": [{"field": "season", "operator": "is", "value": "%s"}, {"field": "episode", "operator": "is", "value": "%s"}]}, "properties": ["title", "season", "episode", "showtitle", "firstaired", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (season, episode))
     meta = unicode(meta, 'utf-8', errors='ignore')
-    meta = json.loads(meta)['result']['episodes']
-    for i in meta:
-        dev.log('Meta: '+i['file'])
-        dev.log('Looking for :'+filename)
-        if i['file'].endswith(filename):
-            dev.log('Found the episode we are looking for')
-            meta = i
-            break
-    DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
+    if 'episodes' in json.loads(meta)['result']:  
+        meta = json.loads(meta)['result']['episodes']
+        for i in meta:
+            dev.log('Meta: '+i['file'].encode('utf8'))
+            dev.log('Looking for :'+filename)
+            if i['file'].endswith(filename):
+                dev.log('Found the episode we are looking for')
+                meta = i
+                break
+        DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
 
-    meta = {'title': meta['title'], 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'], 'premiered' : meta['firstaired'], 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director'])), 'writer': str(' / '.join(meta['writer'])), 'plot': meta['plot']}
+        meta = {'title': meta['title'], 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'], 'premiered' : meta['firstaired'], 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director'])), 'writer': str(' / '.join(meta['writer'])), 'plot': meta['plot']}
 
-    poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle)
-    poster = unicode(poster, 'utf-8', errors='ignore')
-    poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+        poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle)
+        poster = unicode(poster, 'utf-8', errors='ignore')
+        poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
 
-    #If resume playback is set in the settings, display a resume menu
-    try:
-        if xbmcaddon.Addon().getSetting('resume_playback') == 'true':
-            dev.log('Resume Playback is turned on. Grab resume point..')
-            offset = bookmarks.getBookmark(name)
-            dev.log('Offset is %s' % offset)
-            if offset == '0': raise Exception()
-            dev.log('Grabbing minutes and seconds')
-            minutes, seconds = divmod(float(offset), 60) ; hours, minutes = divmod(minutes, 60)
-            dev.log('Showing yesno. Minutes: %s, seconds: %s' % (minutes, seconds))
-            #yes = yesnoDialog('%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), '', '', self.name, 'Resume', 'Start From Beginning')
-            yes = xbmcgui.Dialog().yesno('Resume', '%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), nolabel = 'Resume', yeslabel = 'Start From Beginning')
-            dev.log('Chose option: %s' % yes)
-            if yes: offset = '0'
-    except:
-        pass
+        #If resume playback is set in the settings, display a resume menu
+        try:
+            if xbmcaddon.Addon().getSetting('resume_playback') == 'true':
+                dev.log('Resume Playback is turned on. Grab resume point..')
+                offset = bookmarks.getBookmark(name)
+                dev.log('Offset is %s' % offset)
+                if offset == '0': raise Exception()
+                dev.log('Grabbing minutes and seconds')
+                minutes, seconds = divmod(float(offset), 60) ; hours, minutes = divmod(minutes, 60)
+                dev.log('Showing yesno. Minutes: %s, seconds: %s' % (minutes, seconds))
+                #yes = yesnoDialog('%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), '', '', self.name, 'Resume', 'Start From Beginning')
+                yes = xbmcgui.Dialog().yesno('Resume', '%s %02d:%02d:%02d' % ('Resume from ', hours, minutes, seconds), nolabel = 'Resume', yeslabel = 'Start From Beginning')
+                dev.log('Chose option: %s' % yes)
+                if yes: offset = '0'
+        except:
+            pass
 
     
-    #Play the youtube video with the meta data just acquired
-    playYoutubeVid(id, meta, poster)
+        #Play the youtube video with the meta data just acquired
+        playYoutubeVid(id, meta, poster)
+    else:
+        dev.log('Error: Could not retrieve meta information from the database!', True)
+        return playYoutubeVid(id) #Just play the video, since we could not retrieve meta information
+
     
     
     #Check if the video is still playing and store the time it is currently playing

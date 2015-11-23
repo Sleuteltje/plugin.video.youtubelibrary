@@ -115,3 +115,11 @@ def timedelta_total_seconds(timedelta):
     return (
         timedelta.microseconds + 0.0 +
         (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+        
+#Grab an Addon Setting
+def getAddonSetting(setting, default='niks'):
+    val = xbmcaddon.Addon("plugin.video.youtubelibrary").getSetting(setting)
+    if default != 'niks':
+        if val is None or val is '':
+            val = default
+    return val

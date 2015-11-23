@@ -17,7 +17,17 @@
     <!--Default Playlist Settings-->
     <string id="30301">Default settings for playlists</string>
     <string id="30302">Generate NFO files</string>
-	
+    <string id="30303">Genre</string>
+    <string id="30304">Season Recognition</string>
+    <string id="30305">Episode Recognition</string>
+    <string id="30306">Min length</string>
+    <string id="30307">Max length</string>
+    <string id="30308">Only include</string>
+    <string id="30309">Exclude</string>
+    <string id="30310">Strip Description</string>
+    <string id="30311">Remove Description</string>
+    <string id="30312">Strip Title</string>
+    <string id="30313">Remove Title</string>
 	<!-- Addon Text -->
 	<!-- Main Menu -->
 	<string id="31001">Manage Playlists</string>

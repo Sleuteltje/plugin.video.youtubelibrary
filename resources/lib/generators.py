@@ -59,6 +59,37 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
     se = settings.find('season').text
     
     found = False
+    
+    ##See if there should be standard season/episode recognisition for the season
+    if se == 's02e12':
+        regex = "s(eason)?\s*(\d+)\s*ep?(isode)?\s*(\d+)"
+        m = re.search( regex, vid['snippet']['title'])
+        if m:
+            #Found the sxxexx
+            dev.log('s2e12 '+regex+' found its match: '+m.group(0).encode('UTF-8')+' , '+m.group(1).encode('UTF-8')+' , '+m.group(2).encode('UTF-8'))
+            #Try to replace the s01e01 in the title
+            vid['snippet']['title'] = re.sub(regex, '', vid['snippet']['title'], 1)
+            return m.group(2), m.group(4), vid
+            
+        #Regex not found, return None
+        dev.log('s02e12 recognizition has not found anything: '+regex+' on '+vid['snippet']['title'].encode('UTF-8'), True)
+        return '0', '0', vid
+
+    if se == '02x12':
+        regex = "(\d+)\s?x\s?(\d+)"
+        m = re.search( regex, vid['snippet']['title'])
+        if m:
+            #Found the sxxexx
+            dev.log('2x12 '+regex+' found its match: '+m.group(0).encode('UTF-8')+' , '+m.group(1).encode('UTF-8')+' , '+m.group(2).encode('UTF-8'))
+            #Try to replace the s01e01 in the title
+            vid['snippet']['title'] = re.sub(regex, '', vid['snippet']['title'], 1)
+            return m.group(1), m.group(2), vid
+            
+        #Regex not found, return None
+        dev.log('02x12 recognizition has not found anything: '+regex+' on '+vid['snippet']['title'].encode('UTF-8'), True)
+        return '0', '0', vid
+    
+    ##Normal recongizitions
     #See if there should be a regex search for the season
     if se[:6] == 'regex(':
         match = reg(se, vid['snippet']['title'])
@@ -76,7 +107,7 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
             season = '0'
         
     found = False
-    #See if there should be a regex search for the season
+    #See if there should be a regex search for the episode
     if ep[:6] == 'regex(':
         match = reg(ep, vid['snippet']['title'])
         if match != None:
@@ -111,7 +142,7 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
             dev.log('Invalid episode setting in settings.xml! '+ep)
             episode = '0'
             
-    return [season, episode]
+    return season, episode, vid
 
 
 
@@ -187,8 +218,9 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
             rem = reg(removetitle, title)
             if rem is not None:
                 removetitle = rem #Regex was succesfull, set removetitle to the found string so it can be removed as normal
-            if removetitle in title:
-                title = title.replace(removetitle, '')
+            title = re.sub(removetitle, '', title, flags=re.IGNORECASE)
+            #if removetitle in title:
+                #title = title.replace(removetitle, '')
     #See if we should do something to the title according to the settings
     striptitle = settings.find('striptitle').text
     if striptitle == None:
@@ -290,8 +322,8 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
             </fileinfo>
         </episodedetails>
     """ % {
-        'title': title,
-        'plot': description,
+        'title': title.strip(' \t\n\r'),
+        'plot': description.strip(' \t\n\r'),
         'channel': settings.find('channel').text,
         'thumb': thumbnail,
         'date': normaldate,
@@ -330,6 +362,19 @@ def write_tvshow_nfo(fold, settings):
     d = ytube.convert_published(settings.find('published').text)
     normaldate = d['year']+'-'+d['month']+'-'+d['day']
     
+    #Grab the tags and convert them to xml
+    tags = settings.find('tags')
+    tags_xml = ''
+    if tags is not None:
+        tags = settings.find('tags').text
+        if '/' in tags:
+            multi_tags = tags.split('/')
+            tags_xml = ''
+            for tag in multi_tags:
+                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        elif tags is not '':
+            tags_xml = '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+    
     #Create the contents of the xml file
     content = u"""
             <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
@@ -348,6 +393,7 @@ def write_tvshow_nfo(fold, settings):
                 <fanart>
                     <thumb>%(fanart)s</thumb>
                 </fanart>
+                %(tags)s
             </tvshow>
     """ % {
         'title': settings.find('title').text,
@@ -359,6 +405,7 @@ def write_tvshow_nfo(fold, settings):
         'banner': settings.find('banner').text,
         'fanart': settings.find('fanart').text,
         'date': normaldate,
+        'tags': tags_xml,
     }
     
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet

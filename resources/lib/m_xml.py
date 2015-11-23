@@ -215,7 +215,25 @@ def xml_add_playlist(id):
             #Prefix the playlistname with the channelname
             title = snippet['title']+' - '+res['title']
         
+        bannerTv = brand['image']['bannerImageUrl']
+        if 'bannerTvImageUrl' in brand['image']:
+            bannerTv = brand['image']['bannerTvImageUrl']
         
+        ##Get the default settings from the addon settings
+        writenfo = 'Yes'
+        if dev.getAddonSetting("default_generate_nfo") == "false":
+            writenfo = 'no'
+        genre = dev.getAddonSetting("default_genre", 'Youtube')
+        season = dev.getAddonSetting("default_season", 'year')
+        episode = dev.getAddonSetting("default_episode", 'default')
+        minlength = dev.getAddonSetting("default_minlength", '')
+        maxlength = dev.getAddonSetting("default_maxlength", '')
+        onlyinclude = dev.getAddonSetting("default_onlyinclude", '')
+        excludewords = dev.getAddonSetting("default_excludewords", '')
+        stripdescription = dev.getAddonSetting("default_stripdescription", '')
+        removedescription = dev.getAddonSetting("default_removedescription", '')
+        striptitle = dev.getAddonSetting("default_striptitle", '')
+        removetitle = dev.getAddonSetting("default_removetitle", '')
         
         #Build the playlist
         playlist = {
@@ -226,26 +244,26 @@ def xml_add_playlist(id):
                 'title'                   : title,
                 'channel'            : snippet['title'],
                 'description'        : description,
-                'genre'                : 'Youtube',
+                'genre'                : genre,
                 'published'          : snippet['publishedAt'],
                 #Art
                 'thumb'               : thumbnail,
-                'fanart'                : brand['image']['bannerTvImageUrl'],
+                'fanart'                : bannerTv,
                 'banner'              : brand['image']['bannerImageUrl'],
                 'epsownfanart'    : 'No',
                 # STRM & NFO Settings
-                'writenfo'             : 'Yes',
+                'writenfo'             : writenfo,
                 'delete'                : '',
                 'keepvideos'        : '',
                 'overwritefolder'   : '',
                 #Filters
                 'minlength'         : '',
                 'maxlength'         : '',
-                'excludewords'    : '',
+                'excludewords'    : excludewords,
                 'onlyinclude'       : '',
                 #NFO information
-                'season'            : 'year',
-                'episode'           : 'default',
+                'season'            : season,
+                'episode'           : episode,
                 'striptitle'            : '',
                 'removetitle'       : '',
                 'stripdescription' : '',
@@ -308,6 +326,13 @@ def xml_update_playlist_setting(id, tag, newsetting):
         if setting == None:
             #Could not find setting
             dev.log('XML_update_playlist_setting: could not find setting '+tag+' of '+id)
+            #Les create it
+            setting = Element(tag)
+            setting.text = newsetting
+            elem.append(setting)
+            root = document.getroot()
+            write_xml(root)
+            dev.log('XML_update_playlist_setting: Created xml setting '+tag+' of '+id+' to '+newsetting)
             return False
         else:
             #Change the setting to its new setting

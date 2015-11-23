@@ -29,16 +29,26 @@ from resources.lib import dev
 
 ##### YOUTUBE CONVERTERS #####
 #Converts youtube publishedAt date to list containing year, month, day, hour, minutes, seconds
+#Also converts DD-MM-YYYY now
 def convert_published(date):
     d = {}
-    d['year'] = date[:4]
-    d['month'] = date[5:7]
-    d['day'] = date[8:10]
-    d['hour'] = date[11:13]
-    d['minute'] = date[14:16]
-    d['second'] = date[17:19]
+    if date.find('-') == 2 or date.find('/') == 2:
+        #DD-MM-YYYY
+        d['day'] = date[:2]
+        d['month'] = date[3:5]
+        d['year'] = date[6:10]
+    else:
+        #YYYY-MM-DDTHH-MM-SS
+        d['year'] = date[:4]
+        d['month'] = date[5:7]
+        d['day'] = date[8:10]
+        if 'T' in date:
+            d['hour'] = date[11:13]
+            d['minute'] = date[14:16]
+            d['second'] = date[17:19]
     return d
 
+ 
 
 ##### YOUTUBE API FUNCTIONS #########
 #Grabs the Channel information by the playlist ID 
@@ -214,7 +224,7 @@ def get_duration_vids(vid_ids):
     for vid in search_response.get("items", []):      
         dur = vid['contentDetails']['duration']
         dur = dur[2:] #Strip PT from the duration
-        #dev.log('Duration of video: '+dur)
+        dev.log('Duration of video: '+dur)
         
         seconds = hms_to_sec(dur)
 
@@ -228,13 +238,20 @@ def get_duration_vids(vid_ids):
     return durations
     
     
-#Recalculates 00h00m00s back to number of seconds
+#Recalculates 00h00m00s / 00:00:00 back to number of seconds
 def hms_to_sec(hms):
+    dev.log('hms_to_sec('+hms+')')
     m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
     if m:
+        if m.group(2) is None and m.group(4) is None and m.group(6) == None:
+            if hms.count(':') == 2:
+                m = re.search(r'(?i)((\d+):)?((\d+):)?((\d+))?', hms)
+            else:
+                m = re.search(r'(?i)((\d+)::::)?((\d+):)?((\d+))?', hms)
         hours = m.group(2)
         minutes = m.group(4)
         seconds = m.group(6)
+        dev.log(str(hours)+', '+str(minutes)+', '+str(seconds))
         if seconds is None:
             seconds = '0' #Seconds was not set in the setting, so we start with 0 seconds
         seconds = int(seconds)
@@ -245,7 +262,7 @@ def hms_to_sec(hms):
             seconds = seconds + sm
         if hours is not None:
             #dev.log('hours is '+hours)
-            sh = int(seconds) * 60 * 60
+            sh = int(hours) * 60 * 60
             seconds = seconds + sh
         return seconds
     else:
