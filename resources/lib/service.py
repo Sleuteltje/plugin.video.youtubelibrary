@@ -131,17 +131,22 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
             uptodate = True #Since there are no more pages, we are uptodate
             #update_playlist_vids(id, folder, settings, resp['nextPageToken'], firstvid)
     
+    dev.log('( ._.)~~~~~~~~~~ DONE GRABBING VIDS FROM YOUTUBE FOR :'+settings.find('title').text+' ~~~~~~~~~~(._. )')
     ##Grab settings from the settings.xml for this playlist
     minlength = settings.find('minlength').text
     maxlength = settings.find('maxlength').text
-    if minlength is not '' and minlength is not None and minlength is not '00:00':
+    if minlength is not '' and minlength is not None and minlength is not '00:00' and minlength is not '0:00':
         #Recalculate minlength
+        dev.log('minlength is turned on: '+minlength)
         minlength = ytube.hms_to_sec(minlength)
+        dev.log('minlength in seconds: '+str(minlength))
     else:
         minlength = None
-    if maxlength is not '' and maxlength is not None and maxlength is not '00:00':
+    if maxlength is not '' and maxlength is not None and maxlength is not '00:00' and maxlength is not '0:00':
         #Recalculate maxlength
+        dev.log('maxlength is turned on: '+maxlength)
         maxlength = ytube.hms_to_sec(maxlength)
+        dev.log('maxlength in seconds: '+maxlength)
     else:
         maxlength = None    
 
@@ -164,9 +169,12 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         #See if this video is smaller or larger than the min-/maxlength specified in the settings
         if minlength is not None:
             if int(minlength) > int(duration[vid['contentDetails']['videoId']]):
+                dev.log('Does not match minlength ('+str(minlength)+'): '+vid['snippet']['title']+' (id: '+vid['contentDetails']['videoId']+')')
                 continue #Skip this video
+            dev.log('Matches minlength: '+vid['snippet']['title']+' (id: '+vid['contentDetails']['videoId']+')')
         if maxlength is not None:
             if int(maxlength) < int(duration[vid['contentDetails']['videoId']]):
+                dev.log('Does not match maxlength: '+vid['snippet']['title']+' (id: '+vid['contentDetails']['videoId']+')')
                 continue #Skip this video
                 
         dev.log('TEST duration '+str(duration[vid['contentDetails']['videoId']]))
@@ -190,7 +198,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         if firstvid != False:
             m_xml.xml_update_playlist_setting(id, 'lastvideoId', firstvid) #Set the lastvideoId to this videoId so the playlist remembers the last video it has. This will save on API calls, since it will quit when it comes across a video that already has been set
     '''
-    dev.log('Done ripping videos from playlist '+settings.find('title').text+' (ID: '+id+')')
+    dev.log('( ._.)========== Done ripping videos from playlist '+settings.find('title').text+' (ID: '+id+') ==========(._. )')
 
 ##Helper Functions to check requirements of a youtube video according to the playlist settings
 #Check onlyinclude
@@ -221,7 +229,7 @@ def excludewords(vid, settings):
             strip = []
             strip.append(settings.find('excludewords').text)
         for s in strip:
-            if s in vid['snippet']['title']:
+            if s.lower() in vid['snippet']['title'].lower() or s.lower() in vid['snippet']['description']:
                 return False #We found one of the words in the title, so this one should not be added
         return True
     else:

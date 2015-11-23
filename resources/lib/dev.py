@@ -28,6 +28,8 @@ from resources.lib import vars
 #       Message:  The message to display in the log
 #       Debug: Also display this message if debugmode is off?
 def log(message, debug=None):
+    if str(type(message)) == "<type 'unicode'>":
+        message = message.encode('utf-8')
     if debug is not None:
         xbmc.log(vars.LPREF+message)
     else:

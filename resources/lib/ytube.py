@@ -240,14 +240,15 @@ def get_duration_vids(vid_ids):
     
 #Recalculates 00h00m00s / 00:00:00 back to number of seconds
 def hms_to_sec(hms):
+    hms = hms.strip(' \t\n\r')
     dev.log('hms_to_sec('+hms+')')
     m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
     if m:
         if m.group(2) is None and m.group(4) is None and m.group(6) == None:
-            if hms.count(':') == 2:
-                m = re.search(r'(?i)((\d+):)?((\d+):)?((\d+))?', hms)
-            else:
-                m = re.search(r'(?i)((\d+)::::)?((\d+):)?((\d+))?', hms)
+            #if hms.count(':') == 2:
+            m = re.search(r'(?i)((\d)+:)?((\d+))?(:(\d)+)?', hms)
+            #else:
+            #m = re.search(r'(?i)((\d)+:)?((\d+))?(:(\d)+)?', hms)
         hours = m.group(2)
         minutes = m.group(4)
         seconds = m.group(6)

@@ -1,3 +1,8 @@
+0.9.4.1
+- Fixed Bug: Tags would error if only one was specified
+- Fixed Bug: min-/maxlength now behaving as HH:MM (was MM:SS)
+- exclude(words) is now case-insensitive & searches description of the video as well
+
 0.9.4
 - Added Feature: Tags
 - Added Feature: s02e12 / 02x12 from the youtube vid title as your season/episode numbering
@@ -8,6 +13,7 @@
 - Fixed Bug: min-/maxlength is ignored
 - Fixed Bug: Episodenr listing will be deleted if you refresh a playlist (episodenumbering will be reset)
 - Fixed Bug: Videos longer than 1 hour returned a wrong runtime of minutes
+- Fixed Bug: Scraping stopped at a Deleted Video
 - removetitle is now case-insensitive
 
 v0.9.3

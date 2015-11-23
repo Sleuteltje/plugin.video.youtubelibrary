@@ -372,8 +372,8 @@ def write_tvshow_nfo(fold, settings):
             tags_xml = ''
             for tag in multi_tags:
                 tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
-        elif tags is not '':
-            tags_xml = '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        elif tags.strip(' \t\n\r') is not '':
+            tags_xml = '<tag>'+tags.strip(' \t\n\r')+'</tag>'
     
     #Create the contents of the xml file
     content = u"""
