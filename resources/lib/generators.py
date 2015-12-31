@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #    Kodi Addon: Youtube Library
 #    Copyright 2015 Sleuteltje
 #
@@ -145,25 +146,501 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
     return season, episode, vid
 
 
+    
+
+
+##Music Videos - songinfo
+#Finds the genre, artist, song, album, plot and year
+def get_songinfo(vid, settings, duration):
+    artist = False
+    featured = False
+    song = False
+    album = False
+    tracknr = ''
+    year = False
+    genre = False
+    studio = ''
+    plot = False
+    tags = []
+    
+    vid_title = vid['snippet']['title']
+    vid_description = vid['snippet']['description']
+    vid_id = vid['contentDetails']['videoId']
+    vid_kind = 'song'
+    
+    dev.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    dev.log('get_songinfo('+vid_title+'['+vid_id+'])')
+    
+    setting_genre = settings.find('genre').text #Grab the episode settings from the xml
+    setting_genre_fallback = settings.find('genre_fallback').text 
+    setting_genre_hardcoded = settings.find('genre_hardcoded').text 
+    
+    setting_artist = settings.find('artist').text
+    setting_artist_fallback = settings.find('artist_fallback').text 
+    setting_artist_hardcoded = settings.find('artist_hardcoded').text 
+    
+    setting_song_fallback = settings.find('song_fallback').text 
+    
+    
+    setting_album = settings.find('album').text 
+    setting_album_fallback = settings.find('album_fallback').text 
+    setting_album_hardcoded = settings.find('album_hardcoded').text 
+    
+    setting_plot = settings.find('plot').text 
+    setting_plot_fallback = settings.find('plot_fallback').text 
+    setting_plot_hardcoded = settings.find('plot_hardcoded').text 
+    
+    setting_year = settings.find('year').text 
+    setting_year_fallback = settings.find('year_fallback').text 
+    setting_year_hardcoded = settings.find('year_hardcoded').text 
+    
+    setting_skip_audio = settings.find('skip_audio').text
+    setting_skip_lyrics = settings.find('skip_lyrics').text
+    setting_skip_live = settings.find('skip_live').text
+    setting_skip_albums = settings.find('skip_albums').text
+    dev.log('loaded settings')
+    vid_title = vid_title.strip(' \t\n\r')
+
+    
+    ##Strip complete album from the title
+    new_title = strip_album(vid_title)
+    dev.log('New title after strip_album: '+new_title)
+    if new_title != vid_title:
+        vid_kind = 'album'
+    vid_title = new_title
+    dev.log('Vid title after strip_album: '+vid_title)
+    
+    ##Guess what kind of video this is (song, live song, album or concert)
+    if int(duration) < 600:
+        vid_kind = 'song'
+        #Song is shorter than 10 minutes, so it must be a song / live song
+        '''
+        if 'live' in vid_title.lower() or 'tour' in vid_title.lower():
+            #It must be a live song
+            vid_kind = 'live'
+            tags.append('live')
+        elif 'lyrics' in vid_title.lower():
+            vid_kind = 'lyrics'
+            tags.append('lyrics')
+        elif 'audio' in vid_title.lower():
+            vid_kind = 'audio'
+            tags.append('audio')
+        '''
+    else:
+        #Song is longer than 10 minutes, so it must be an album / concert
+        vid_kind = 'album'
+        if ' live ' in vid_title.lower() or ' live ' in vid_description.lower():
+            vid_kind = 'concert'
+            tags.append('concert')
+        else:
+            tags.append('album')
+
+    
+    dev.log('(o.o) - Video Kind: '+vid_kind)
+        
+    ##Remove stuff between () [] or - - (like quality indicators, official video and such) from the title
+    vid_title = strip_quality(vid_title)
+    dev.log('Vid title after stripping quality: '+vid_title)
+    new_title = strip_lyrics(vid_title)
+    if vid_title != new_title:
+        dev.log('Tagged as Lyrics video')
+        vid_kind = 'lyrics'
+        tags.append('lyrics')
+        new_title += ' (Lyrics Video)'
+    vid_title = new_title
+    dev.log('Vid title after stripping lyrics: '+vid_title)
+    new_title = strip_live(vid_title)
+    if vid_title != new_title:
+        dev.log('Tagged as Live Video')
+        vid_kind = 'live'
+        tags.append('live')
+        new_title += '(Live)'
+    vid_title = new_title
+    dev.log('Vid title after stripping live: '+vid_title)
+    new_title = strip_audio(vid_title)
+    if vid_title != new_title:
+        dev.log('Tagged as Audio video: '+new_title)
+        vid_kind = 'audio'
+        tags.append('audio')
+        new_title += '(Audio)'
+    vid_title = new_title
+    dev.log('Vid title after stripping audio: '+vid_title+' ('+new_title+')')
+    if setting_skip_audio == 'true' and vid_kind == 'audio':
+        dev.log('Skip_audio is on, and video '+vid_title+' is an audio video', 1)
+        return False
+    if setting_skip_lyrics == 'true' and vid_kind == 'lyrics':
+        dev.log('Skip_lyrics is on, and video '+vid_title+' is a lyric video', 1)
+        return False
+    if setting_skip_albums == 'true' and vid_kind == 'album':
+        dev.log('Skip_albums is on, and video '+vid_title+' is an album video', 1)
+        return False
+    if setting_skip_live == 'true':
+        if vid_kind == 'live' or vid_kind == 'concert':
+            dev.log('Skip_live is on, and video '+vid_title+' is a live or concert video', 1)
+            return False
+        
+
+    ##Try to find a tracknr
+    m = re.search("\(?\[?(\d{1,2})\s\)\]\s?\.", vid_title)
+    if m:
+        tracknr = m.group(1)
+        vid_title = vid_title.replace(m.group(0), '')
+        dev.log('Vid title after stripping tracknr '+tracknr+': '+vid_title)
+        
+    ##Determine feautered artists
+    featured, vid_title = get_featured(vid_title)
+
+
+    ##Determine the Year    
+    year, vid_title = get_year(vid_title, vid_description, 'year', settings, vid)
+    if year == False:
+        year, vid_title = get_year(vid_title, vid_description, 'year_fallback', settings, vid)
+        if year == False:
+            #Year recognizition has failed / the fallback was do not add. So do not add this video
+            dev.log('Year not found! Fallback was '+setting_year_fallback+' Video not added: '+vid_title+' ('+vid_id+')', 1)
+            return False
+
+
+    
+    ##Try to determine the album from the title
+    album, vid_title = get_album(vid_title, vid_description, 'album', settings, vid)
+    if album == False:
+        album, vid_title = get_album(vid_title, vid_description, 'album_fallback', settings, vid)
+    
+    
+    ##Determine the artist & song
+    artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
+    if artist == False:
+        artist = get_hardcoded('artist_fallback', settings, vid)
+        if artist == False:
+            dev.log('Artist not found! Fallback was '+setting_artist_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+            return False
+    else:
+        ft = get_multiple_artists(artist)
+        if ft != False:
+            artist = ft.pop(0) #Assume the first artist is the main artist
+            featured = ft
+    artist = strip_audio(artist) #Strip (audio) and such from the name
+    artist = strip_live(artist) #Strip live and such from the artist
+    artist = strip_lyrics(artist) #Strip lyrics and such from the artist
+    if song == False:
+        song = get_hardcoded('song_fallback', settings, vid)
+        if song == False:
+            dev.log('Song not found! Fallback was '+setting_song_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+            return False
+    
+    ##If the video kind is an album, the album is the song title
+    if album == False:
+        if vid_kind == 'album':
+            album = song
+        if album == False:
+            dev.log('Album not found! Fallback was '+setting_album_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+            return False
+    
+    ##Determine the plot
+    plot = get_plot(vid_description, 'plot', settings, vid)
+    if plot == False:
+        plot = get_plot(vid_description, 'plot_fallback', settings, vid)
+        if plot == False:
+            dev.log('Plot not found! Fallback was '+setting_plot_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+            return False
+            
+    ##Determine the genre
+    genre = setting_genre_hardcoded
+    
+    vid_info = {
+        'title': song,
+        'artist': artist,
+        'album': album,
+        'genre': genre,
+        #'runtime': ?,
+        'plot': plot,
+        'year': year,
+        'track': tracknr,
+        'tracknr': tracknr,
+        'studio': studio,
+        'tags': tags,
+        'featured': featured,
+    }
+    
+    return vid_info
+
+
+#Strip unwanted text from the text
+def strip_album(text):
+    album = ['complete album', 'full album'] 
+    text = strip_from_text(text, album)
+    return remove_extra_spaces(text)
+def strip_audio(text):
+    audio = ['audio only', 'audio'] 
+    text = strip_from_text(text, audio)
+    return remove_extra_spaces(text)
+def strip_lyrics(text):
+    lyrics = ['Lyrics on screen', 'with lyrics', 'w/ lyrics', 'lyric video', 'lyrics video', 'lyrics', 'lyric'] 
+    text = strip_from_text(text, lyrics)
+    return remove_extra_spaces(text)
+def strip_live(text):
+    live = ['live'] 
+    text = strip_from_text(text, live)
+    return remove_extra_spaces(text)
+def strip_artist(text):
+    artists = ['the music group', 'the band', 'the group']
+    text = strip_from_text(text, artists)
+    return remove_extra_spaces(text)
+def strip_quality(text):
+    hooks = ['original video with subtitles', 'original video', 'Official Music Video', 'official video hd', 'Official Video','Videoclip', 'Video Clip', 'video', 'clip officiel', 'clip', 'official', 'officiel']
+    text = strip_from_text(text, hooks)
+    qualitys = ['hd 1080p', 'hd 720p', '1080p hd', '720p hd', '1080p quality', '720p quality', 'dvd quality', 'hd quality', 'high quality', '1080p', '720p', 'hd', 'hq']
+    text = strip_from_text(text, qualitys)
+    return remove_extra_spaces(text)
+    
+#Strips a list of words from the text, first checking ()[]-- and then -, and then just the word
+#text: The text to replace in
+#checks: List of words to replace in the text
+def strip_from_text(text, checks):    
+    for check in checks:
+        #dev.log('Replacing '+check)
+        #First check if for it between () or [] or - - 
+        regex = re.compile("(\(|\[|-)\s*"+re.escape(check)+"\s*(\)|\]|-)", re.IGNORECASE)
+        #dev.log('Regex: '+ regex.pattern )
+        text = re.sub(regex, '', text)
+        #Then check for them from the beginning of the string with a - behind it
+        regex = re.compile("^\s*"+re.escape(check)+"\s*-\s*", re.IGNORECASE)
+        text = re.sub(regex, '', text)
+        #Then check for them with just in the text
+        regex = re.compile(re.escape(check), re.IGNORECASE)
+        text = re.sub(regex, '', text)
+    return text
+
+#Removes spaces that are to much from the text, also strips spaces, tabs, returns, newlines & quotes from both ends of text
+def remove_extra_spaces(text):
+    while '  ' in text:
+        text = text.replace('  ', ' ')
+    return text.strip(' \t\n\r"\'')
+        
+    
+def get_hardcoded(setting, settings, vid):
+    if settings.find(setting).text == 'hardcoded':
+        setting = setting.replace('_fallback', '')
+        return dev.get_setting(setting+'_hardcoded', settings)
+    if settings.find(setting).text == 'playlist channelname':
+        return settings.find('channel').text
+    if settings.find(setting).text == 'video channelname':
+        return vid['snippet']['channelTitle']
+    if settings.find(setting).text == 'published year':
+        return ytube.convert_published(vid['snippet']['publishedAt'])['year']
+    if settings.find(setting).text == 'playlist description':
+        return settings.find('description').text
+    if settings.find(setting).text == 'video description':
+        return vid['snippet']['description']
+    return False
+    
+
+def get_featured(text):
+    text = strip_audio(text)
+    text = strip_lyrics(text)
+    text = strip_live(text)
+    regex = "(ft|vs|featuring|with|w\/)\s*\.?\:?\s*([^-\n\r]+)"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        ft = get_multiple_artists(m.group(2))
+        if ft == False:
+            return [m.group(2)], text
+        #Replace the found string in the text
+        text = text.replace(m.group(0), '')
+        return ft, text
+    return False, text
+
+def get_multiple_artists(text):
+    text = strip_audio(text)
+    text = strip_lyrics(text)
+    text = strip_live(text)
+    splits = [',', '&', 'and', '/']
+    for spl in splits:
+        #Found featuring artist in the text, see if it are more than one.
+        if spl in text:
+            #Split all artist up by the ,
+            return text.split(spl)
+    return False
+
+    
+def get_album(vid_title, vid_description, setting, settings, vid):
+    album = get_hardcoded(setting, settings, vid)
+    if album != False:
+        #The album was hardcoded
+        return album, vid_title
+    
+    if settings.find(setting).text == 'video title and description':
+        #First try to get the album from the description.
+        regex = '(the album|as featured on)\s*:?\s*"?([^-\.\n\r"]+)'
+        m = re.search(regex, vid_description)
+        if m:
+            #Album found!
+            return remove_extra_spaces(m.group(2)), vid_title
+    
+    return False, vid_title
+
+def get_artist_song(vid_title, vid_description, setting, settings, vid):
+    artist = get_hardcoded(setting, settings, vid)
+    if artist != False:
+        #The artist was hardcoded
+        a, song = find_artist_song(vid_title, artist)
+        if song == False:
+            a, song = find_artist_song_description(vid_description)
+        return artist, song
+    
+    if settings.find(setting).text == 'video title and description':
+        #Try to grab the information
+        #First try to get the artist and title from the video title. Like a normal title
+        artist, song = find_artist_song(vid_title, dev.get_setting('artist_hardcoded', settings))
+        if artist != False and song != False:
+            #Succesfull
+            return artist, song
+        #Artist - song lookup failed, more drastic lookups are needed
+        artist, song = find_artist_song_description(vid_description)
+        if artist != False and song != False:
+            #Succesfull
+            return artist, song
+    return False, False
+def find_artist_song(text, hardcoded_artist):
+    regex = "^([^-\n]+)(-|by|\|)\s*([^-:\n]+)$"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        dev.log('find_artist_song() Found Artist - Song: '+str(m.group(1).encode('UTF-8'))+' - '+str(m.group(3).encode('UTF-8')))
+        artist = remove_extra_spaces(m.group(1))
+        song = remove_extra_spaces(m.group(3))
+        if m.group(2) == 'by' or artist.lower() == hardcoded_artist.lower():
+            #Turn artist and song around
+            artist = m.group(3)
+            song = m.group(1)
+        if '(' in artist and ')' not in artist or ')' in artist and '(' not in artist:
+            return False, False
+        return artist, song
+    return False, False
+def find_artist_song_description(text):
+    regex = "([^\n\r]+)('s|')\s*(official)?\s*(music)?\s*video\s*for\s*([^\.\n\r]*)"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        dev.log('find_artist_song_description() 1st: Found Artist - Song: '+str(m.group(1)).encode('utf-8')+' - '+str(m.group(5)).encode('utf-8'))
+        #found the artist and song
+        artist = m.group(1)
+        song = m.group(5)
+        return artist, song
+    regex = "(official)?\s*(music)?\s*video\s*for\s*(.*?)('|’)?s[^'\"‘]*('|\"|‘)(.*)('|\"|’)"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        dev.log('find_artist_song_desription() 5th: Found Artist - Song: '+str(m.group(3)).encode('utf-8')+' - '+str(m.group(6)).encode('utf-8'))
+        #Found the artist and song
+        return m.group(3), m.group(6)
+    if m:
+        dev.log('find_artist_song_description() 1st: Found Artist - Song: '+str(m.group(1)).encode('utf-8')+' - '+str(m.group(5)).encode('utf-8'))
+        #found the artist and song
+        artist = m.group(1)
+        song = m.group(5)
+        return artist, song
+    regex = "(.*?)\s*(by|from|performing|\|)\s*(?:([^,\n\r-]*?)\s*(by|from|performing))?\s*([^,\.\n\r-]*)"
+    #regex_complex = "(.*?)\s*(?:is a song)?\s*(-|by|from(?! their album)|performing|\|)\s*(?:([^,\n\r]*?)\s*(-|by|from(?! their album)|performing))?\s*([^,\.\n\r]*)"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        #found the artist and song
+        if m.group(4) == 'performing':
+            dev.log('find_artist_song_description() Found Artist - Song 2nd: '+str(m.group(3)).encode('utf-8')+' - '+str(m.group(5)).encode('utf-8'))
+            artist = m.group(3)
+            song = m.group(5)
+            return artist, song
+        artist = m.group(1)
+        song = m.group(3)
+        if song is None:
+            regex = re.compile(re.escape("\s*(official\s*)?(music\s*)?video\s*for\s*"), re.IGNORECASE)
+            artist = regex.sub('', artist) #Replace official music video for in the artist, since it could be left over
+            song = m.group(5)
+        if m.group(2) == 'by' or m.group(2) == 'from':
+            dev.log('find_artist_song_description() Found Artist - Song 3th: '+str(song.encode('UTF-8'))+' - '+str(m.group(1).encode('UTF-8')))
+            artist = song
+            song = m.group(1)
+            return artist, song
+        dev.log('find_artist_song_description() Found Artist - Song 4th: '+str(artist).encode('utf-8')+' - '+str(song).encode('utf-8'))
+        dev.log('Description: '+text)
+        return artist, song
+
+    return False, False
+
+
+def get_year(vid_title, vid_description, setting, settings, vid):
+    year = get_hardcoded(setting, settings, vid)
+    if year != False:
+        return year, vid_title
+    if settings.find(setting).text == 'video title and description':
+        year, vid_title = find_year(vid_title)
+        if year != False:
+            return year, vid_title
+            year, vid_description = find_year(vid_description)
+            if year != False:
+                return year, vid_title
+        
+    return False, vid_title
+def find_year(text):
+    regex = "(\(?()c(opyright)?\)?)?\s*(\d{4})"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        if len(m.group(4)) == 4:
+            #Found a year!
+            dev.log(u'Found a year!: '+m.group(4)+ ' Whole match: '+m.group(0))
+            text = text.replace(m.group(0), '') #Remove the copyright / year notice from the title
+            return m.group(4), text
+    return False, text
+    
+def get_plot(vid_description, setting, settings, vid):
+    plot = get_hardcoded(setting, settings, vid)
+    if plot != False:
+        return plot
+    if settings.find(setting).text == 'lyrics in video description':
+        regex = "lyrics\s*:?(?:\n|\r|\s)*((?:\n|\r|.)*)"
+        m = re.search(regex, vid_description)
+        if m:
+            if len(m.group(1)) > 1:
+                return m.group(1)
+    return False
+
 
 ###### STRM GENERATOR ##############
 #Creates a .strm file
 # Name : The name of the strm file
 # folder:   The name of the folder the strm file should be written in (Not the mainfolder, but the name of the show, so the strms get in that subdir)
 # videoid:  The videoid of the youtube video we want to make a strm off
+# startpoint: The startpoint of the video (for starters, if you want it to start at 10:00 minutes in the video)
+# endpoint: The endpoint of the video (if you want to stop the video at 20:00 minutes)
+#
 # show: The name of the show (needed for a .strm file to this addon)
 # season: The season of this episode
 # episode: The episode number of this episode
 #
+# type: tv (''), musicvideo, music, movies
+#
+# artist: The artist
+# song: The song
+# album: The album
+# year: The year
+#
 # Returns the filename (without .strm)
-def write_strm(name, fold, videoid, show=None, season=None, episode=None):
+def write_strm(name, fold, videoid, show=None, season=None, episode=None, startpoint = None, endpoint = None, artist='', album='', song='', year='', type=''):
     #dev.log('strm('+name+', '+fold+', '+videoid+')')
     movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
+    if type=='musicvideo':
+        movieLibrary = vars.musicvideo_folder
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
     enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
     
     if vars.__settings__.getSetting("strm_link") == "Youtube Library":
-        content = 'plugin://plugin.video.youtubelibrary/?mode=play&id=%s&show=%s&season=%s&episode=%s&filename=%s' % (sysname, show, season, episode, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
+        if type == 'musicvideo':
+            content = 'plugin://plugin.video.youtubelibrary/?mode=playmusicvideo'
+            if startpoint != None:
+                content += '&startpoint='+startpoint
+            if endpoint != None:
+                content += '&endpoint='+endpoint
+            content += '&id=%s&artist=%s&song=%s&album=%s&year=%s&filename=%s' % (sysname, artist, song, album, year, enc_name) #Set the content of the strm file with a link back to this addon for playing the video 
+        else:
+            content = 'plugin://plugin.video.youtubelibrary/?mode=play&id=%s&show=%s&season=%s&episode=%s&filename=%s' % (sysname, show, season, episode, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
     else:
         content = vars.KODI_ADDONLINK+'%s' % ( sysname) #Set the content of the strm file with a link to the official Kodi Youtube Addon
 
@@ -174,7 +651,7 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None):
 
     stream = os.path.join(folder, enc_name + '.strm') #Set the file to maindir/name/name.strm
     file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
-    file.write(str(content)) #Write the content in the file
+    file.write(str(content.encode('UTF-8'))) #Write the content in the file
     file.close() #Close the file
     dev.log('write_strm: Written strm file: '+fold+'/'+enc_name+'.strm')
     return enc_name
@@ -190,15 +667,21 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None):
 # season: The season of the episode
 #episode: The episode number
 #duration: The duration of the video
-def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
+#overwrite_title: If you want to use another title than the vid['snippet']['title']
+#overwrite_description: Same as above, but for description
+#type: tv (''), musicvideo, music, movies
+def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', overwrite_title=None, overwrite_description=None, musicvideo=None, type=''):
     #dev.log('write_nfo('+name+', '+fold+')')
     movieLibrary = vars.tv_folder #Use the directory from the addon settings
-
+    if type=='musicvideo':
+        movieLibrary = vars.musicvideo_folder
     snippet = vid['snippet']
     
     
     #See if we should do something to the title according to the settings
     title = snippet['title']
+    if overwrite_title != None:
+        title = overwrite_title
     removetitle = settings.find('removetitle').text
     if removetitle == None:
         removetitle = ''
@@ -243,6 +726,8 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
                 
     #See if we should do something to the description according to the settings
     description = snippet['description']
+    if overwrite_description != None:
+        description = overwrite_description
     removedescription = settings.find('removedescription').text
     if removedescription == None:
         removedescription = ''
@@ -301,37 +786,109 @@ def write_nfo(name, fold, vid, settings, season, episode, duration='0'):
     #Convert the duration (seconds) in number of minutes
     durationminutes = int(int(duration) / 60)
     
-    #Create the contents of the xml file
-    content = """
-        <episodedetails>
-            <title>%(title)s</title>
-            <season>%(season)s</season>
-            <episode>%(episode)s</episode>
-            <plot>%(plot)s</plot>
-            <thumb>%(thumb)s</thumb>
-            <credits>%(channel)s</credits>
-            <director>%(channel)s</director>
-            <aired>%(date)s</aired>
-            <premiered>%(date)s</premiered>
-            <studio>Youtube</studio>
-            <runtime>%(durationminutes)s</runtime>
-            <fileinfo>
-                <streamdetails>
-                    <durationinseconds>%(duration)s</durationinseconds>
-                </streamdetails>
-            </fileinfo>
-        </episodedetails>
-    """ % {
-        'title': title.strip(' \t\n\r'),
-        'plot': description.strip(' \t\n\r'),
-        'channel': settings.find('channel').text,
-        'thumb': thumbnail,
-        'date': normaldate,
-        'season': season,
-        'episode': episode,
-        'durationminutes': durationminutes,
-        'duration': duration
-    }    
+    durationhms = dev.convert_sec_to_hms(duration)
+    
+    if type == 'musicvideo':
+        if musicvideo == None:
+            return False
+        #Grab the featured artists and convert them to xml
+        featured_xml = ''
+        if musicvideo['featured'] != False:
+            for artist in musicvideo['featured']:
+                featured_xml += '<artist>'+artist.strip(' \t\n\r')+'</artist>'
+        #Grab the tags and convert them to xml
+        tags_xml = ''
+        if musicvideo['tags'] != False:
+            for tag in musicvideo['tags']:
+                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        tags = settings.find('tags')
+        if tags is not None:
+            tags = settings.find('tags').text
+            if '/' in tags:
+                multi_tags = tags.split('/')
+                for tag in multi_tags:
+                    tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+            elif tags.strip(' \t\n\r') is not '':
+                tags_xml += '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+        
+        genre = musicvideo['genre']
+        if genre is None:
+            genre = ''
+        #Create the contents of the xml file
+        content = """
+<musicvideo>
+    <title>%(title)s</title>
+    <artist>%(artist)s</artist>
+    %(featured)s
+    <album>%(album)s</album>
+    <genre>%(genre)s</genre>
+    <runtime>%(durationminutes)s</runtime>
+    <plot>%(plot)s</plot>
+    <year>%(year)s</year>
+    <director></director>
+    <studio>%(studio)s</studio>
+    <track>%(tracknr)s</track>
+    <thumb>%(thumb)s</thumb>
+    <fanart>
+        <thumb>%(fanart)s</thumb>
+    </fanart>
+    <fileinfo>
+        <streamdetails>
+            <durationinseconds>%(duration)s</durationinseconds>
+        </streamdetails>
+    </fileinfo>
+    %(tags)s
+</musicvideo>
+        """ % {
+            'title': musicvideo['title'].strip(' \t\n\r'),
+            'artist': musicvideo['artist'].strip(' \t\n\r'),
+            'featured': featured_xml,
+            'album': musicvideo['album'].strip(' \t\n\r'),
+            'genre': genre.strip(' \t\n\r'),
+            'plot': musicvideo['plot'].strip(' \t\n\r'),
+            'year': musicvideo['year'].strip(' \t\n\r'),
+            'studio': musicvideo['studio'].strip(' \t\n\r'),
+            'thumb': thumbnail,
+            'durationhms': durationhms,
+            'tracknr': musicvideo['tracknr'].strip(' \t\n\r'),
+            'fanart': settings.find('fanart').text,
+            'tags': tags_xml,
+            'durationminutes': durationminutes,
+            'duration': duration
+        }
+    else:
+        ##TV
+        #Create the contents of the xml file
+        content = """
+<episodedetails>
+    <title>%(title)s</title>
+    <season>%(season)s</season>
+    <episode>%(episode)s</episode>
+    <plot>%(plot)s</plot>
+    <thumb>%(thumb)s</thumb>
+    <credits>%(channel)s</credits>
+    <director>%(channel)s</director>
+    <aired>%(date)s</aired>
+    <premiered>%(date)s</premiered>
+    <studio>Youtube</studio>
+    <runtime>%(durationminutes)s</runtime>
+    <fileinfo>
+        <streamdetails>
+            <durationinseconds>%(duration)s</durationinseconds>
+        </streamdetails>
+    </fileinfo>
+</episodedetails>
+        """ % {
+            'title': title.strip(' \t\n\r'),
+            'plot': description.strip(' \t\n\r'),
+            'channel': settings.find('channel').text,
+            'thumb': thumbnail,
+            'date': normaldate,
+            'season': season,
+            'episode': episode,
+            'durationminutes': durationminutes,
+            'duration': duration
+        }
     
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     

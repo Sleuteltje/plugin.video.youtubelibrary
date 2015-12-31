@@ -46,16 +46,27 @@ if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings.xml")) == False: #If 
     xbmcvfs.mkdir(vars.streamsPath+'TV') #Create the streams TV dir if it does not exist already
     
     m_xml.create_xml()
-
+if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings_musicvideo.xml")) == False:
+    xbmcgui.Dialog().ok(dev.lang(31103), dev.lang(31104))
+    
+    xbmcvfs.mkdir(vars.streamsPath+'MusicVideos') #Create the streams musicvideos dir if it does not exist already
+    
+    m_xml.create_xml('settings_musicvideo.xml')
 
 ########## ROUTES ##############      
 #Grab which mode the plugin is in    
 mode = vars.args.get('mode', None)
+type = vars.args.get('type', '')
+#Convert type[0] to just type
+if type != '':
+    type = type[0]
+
 
 ##Index
 if mode is None:
     dev.log('Mode is Index', True)
     routes.index()
+    
 
 ## SERVICE
 elif mode[0] == "service":
@@ -67,27 +78,27 @@ elif mode[0] == 'folder':
     #Which folder should be loaded?
     ## managePlaylists
     if foldername == 'managePlaylists':
-        routes.manage_playlists()
+        routes.manage_playlists(type=type)
     ## Search Channel
     elif foldername == 'searchchannel':
-        routes.search_channel()
+        routes.search_channel(type=type)
 ###### Manage Playlists subroutes 
 ## RemovePlaylist
 elif mode[0] == "deletePlaylist":
-    dev.log('Mode is deletePlaylist')
+    dev.log('Mode is deletePlaylist '+type)
     #Remove this playlist
-    routes.deletePlaylist()
+    routes.deletePlaylist(type)
 ## RefreshPlaylist
 elif mode[0] == "refreshPlaylist":
-    dev.log('Mode is refreshPlaylist')
+    dev.log('Mode is refreshPlaylist '+type)
     #Refresh this playlist
-    routes.refreshPlaylist()
+    routes.refreshPlaylist(type=type)
 ## editPlaylist
 elif mode[0] == "editPlaylist":
-    dev.log('Mode is editPlaylist')
+    dev.log('Mode is editPlaylist '+type)
     id = vars.args['id'][0]
     set = vars.args.get('set', None)
-    routes.edit_playlist(id, set)
+    routes.edit_playlist(id, set, type=type)
     
 
 ##### Search Channel subroutes
@@ -96,22 +107,27 @@ elif mode[0] == "pickedChannel":
     dev.log('Picked a channel')
     #Display the videos by their channel ID
     id = vars.args['id'][0]
-    routes.show_playlists_by_channel(id)
+    routes.show_playlists_by_channel(id, type=type)
+elif mode[0] == "pickedmusicvideoChannel":
+    dev.log('Picked a MusicVideo channel')
+    #Display the videos by their channel ID
+    id = vars.args['id'][0]
+    routes.show_playlists_by_channel(id, 'musicvideo')
 ## AddPlaylist
 elif mode[0] == "addPlaylist":
     dev.log('Mode is addPlaylist')
     #Display the videos of this playlistID
     id = vars.args['id'][0]
-    routes.add_playlist(id)
+    routes.add_playlist(id, type=type)
 
 
 ## Update all playlists
 elif mode[0] == 'updateplaylists':
     dev.log('Mode is updateplaylists')
-    routes.update_all_playlists()
+    routes.update_all_playlists(type=type)
 elif mode[0] == 'updateplaylist':
     dev.log('Mode is updateplaylist')
-    routes.update_playlist()
+    routes.update_playlist(type=type)
 ## PLAY VIDEO
 elif mode[0] == "play":
     dev.log('Mode is Play')
@@ -120,7 +136,15 @@ elif mode[0] == "play":
     season = vars.args['season'][0] #Grab the season
     episode = vars.args['episode'][0] #Grab the episode
     filename = vars.args['filename'][0] #Grab the filename
-    play.playVid(id, filename, season, episode, show) #Update the nfo & strm files for this playlist
+    play.playVid(id, filename, season, episode, show) #Play the video
+## PLAY MUSICVIDEO
+elif mode[0] == "playmusicvideo":
+    dev.log('Mode is PlayMusicVideo')
+    id = vars.args['id'][0] #Grab the vid id which we should be playing
+    artist = vars.args['artist'][0] #Grab the artist
+    song = vars.args['song'][0] #Grab the song
+    filename = vars.args['filename'][0] #Grab the filename
+    play.playMusicVid(id, filename, artist, song) #Play the video
     
 
     
@@ -144,6 +168,76 @@ elif mode[0] == "play":
 # ############################################################################## # 
 ######################################### TESTS ##################################
 # ############################################################################## # 
+## REMUX TEST
+elif mode[0] == "remuxtest":
+    dev.log('Mode is remuxtest');
+    
+    id = "Ivp6hfbQnts"
+    
+    from resources.lib import pafy
+    pafy.set_api_key(vars.API_KEY)
+    #Resolve the youtube video url for ourselves
+    v = pafy.new(id)    
+    
+    url = dev.build_url({'mode': 'play', 'id': id})
+    dev.adddir(str(v.getbest()), url, description=v.getbest().url)
+    
+    url = dev.build_url({'mode': 'playtest', 'foldername': 'remux'})
+    dev.adddir(str(v.getbestvideo()), url, description=v.getbestvideo().url)
+    
+    dev.log('Remuxtest, best Video&Audio: '+str(v.getbest()));
+    dev.log('Remuxtest, best Video: '+str(v.getbestvideo()));
+    dev.log('Remuxtest, best Audio: '+str(v.getbestaudio()));
+    
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+    
+##Playvidtest
+elif mode[0] == "striptest":
+    dev.log('mode is striptest')
+    title = 'Britney Spears - Gimme More (from Britney Spears Live: The Femme Fatale Tour)'
+    
+    url = dev.build_url({'home': 'home'})
+    
+    title = generators.strip_quality(title)
+    dev.adddir(title, url, description = 'strip_quality')
+    dev.log('After strip_quality: '+title)
+    if generators.strip_lyrics(title) != title:
+        dev.adddir(title, url, description = 'Title does not match strip_lyrics!')
+    title = generators.strip_lyrics(title)
+    dev.adddir(title, url, description = 'strip_lyrics')
+    dev.log('After strip_lyrics: '+title)
+    title = generators.strip_audio(title)
+    dev.adddir(title, url, description = 'strip_audio')
+    dev.log('After strip_audio: '+title)
+    title = generators.strip_live(title)
+    dev.adddir(title, url, description = 'strip_live')
+    dev.log('After strip_live: '+title)
+    
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+    
+elif mode[0] == "playtest":
+    dev.log('mode is playtest');
+    
+    id = "Ivp6hfbQnts"
+    
+    from resources.lib import pafy
+    pafy.set_api_key(vars.API_KEY)
+    #Resolve the youtube video url for ourselves
+    v = pafy.new(id)    
+    
+    meta = {};
+    meta['title'] = 'Test'
+    poster = 'Default.png'
+    
+    xbmc.Player().play(v.getbestvideo().url) #Play this video
+    '''
+    liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
+    liz.setInfo( type="Video", infoLabels=meta )
+    liz.setPath(v.getbest().url)
+    xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)'''
+
+    
 ## STRM TEST
 elif mode[0] == "strmtest":
     dev.log('Mode is strm test')

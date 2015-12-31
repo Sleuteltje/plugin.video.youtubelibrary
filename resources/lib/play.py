@@ -23,14 +23,21 @@ from resources.lib import vars
 from resources.lib import dev
 from resources.lib import bookmarks
 
+import YDStreamExtractor
+
+
+
 
 ##### PLAY VIDEO 
 #Plays a youtube video by id
 def playYoutubeVid(id, meta=None, poster=None):
+    '''
     from resources.lib import pafy
     pafy.set_api_key(vars.API_KEY)
     #Resolve the youtube video url for ourselves
     v = pafy.new(id)
+    stream_url = v.getbest().url
+    '''
     if meta is None:
         #Create an empty meta, so we can fill it with the information grabbed from youtube
         meta = {}
@@ -40,11 +47,30 @@ def playYoutubeVid(id, meta=None, poster=None):
         poster = 'Default.png'
     
     
+    #YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
+    try:
+        #url = id #a youtube ID will work as well and of course you could pass the url of another site
+        vid = YDStreamExtractor.getVideoInfo(id,quality=1) #quality is 0=SD, 1=720p, 2=1080p and is a maximum
+        stream_url = vid.streamURL() #This is what Kodi (XBMC) will play
+    except:
+        dev.log('Failed to get a valid stream_url!')
+        return False #Failed to grab a video title
+    
+    
     #xbmc.Player().play(v.getbest().url) #Play this video
     liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
     liz.setInfo( type="Video", infoLabels=meta )
-    liz.setPath(v.getbest().url)
+    liz.setPath(stream_url)
     return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
+            
+
+#Plays the requested Youtube Music Video
+def playMusicVid(id, filename=None, artist = None, song = None):
+    poster = 'Default.png'
+    meta = {};
+    meta['title'] = artist+' - '+song
+    
+    return playYoutubeVid(id, meta, poster)
             
 #Plays the requested Youtube Video
 def playVid(id, filename=None, season = None, episode = None, show = None):    

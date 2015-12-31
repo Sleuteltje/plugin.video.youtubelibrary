@@ -3,19 +3,23 @@
     <!--Category-->
     <string id="30100">General</string>
     <string id="30200">Library Settings</string>
-    <string id="30300">Default Playlist Settings</string>
+    <string id="30300">Default TV Shows Settings</string>
+    <string id="30400">Default MusicVideo Settings</string>
     <!--General-->
     <string id="30101">Download Images</string>
     <string id="30102">Resume Playback</string>
     <string id="30103">Play videos from library with</string>	
-    <string id="30104">Debug Mode</string>	
+    <string id="30104">Debug Mode</string>
+	<string id="30105">Mode</string>
 	<!--Library Settings-->
-	<string id="30201">Scan for new videos every X hours</string>
+	<string id="30201">Scan for new TV videos every X hours</string>
+	<string id="30206">Scan for new Music Video videos every X hours</string>
     <string id="30202">Update Video Library after updating new youtube vids</string>
     <string id="30203">Add these directories to your Kodi Library</string>
     <string id="30204">TV Shows Directory</string>
-    <!--Default Playlist Settings-->
-    <string id="30301">Default settings for playlists</string>
+    <string id="30205">Music Videos Directory</string>
+    <!--Default TV Show Settings-->
+    <string id="30301">Default settings for TV Shows</string>
     <string id="30302">Generate NFO files</string>
     <string id="30303">Genre</string>
     <string id="30304">Season Recognition</string>
@@ -28,17 +32,62 @@
     <string id="30311">Remove Description</string>
     <string id="30312">Strip Title</string>
     <string id="30313">Remove Title</string>
+    <string id="30314">Tags</string>
+    <!--Default MusicVideo Settings-->
+    <string id="30401">Default settings for Music Videos</string>
+    <string id="30402">Generate NFO files</string>
+    
+	<string id="30403">Genre</string>
+	<string id="30404">Genre Fallback</string>
+	<string id="30405">Genre Hardcoded</string>
+	
+	<string id="30410">Song Fallback</string>
+	
+	<string id="30421">Artist</string>
+	<string id="30422">Artist Fallback</string>
+	<string id="30423">Artist Hardcoded</string>
+	
+	<string id="30431">Album</string>
+	<string id="30432">Album Fallback</string>
+	<string id="30433">Album Hardcoded</string>
+	
+	<string id="30441">Plot</string>
+	<string id="30442">Plot Fallback</string>
+	<string id="30443">Plot Hardcoded</string>
+	
+	<string id="30451">Year</string>
+	<string id="30452">Year Fallback</string>
+	<string id="30453">Year Hardcoded</string>
+	
+    <string id="30461">Tags</string>
+    <string id="30462">Skip Lyric Videos</string>
+    <string id="30463">Skip Live Videos</string>
+    <string id="30464">Skip Album Videos</string>
+    <string id="30465">Skip Audio Only Videos</string>
 	<!-- Addon Text -->
 	<!-- Main Menu -->
-	<string id="31001">Manage Playlists</string>
-	<string id="31002">Manage the Channels Playlists you have added as a Tv Show in the Kodi Librarys</string>
+	<string id="31001">Manage TV Playlists</string>
+	<string id="31002">Manage the Channels Playlists you have added as a Tv Show in the Kodi Library</string>
+	<string id="31011">Manage Music Video Playlists</string>
+	<string id="31012">Manage the Channels Playlists you have added as Music Videos in the Kodi Library</string>
 	<string id="31003">Update Now</string>
 	<string id="31004">Add new Channel as TV Show</string>
-	<string id="31005">Search by channel name for a new Channel to add as Tv Show to your Kodi Library</string>
+	<string id="31005">Search by channel name for a new Playlist to add as Tv Show to your Kodi Library</string>
+	<string id="31008">Add new Channel as Music Videos</string>
+	<string id="31009">Search by channel name for a new Playlist to add to your Kodi Music Video Library</string>
 	<!-- Manage Playlists -->
 	<string id="31006">Update Now</string>
 	<string id="31007">Delete playlist</string>
+	<!-- Add playlist -->
+	<string id="31010">Press Ok to add this playlist to your list of Youtube Kodi</string>
+	
+	<!-- Edit Playlist -->
+	<string id="31900">If the above fails, it will fallback on this.</string>
+	<string id="31901">The text to use when hardcoded is chosen.</string>
 	
 	<string id="31101">First Run</string>
 	<string id="31102">Please read the online instructions how to use this addon. Do not forget to add the directory as a video source in Kodi! Please see the thread at the Kodi forums how you can help this addon. Have fun!</string>
+	<string id="31103">New Feature!</string>
+	<string id="31104">Now you can also add Musicvideos! See the thread on the Kodi forums for more help. \n \n You can send donations to mailsleuteltje@gmail.com. You can also help out by reporting bugs and helping me develop!</string>
+	<string id="31105">Search Channel</string>
 </strings>

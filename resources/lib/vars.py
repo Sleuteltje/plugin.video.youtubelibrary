@@ -74,8 +74,10 @@ else:
     service_interval = int(service_interval)
 tv_folder_path = xbmc.translatePath(__settings__.getSetting("tv_folder"))
 tv_folder = os.path.join(tv_folder_path, '') #The directory where all the tv-shows .strm & nfo files will be added
+musicvideo_folder_path = xbmc.translatePath(__settings__.getSetting("musicvideo_folder"))
+musicvideo_folder = os.path.join(musicvideo_folder_path, '') #The directory where all the music videos .strm & nfo files will be added
 update_videolibrary = __settings__.getSetting("update_videolibrary") #Should we update the video library after updating all playlists?
-
+mode = int(__settings__.getSetting("mode"))
 
 
 #Extra Kodi Paths

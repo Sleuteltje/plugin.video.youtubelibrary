@@ -126,7 +126,8 @@ def yt_get_channel_info(Channelid):
 #Searches for channels by keyword
 # Params:
     # keyword : The keyword we want to use to search for channels
-def search_channel(keyword):
+    # type: The type (tv, musicvideo, music, movie), so we know which links to build
+def search_channel(keyword, type=''):
     youtube = build(
       vars.YOUTUBE_API_SERVICE_NAME, 
       vars.YOUTUBE_API_VERSION, 
@@ -143,7 +144,7 @@ def search_channel(keyword):
 
     for search_result in search_response.get("items", []):
       #videos.append(search_result)
-      url = dev.build_url({'mode': 'pickedChannel', 'id': search_result['id']['channelId']})
+      url = dev.build_url({'mode': 'pickedChannel', 'id': search_result['id']['channelId'], 'type': type})
       dev.adddir(search_result['snippet']['title'], url, search_result['snippet']['thumbnails']['high']['url'], fanart=search_result['snippet']['thumbnails']['high']['url'], description=search_result['snippet']['description'])
 
       
@@ -224,7 +225,7 @@ def get_duration_vids(vid_ids):
     for vid in search_response.get("items", []):      
         dur = vid['contentDetails']['duration']
         dur = dur[2:] #Strip PT from the duration
-        dev.log('Duration of video: '+dur)
+        #dev.log('Duration of video: '+dur)
         
         seconds = hms_to_sec(dur)
 
@@ -241,7 +242,7 @@ def get_duration_vids(vid_ids):
 #Recalculates 00h00m00s / 00:00:00 back to number of seconds
 def hms_to_sec(hms):
     hms = hms.strip(' \t\n\r')
-    dev.log('hms_to_sec('+hms+')')
+    #dev.log('hms_to_sec('+hms+')')
     m = re.search(r'(?i)((\d+)h)?((\d+)m)?((\d+)s)?', hms)
     if m:
         if m.group(2) is None and m.group(4) is None and m.group(6) == None:
@@ -252,7 +253,7 @@ def hms_to_sec(hms):
         hours = m.group(2)
         minutes = m.group(4)
         seconds = m.group(6)
-        dev.log(str(hours)+', '+str(minutes)+', '+str(seconds))
+        #dev.log(str(hours)+', '+str(minutes)+', '+str(seconds))
         if seconds is None:
             seconds = '0' #Seconds was not set in the setting, so we start with 0 seconds
         seconds = int(seconds)

@@ -6,18 +6,22 @@
 		<setting id="resume_playback" type="bool" label="30102" default="true" />
 		<setting id="strm_link" type="select" label="30103" values="Official Kodi Addon|Youtube Library" default="Youtube Library" />
 		<setting id="debugmode" type="bool" label="30104" default="false" />
+		<setting id="mode" type="enum" label="30105" values="basic|normal|expert" default="1" />
 	</category>
     <!--Library Settings-->
     <category label="30200">
-		<setting id="service_interval" type="select" label="30201" values="4|8|12|24|48|168" default="12" />
+		<setting id="service_interval" type="select" label="30201" values="4|8|12|24|48|168|672" default="12" />
+		<setting id="service_interval_musicvideo" type="select" label="30206" values="4|8|12|24|48|168|672" default="672" />
 		<setting id="update_videolibrary" type="bool" label="30202" default="true"/>
 		<setting label="30203" type="lsep"/>
 		<setting id="tv_folder" type="folder" label="30204" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
+		<setting id="musicvideo_folder" type="folder" label="30205" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/MusicVideos" />
 	</category>
     <!-- Default Playlist Settings -->
     <category label="30300">
 		<setting label="30301" type="lsep"/>
-		<setting id="default_genre" label="30303" type="text" default="Youtube" />
+		<setting id="default_genre" label="30303" type="text" default="" />
+		<setting id="default_tags" label="30314" type="text" default="Youtube" />
 		<setting id="default_season" type="select" label="30304" values="year|s2e12|02x12" default="year" />
 		<setting id="default_episode" type="select" label="30305" values="default|s2e12|02x12|monthday|pos|" default="default" />
 		<setting id="default_minlength" type="time" label="30306" default=""/>
@@ -29,6 +33,49 @@
 		<setting id="default_striptitle" label="30312" type="text" default="" />
 		<setting id="default_removetitle" label="30313" type="text" default="" />
         <setting id="default_generate_nfo" label="30302" type="bool" default="true" />
+	</category>    
+    <!-- Default Music Video Playlist Settings -->
+    <category label="30400">
+	
+		<setting label="30401" type="lsep"/>
+		<setting id="default_musicvideo_tags" type="text" label="30461" default="Youtube" />
+		
+		<setting id="default_musicvideo_skip_audio" type="bool" label="30465" default="false" />
+		<setting id="default_musicvideo_skip_lyrics" type="bool" label="30462" default="false" />
+		<setting id="default_musicvideo_skip_live" type="bool" label="30463" default="false" />
+		<setting id="default_musicvideo_skip_albums" type="bool" label="30464" default="false" />
+		
+		<setting id="default_musicvideo_genre" label="30403" type="select" values="hardcoded" default="hardcoded" />
+		<setting id="default_musicvideo_genre_fallback" subsetting="true" label="30404" type="select" values="do not add|hardcoded" default="do not add" />
+		<setting id="default_musicvideo_genre_hardcoded" subsetting="true" label="30405" type="text" />	
+		
+		<setting id="default_musicvideo_song_fallback" label="30410" type="select" values="video title|do not add" default="video title" />
+		
+		<setting id="default_musicvideo_artist" label="30421" type="select" values="video title and description|playlist channelname|video channelname|hardcoded" default="video title and description" />
+		<setting id="default_musicvideo_artist_fallback" subsetting="true" label="30422" type="select" values="hardcoded|playlist channelname|video channelname|do not add" default="do not add" />
+		<setting id="default_musicvideo_artist_hardcoded" subsetting="true" label="30423" type="text" />	
+		
+		<setting id="default_musicvideo_album" label="30431" type="select" values="video title and description|published year|hardcoded" default="video title and description" />
+		<setting id="default_musicvideo_album_fallback" subsetting="true" label="30432" type="select" values="published year|hardcoded|do not add" default="hardcoded" />
+		<setting id="default_musicvideo_album_hardcoded" subsetting="true" label="30433" type="text" default="Unknown" />	
+		
+		<setting id="default_musicvideo_plot" label="30441" type="select" values="lyrics in video description|video description|playlist description|hardcoded" default="video description" />
+		<setting id="default_musicvideo_plot_fallback" subsetting="true" label="30442" type="select" values="hardcoded|video description|playlist description|do not add" default="video description" />
+		<setting id="default_musicvideo_plot_hardcoded" subsetting="true" label="30443" type="text" />	
+		
+		<setting id="default_musicvideo_year" label="30451" type="select" values="video title and description|published year|hardcoded" default="video title and description" />
+		<setting id="default_musicvideo_year_fallback" subsetting="true" label="30452" type="select" values="published year|hardcoded|do not add" default="published year" />
+		<setting id="default_musicvideo_year_hardcoded" subsetting="true" label="30453" type="text" />	
+		
+		<setting id="default_musicvideo_minlength" type="time" label="30306" default=""/>
+		<setting id="default_musicvideo_maxlength" type="time" label="30307" default=""/>
+		<setting id="default_musicvideo_onlyinclude" label="30308" type="text" default="" />
+		<setting id="default_musicvideo_excludewords" label="30309" type="text" default="" />
+		<setting id="default_musicvideo_stripdescription" label="30310" type="text" default="" />
+		<setting id="default_musicvideo_removedescription" label="30311" type="text" default="" />
+		<setting id="default_musicvideo_striptitle" label="30312" type="text" default="" />
+		<setting id="default_musicvideo_removetitle" label="30313" type="text" default="" />
+        <setting id="default_musicvideo_generate_nfo" label="30302" type="bool" default="true" />
 	</category>    
 </settings>
 

@@ -117,6 +117,11 @@ def timedelta_total_seconds(timedelta):
     return (
         timedelta.microseconds + 0.0 +
         (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
+
+#Converts secs to hms
+def convert_sec_to_hms(seconds):
+    import time
+    time.strftime('%H:%M:%S', time.gmtime(int(seconds)))
         
 #Grab an Addon Setting
 def getAddonSetting(setting, default='niks'):
@@ -125,3 +130,45 @@ def getAddonSetting(setting, default='niks'):
         if val is None or val is '':
             val = default
     return val
+    
+#Converts type link to a nice naming
+def typeName(type):
+    type_name = ''
+    if(type == ''):
+        type_name = 'TV Shows'
+    elif(type == 'musicvideo'):
+        type_name = 'Music Videos'
+    elif(type == 'music'):
+        type_name = 'Music'
+    elif(type == 'movies'):
+        type_name = 'Movies'
+    return type_name
+    
+#Converts type to its settings.xml
+def typeXml(type):
+    if(type == 'musicvideo'):
+        return 'settings_musicvideo.xml'
+    elif(type == 'music'):
+        return 'settings_music.xml'
+    elif(type == 'movies'):
+        return 'settings_movies.xml'
+    else:
+        return 'settings.xml'
+        
+#Converts the type to the epnr directory
+def typeEpnr(type):
+    if type == 'musicvideo':
+        return 'musicvideo'
+    elif type == 'music':
+        return 'music'
+    elif type == 'movies':
+        return 'movies'
+    else:
+        return 'episodenr'
+        
+#Gets the setting from the xml safely
+def get_setting(setting, settings):
+    setting = settings.find(setting).text
+    if setting is None:
+        setting = ''
+    return setting

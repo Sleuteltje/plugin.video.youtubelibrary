@@ -26,10 +26,13 @@ from resources.lib import ytube
 
 
 #Writes the nfo & strm files for all playlists
-def update_playlists():
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube Playlists...', vars.__icon__, 3000)
-    dev.log('Updating All Youtube Playlists')
-    m_xml.xml_get()
+def update_playlists(type=''):
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube '+dev.typeName(type)+' Playlists...', vars.__icon__, 3000)
+    dev.log('Updating All '+type+' Youtube Playlists')
+    scan_interval = 'service_interval'
+    if type == 'musicvideo':
+        scan_interval = 'service_interval_musicvideo'
+    m_xml.xml_get(type=type)
     pl = m_xml.document.findall('playlists/playlist')
     if pl is not None: 
         for child in pl: #Loop through each playlist
@@ -46,23 +49,26 @@ def update_playlists():
                 #diff = (timenow-scansince).total_seconds()
                 diff = dev.timedelta_total_seconds(timenow-scansince)
                 dev.log('Difference is '+str(diff))
-                if diff < (int(vars.__settings__.getSetting("service_interval")) * 60 * 60):
+                if diff < (int(vars.__settings__.getSetting(scan_interval)) * 60 * 60):
                     dev.log('Difference '+str(diff)+' was not enough, '+str(int(vars.__settings__.getSetting("service_interval")) * 60 * 60)+' seconds needed. This Playlist will not be updated now.')
                     continue
                 
             
-                update_playlist(child.attrib['id']) #Update the nfo & strm files for this playlist
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Done Updating Youtube Playlists', vars.__icon__, 3000)
+                update_playlist(child.attrib['id'], type=type) #Update the nfo & strm files for this playlist
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Done Updating Youtube '+dev.typeName(type)+' Playlists', vars.__icon__, 3000)
     #Should we also update the video library?
-    if vars.update_videolibrary == "true":
-        dev.log('Updating video library is enabled. Updating librarys directory %s' % vars.tv_folder_path, True)
-        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+vars.tv_folder_path+')')
+    if vars.update_videolibrary == "true" and type=='':
+        update_dir = vars.tv_folder_path
+        if type == 'musicvideo':
+            update_dir = vars.musicvideo_folder_path
+        dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
+        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
         
 #Writes the nfo & strm files for the given playlist
-def update_playlist(id):
-    settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}) #Grab the xml settings for this playlist
+def update_playlist(id, type=''):
+    settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
     if settings is None:
-        dev.log('Could not find playlist '+id+' in the settings.xml file', True)
+        dev.log('Could not find playlist '+id+' in the '+dev.typeXml(type)+' file', True)
         return False
     else:
         dev.log('Updating playlist %s (Id: %s)' % (settings.find('title').text.encode('utf-8'), id))
@@ -76,14 +82,15 @@ def update_playlist(id):
         #Create the tvshow.nfo
         writenfo = settings.find('writenfo').text
         if writenfo != 'no':
-            generators.write_tvshow_nfo(folder, settings)
+            if type == '' or type == 'tv':
+                generators.write_tvshow_nfo(folder, settings)
         
-        update_playlist_vids(id, folder, settings)
+        update_playlist_vids(id, folder, settings, type=type)
         
         #Save the time this playlist got updated in the xml
         import datetime
         d=datetime.datetime.now()
-        m_xml.xml_update_playlist_attr(id, 'scansince', d.strftime("%d/%m/%Y %H:%M:%S"))
+        m_xml.xml_update_playlist_attr(id, 'scansince', d.strftime("%d/%m/%Y %H:%M:%S"), type=type)
     
         return True
 
@@ -92,7 +99,7 @@ def update_playlist(id):
     #the folder where the strm & nfo files should go
     #the elementtree element containing the playlist xml settings
     #the id of the fist videoId, so it can save that one in the xml if it parsed all videos. Since the newest is the video it should be stopping the next time.
-def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False):
+def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False, type=type):
     
     ##Get all Youtube Videos belonging to this playlist
     #resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
@@ -108,7 +115,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
         vids = resp.get("items", [])
         for vid in vids:
-            if m_xml.episode_exists(id, vid['contentDetails']['videoId']):
+            if m_xml.episode_exists(id, vid['contentDetails']['videoId'], type=type):
                 #This list contains a videoId we already got, assume we are up to date
                 uptodate = True
                 continue #continue to the next video in the list
@@ -146,7 +153,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
         #Recalculate maxlength
         dev.log('maxlength is turned on: '+maxlength)
         maxlength = ytube.hms_to_sec(maxlength)
-        dev.log('maxlength in seconds: '+maxlength)
+        dev.log('maxlength in seconds: '+str(maxlength))
     else:
         maxlength = None    
 
@@ -156,7 +163,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
     ##Loop through all 50< vids and check with filters if we should add it
     for vid in reversed(all_vids):    
         #Check if we already had this video, if so we should skip it
-        if m_xml.episode_exists(id, vid['contentDetails']['videoId']):
+        if m_xml.episode_exists(id, vid['contentDetails']['videoId'], type=type):
             dev.log('Episode '+vid['contentDetails']['videoId']+' is already scanned into the library')
             continue
         ##Check if the filters in the settings prevent this video from being added
@@ -177,18 +184,35 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False)
                 dev.log('Does not match maxlength: '+vid['snippet']['title']+' (id: '+vid['contentDetails']['videoId']+')')
                 continue #Skip this video
                 
-        dev.log('TEST duration '+str(duration[vid['contentDetails']['videoId']]))
+        #dev.log('TEST duration '+str(duration[vid['contentDetails']['videoId']]))
         
-        #Grab the correct season and episode number from this vid
-        season, episode, vid = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
-        filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
-        
-        generators.write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode
-        if settings.find('writenfo').text != 'no':
-            generators.write_nfo(filename, folder, vid, settings, season = season, episode = episode, duration = duration[vid['contentDetails']['videoId']]) #Write the nfo file for this episode
-        
+        if type == '' or type == 'tv':
+            #Grab the correct season and episode number from this vid
+            season, episode, vid = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
+            filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
+            
+            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode
+            if settings.find('writenfo').text != 'no':
+                generators.write_nfo(filename, folder, vid, settings, season = season, episode = episode, duration = duration[vid['contentDetails']['videoId']]) #Write the nfo file for this episode
+        ##Musicvideo
+        elif type == 'musicvideo':
+            #Grab the musicvideo information from the generator
+            musicvideo_info = generators.get_songinfo(vid, settings, duration = duration[vid['contentDetails']['videoId']])
+            if musicvideo_info == False:
+                continue #Skip this video, it did not make it past the musicvideo filters
+            
+            filename = vid['snippet']['title'] #Create the filename for the .strm & .nfo file
+            
+            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], artist=musicvideo_info['artist'], song=musicvideo_info['title'], album=musicvideo_info['album'], year=musicvideo_info['year'], type=type) #Write the strm file for this episode
+            if settings.find('writenfo').text != 'no':
+                generators.write_nfo(filename, folder, vid, settings, musicvideo=musicvideo_info, duration = duration[vid['contentDetails']['videoId']], type=type) #Write the nfo file for this episode
+            season = musicvideo_info['album']
+            if season == '':
+                season = musicvideo_info['artist']
+            
+            
         #Add this episode to the episodenr/playlist.xml file so we can remember we scanned this episode already
-        m_xml.playlist_add_episode(id, season, vid['contentDetails']['videoId'])
+        m_xml.playlist_add_episode(id, season, vid['contentDetails']['videoId'], type=type)
         
     #If there is a nextPagetoken there are more videos to parse, call this function again so it can parse them to
     '''
