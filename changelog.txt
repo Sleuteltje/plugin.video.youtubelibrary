@@ -1,22 +1,16 @@
+0.9.5.1:
+- Fixed Bug: Images (folder.jpg etc.) will not be downloaded everytime the playlist is updated.
+- Fixed Error: If the youtube server is not connectable, it will retry in 15 seconds with SSL disabled
+- Fixed Error: division by zero error whith playback on video on some devices
+- Fixed Error: If images are not downloadable with https://, it will try to download with http://
+- Fixed some other small things & bugs
+
 0.9.5 - Happy New Year!
-- Changed Icon & Fanart to Happy New Year! Edition
-- Added Feature: Now works with youtube-dl instead of pafy to get video url (This makes VEVO video playback possible as well)
-- Added Feature: Basic Mode. If the settings dazzle you, this is the setting for you. You don't get to alter things much tho.
-- Added Feature: Normal Mode (enabled by default). Some options are still hidden.
-- Added Feature: Expert Mode. All options are available.
-- Added Feature: defaultsetting for Tags
-- Fixed Bug: Some defaultsettings for TV were not working
+- Now works with youtube-dl instead of pafy to get video url (This makes VEVO video playback possible as well)
+
 - Added Feature: MusicVideo Support:
 	Added MusicVideo Features:
-	- Tries to pretty up the songtitle
-	- Skip Audio-only videos
-	- Skip Live videos
-	- Skip Lyric Videos
-	- Auto tags Audio-only videos as 'audio'
-	- Auto tags Live vidoes as 'live'
-	- Auto tags Lyric videos as 'lyrics'
 	- Guess artist - song from youtube video/description
-	- Guess feautured artists, and add those artist as seperete artists on the musicvideo
 	- Use playlist name, video channel name, hardcoded as Artist fallback
 	- Use video title as Song title fallback
 	- Guess Album from video title/description
@@ -25,7 +19,14 @@
 	- Guess Year from video title/description
 	- Use published year or a hardcoded year as year fallback
 	- Option to not add (skip the video) if recognizition of any tag fails
-
+	- Auto tags Audio-only videos as 'audio'
+	- Auto tags Live vidoes as 'live'
+	- Auto tags Lyric videos as 'lyrics'
+- Added Feature: Basic Mode. If the settings dazzle you, this is the setting for you. You don't get to alter things much tho.
+- Added Feature: Normal Mode (enabled by default). Some options are still hidden.
+- Added Feature: Expert Mode. All options are available.
+- Added Feature: defaultsetting for Tags
+- Fixed Bug: Some defaultsettings for TV were not working
 
 0.9.4.1
 - Fixed Bug: Tags would error if only one was specified

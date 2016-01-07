@@ -55,11 +55,7 @@ def convert_published(date):
 #Returns the channel id 
 def yt_get_playlist_info(id):
     #Connect to youtube API
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
     #Retrieve the information from the youtube API
     response = youtube.playlists().list(
       part="contentDetails,id,snippet",
@@ -85,11 +81,7 @@ def yt_get_playlist_info(id):
 #Grabs the playlists that the given channelid has created
 def yt_get_playlists_by_channel(id):
     #Connect to youtube API
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
     #Retrieve the information from the youtube API
     response = youtube.playlists().list(
       part="contentDetails,snippet",
@@ -106,11 +98,7 @@ def yt_get_playlists_by_channel(id):
     # ChannelId : The id of the channel we want to retrieve
 def yt_get_channel_info(Channelid):
     #Connect to youtube API
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
     dev.log('GET yt_get_channel_info: https://www.googleapis.com/youtube/v3/channels?part=snippet%2C+contentDetails%2C+brandingSettings&maxResults=50&id='+Channelid+'&key='+vars.API_KEY)
 
     #Search for the channels with the following parameters
@@ -128,11 +116,7 @@ def yt_get_channel_info(Channelid):
     # keyword : The keyword we want to use to search for channels
     # type: The type (tv, musicvideo, music, movie), so we know which links to build
 def search_channel(keyword, type=''):
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
     search_response = youtube.search().list(
       q=keyword,
       part="id,snippet",
@@ -152,11 +136,7 @@ def search_channel(keyword, type=''):
 # Params:
     # keyword: The keyword to search for
 def search_by_keyword(keyword):
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
     search_response = youtube.search().list(
       q=keyword,
       part="id,snippet",
@@ -172,12 +152,7 @@ def search_by_keyword(keyword):
     # id: The id of the playlist which videos you want to retrieve
     #nextpage: The nextpage token. Default: false. If set it will retrieve the page. That allows all videos to be parsed, instead of the 50 limit
 def vids_by_playlist(id, nextpage = False):
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
-    
+    youtube = build_youtube()
     if nextpage == False:
         dev.log('GET vids_by_playlist: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2C+contentDetails&maxResults=50&playlistId='+id+'&key='+vars.API_KEY)
         search_response = youtube.playlistItems().list(
@@ -209,11 +184,8 @@ def get_duration_vids(vid_ids):
         idlist += id+','
     idlist = idlist[:-1]
     
-    youtube = build(
-      vars.YOUTUBE_API_SERVICE_NAME, 
-      vars.YOUTUBE_API_VERSION, 
-      developerKey=vars.API_KEY
-    )
+    youtube = build_youtube()
+    
     search_response = youtube.videos().list(
       part="contentDetails",
       maxResults=50,
@@ -270,3 +242,28 @@ def hms_to_sec(hms):
     else:
         dev.log('Could not extract seconds from hms format: '+hms, True)
         return None
+
+
+#Connects to the Youtube API        
+def build_youtube():
+    try:
+        youtube = build(
+          vars.YOUTUBE_API_SERVICE_NAME, 
+          vars.YOUTUBE_API_VERSION, 
+          developerKey=vars.API_KEY
+        )
+    except:
+        dev.log('ERROR: Could not connect to Youtube API! Will try again in 15 seconds with SSL disabled', 2)
+        import xbmc
+        #Wait 15 seconds before trying again
+        xbmc.Monitor().waitForAbort(15)
+        #Try again with SSL disabled
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
+        youtube = build(
+          vars.YOUTUBE_API_SERVICE_NAME, 
+          vars.YOUTUBE_API_VERSION, 
+          developerKey=vars.API_KEY
+        )
+
+    return youtube

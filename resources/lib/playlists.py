@@ -19,6 +19,7 @@
 import xbmcgui
 import os
 import shutil
+import xbmc
 
 from resources.lib import vars
 from resources.lib import dev

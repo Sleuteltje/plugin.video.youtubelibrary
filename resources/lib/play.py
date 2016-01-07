@@ -16,6 +16,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import division
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcplugin
 import sys
 
@@ -155,7 +156,7 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
         except: pass
         xbmc.sleep(1000)
     
-    diff = currentTime / totalTime #Calculate how much of the video has been watced
+    diff = currentTime / totalTime #Calculate how much of the video has been watched
     #The video has stopped playing
     dev.log('Ended Video Playback (%s) @ %s (percentage: %s)' % (totalTime, currentTime, diff))
     

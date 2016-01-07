@@ -58,7 +58,7 @@ def reg(se, txt):
 def episode_season(vid, settings, totalresults = False, playlist = False):
     ep = settings.find('episode').text #Grab the episode settings from the xml
     se = settings.find('season').text
-    
+    #dev.log('episode_season('+playlist+','+se+','+ep+')')
     found = False
     
     ##See if there should be standard season/episode recognisition for the season
@@ -125,7 +125,9 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
             episode = m_xml.number_of_episodes(playlist, season)
             if episode == None:
                 episode = 0
+            #dev.log('Default Eprec: '+str(episode))
             episode = str(episode + 1)
+            #dev.log('Default Eprec after +1: '+episode)
         elif ep == 'monthday': #We want the episode to be the month number + day number
             d = ytube.convert_published(vid['snippet']['publishedAt'])
             episode = d['month']+d['day']
@@ -984,6 +986,20 @@ def write_tvshow_nfo(fold, settings):
     #If the setting download_images is true, we should also download the images as actual files into the directory
     if vars.__settings__.getSetting("download_images") == "true":
         dev.log('download_images enabled, so downloading images to '+folder)
-        urllib.urlretrieve(settings.find('thumb').text, folder+"/folder.jpg")
-        urllib.urlretrieve(settings.find('banner').text, folder+"/banner.jpg")
-        urllib.urlretrieve(settings.find('fanart').text, folder+"/fanart.jpg")
+        download_img(settings.find('thumb').text, folder+"/folder.jpg")
+        download_img(settings.find('banner').text, folder+"/banner.jpg")
+        download_img(settings.find('fanart').text, folder+"/fanart.jpg")
+
+def download_img(url, filename, overwrite=False):
+    import os.path
+    if os.path.isfile(filename) and overwrite is False:
+        return False
+    try:
+        urllib.urlretrieve(url, filename)
+    except IOError:
+        #Replace the https with http
+        try:
+            urllib.urlretrieve(url.replace('https://', 'http://'), filename)
+        except:
+            dev.log('Could not download: '+url, 1)
+    return True
