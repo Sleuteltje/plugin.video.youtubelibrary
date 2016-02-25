@@ -10,8 +10,7 @@
 	</category>
     <!--Library Settings-->
     <category label="30200">
-		<setting id="service_interval" type="select" label="30201" values="4|8|12|24|48|168|672" default="12" />
-		<setting id="service_interval_musicvideo" type="select" label="30206" values="4|8|12|24|48|168|672" default="672" />
+		<setting id="service_interval" type="select" label="30201" values="5|10|15|30|60|120|240|720|1440" default="30" />
 		<setting id="update_videolibrary" type="bool" label="30202" default="true"/>
 		<setting label="30203" type="lsep"/>
 		<setting id="tv_folder" type="folder" label="30204" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
@@ -52,7 +51,7 @@
 		<setting id="default_musicvideo_genre_fallback" subsetting="true" label="30404" type="select" values="do not add|hardcoded" default="do not add" />
 		<setting id="default_musicvideo_genre_hardcoded" subsetting="true" label="30405" type="text" />	
 		
-		<setting id="default_musicvideo_song_fallback" label="30410" type="select" values="video title|do not add" default="video title" />
+		<setting id="default_musicvideo_song_fallback" label="30410" type="select" values="video title|video title (original)|do not add" default="video title" />
 		
 		<setting id="default_musicvideo_artist" label="30421" type="select" values="video title and description|playlist channelname|video channelname|hardcoded" default="video title and description" />
 		<setting id="default_musicvideo_artist_fallback" subsetting="true" label="30422" type="select" values="hardcoded|playlist channelname|video channelname|do not add" default="do not add" />
@@ -80,6 +79,8 @@
 		<setting id="default_musicvideo_removetitle" label="30313" type="text" default="" />
         <setting id="default_musicvideo_generate_nfo" label="30302" type="bool" default="true" />
         <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+		<setting id="default_musicvideo_updateevery" label="30316" type="select" values="12 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="off" />
+		<setting id="default_musicvideo_updateat" type="time" label="30317" default="23:59"/>
 	</category>    
 </settings>
 

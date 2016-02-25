@@ -28,7 +28,7 @@ from resources.lib import playlists
 ###SERVICE
 #Runs the service    
 def run_service():
-    dev.log('SERVICE started updates again in % hours' % vars.service_interval)
+    dev.log('SERVICE started updates again in % minutes' % vars.service_interval)
     import time
 
     service.update_playlists()
@@ -38,11 +38,11 @@ def run_service():
     
     while True:
         # Sleep/wait for abort for number of hours that is set in the addon settings
-        if xbmc.Monitor().waitForAbort(vars.service_interval*60*60):
+        if xbmc.Monitor().waitForAbort(vars.service_interval*60):
         #if monitor.waitForAbort(5*60):
             # Abort was requested while waiting. We should exit
             break
-        dev.log("SERVICE is running..! will update again in %s hours" % vars.service_interval)
+        dev.log("SERVICE is running..! will update again in %s minutes" % vars.service_interval)
         service.update_playlists()
         service.update_playlists('musicvideo') #Update musicvideos as well
     dev.log("Kodi not running anymore, Service terminated")

@@ -202,6 +202,8 @@ def get_songinfo(vid, settings, duration):
     setting_skip_albums = settings.find('skip_albums').text
     dev.log('loaded settings')
     vid_title = vid_title.strip(' \t\n\r')
+    
+        
 
     
     ##Strip complete album from the title
@@ -311,25 +313,34 @@ def get_songinfo(vid, settings, duration):
     
     
     ##Determine the artist & song
-    artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
-    if artist == False:
-        artist = get_hardcoded('artist_fallback', settings, vid)
-        if artist == False:
-            dev.log('Artist not found! Fallback was '+setting_artist_fallback+', video: '+vid_title+' ('+vid_id+') not added')
-            return False
+    #If the setting artist is hardcoded & the song recognisition is set to video title, we should leave it at that
+    if setting_artist == 'hardcoded' and setting_song_fallback == 'video title' or setting_artist == 'hardcoded' and setting_song_fallback == 'video title (original)':
+        dev.log('Artist is hardcoded and song is set to video title, leave it at that: '+setting_artist_hardcoded)
+        artist = setting_artist_hardcoded
+        song = vid_title
+        if setting_song_fallback == 'video title (original)':
+            song = vid['snippet']['title']
+        featured = ''
     else:
-        ft = get_multiple_artists(artist)
-        if ft != False:
-            artist = ft.pop(0) #Assume the first artist is the main artist
-            featured = ft
-    artist = strip_audio(artist) #Strip (audio) and such from the name
-    artist = strip_live(artist) #Strip live and such from the artist
-    artist = strip_lyrics(artist) #Strip lyrics and such from the artist
-    if song == False:
-        song = get_hardcoded('song_fallback', settings, vid)
+        artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
+        if artist == False:
+            artist = get_hardcoded('artist_fallback', settings, vid)
+            if artist == False:
+                dev.log('Artist not found! Fallback was '+setting_artist_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+                return False
+        else:
+            ft = get_multiple_artists(artist)
+            if ft != False:
+                artist = ft.pop(0) #Assume the first artist is the main artist
+                featured = ft
+        artist = strip_audio(artist) #Strip (audio) and such from the name
+        artist = strip_live(artist) #Strip live and such from the artist
+        artist = strip_lyrics(artist) #Strip lyrics and such from the artist
         if song == False:
-            dev.log('Song not found! Fallback was '+setting_song_fallback+', video: '+vid_title+' ('+vid_id+') not added')
-            return False
+            song = get_hardcoded('song_fallback', settings, vid)
+            if song == False:
+                dev.log('Song not found! Fallback was '+setting_song_fallback+', video: '+vid_title+' ('+vid_id+') not added')
+                return False
     
     ##If the video kind is an album, the album is the song title
     if album == False:
@@ -650,6 +661,9 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
     
     folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
     xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    if type == '' or type == 'tv':
+        folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
+        xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
 
     stream = os.path.join(folder, enc_name + '.strm') #Set the file to maindir/name/name.strm
     file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
@@ -899,6 +913,9 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     enc_name = dev.legal_filename(name)
     folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
     xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    if type == '' or type == 'tv':
+        folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
+        xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
 
     stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
     file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
@@ -975,22 +992,62 @@ def write_tvshow_nfo(fold, settings):
     
     import codecs
     # process Unicode text
-    with codecs.open(stream,'w',encoding='utf8') as f:
-        f.write(content)
-        f.close()
-    #file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
-    #file.write(str(content)) #Write the content in the file
-    #file.close() #Close the file
+    #with codecs.open(stream,'w',encoding='utf8') as f:
+    #    f.write(content)
+    #    f.close()
+    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
+    file.write(str(content.encode("utf-8"))) #Write the content in the file
+    file.close() #Close the file
     dev.log('write_tvshow_nfo: Written tvshow.nfo file: '+fold+'/'+enc_name+'.nfo')
     
     #If the setting download_images is true, we should also download the images as actual files into the directory
     if vars.__settings__.getSetting("download_images") == "true":
+        extrafanart = os.path.join(folder, 'extrafanart') #Set to extrafanart
+        xbmcvfs.mkdir(extrafanart) #Create this subfolder if it does not exist yet
+        
         dev.log('download_images enabled, so downloading images to '+folder)
         download_img(settings.find('thumb').text, folder+"/folder.jpg")
         download_img(settings.find('banner').text, folder+"/banner.jpg")
         download_img(settings.find('fanart').text, folder+"/fanart.jpg")
+        download_img(settings.find('fanart').text, extrafanart+"/fanart.jpg")
 
-def download_img(url, filename, overwrite=False):
+
+def download_img(thumbUrl, filename, overwrite=False): 
+    #import codecs
+    #import zipfile
+    #import time
+    
+    #import fnmatch   
+    #import util, helper
+    #from util import * 
+    import urllib2
+    import xbmcgui
+    import os.path
+    if os.path.isfile(filename) and overwrite is False:
+        return False
+    
+    # fetch thumbnail and save to filepath
+    try:					
+        target = filename
+        if(filename.startswith('smb://')):
+            #download file to local folder and copy it to smb path with xbmcvfs
+            target = os.path.join(os.path.getTempDir(), os.path.basename(filename))
+                                
+        req = urllib2.Request(thumbUrl)
+        req.add_unredirected_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31')
+        f = open(target,'wb')
+        f.write(urllib2.urlopen(req).read())
+        f.close()
+            
+        if(filename.startswith('smb://')):	
+            xbmcvfs.copy(target, filename)
+            xbmcvfs.delete(target)
+            
+    except Exception, (exc):
+        xbmcgui.Dialog().ok('ERROR', 'Could not create image!')
+        dev.log("ERROR: Could not create file: '%s'. Error message: '%s'" %(str(filename), str(exc)))
+        
+"""def download_img(url, filename, overwrite=False):
     import os.path
     if os.path.isfile(filename) and overwrite is False:
         return False
@@ -1003,3 +1060,5 @@ def download_img(url, filename, overwrite=False):
         except:
             dev.log('Could not download: '+url, 1)
     return True
+    """        
+        

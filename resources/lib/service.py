@@ -90,9 +90,9 @@ def updateevery_normal(t, time, scansince):
 def update_playlists(type=''):
     xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube '+dev.typeName(type)+' Playlists...', vars.__icon__, 3000)
     dev.log('Updating All '+type+' Youtube Playlists')
-    scan_interval = 'service_interval'
-    if type == 'musicvideo':
-        scan_interval = 'service_interval_musicvideo'
+    #scan_interval = 'service_interval'
+    #if type == 'musicvideo':
+    #    scan_interval = 'service_interval_musicvideo'
     m_xml.xml_get(type=type)
     pl = m_xml.document.findall('playlists/playlist')
     if pl is not None: 

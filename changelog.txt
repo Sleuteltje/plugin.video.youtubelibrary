@@ -1,6 +1,4 @@
 To Fix:
-- smb:// paths werken niet
-- Afbeeldingen, seizoenen e.d. opslaan in de submappen
 - Localize all strings
 - Artist / song recognizition met Epic Rap Battles
 
@@ -16,7 +14,12 @@ To Fix:
 - Added Feature: Set frequency of updates for each playlist seperately
 - Added Feature: Set desired day of the week for the updating of playlists
 - Added Feature: Set desired time of the day for the updating of playlists
-
+- Fanart also saved in a subdir called extrafanart
+- .strm & .nfo files are now stored in subdirectories of their season
+- Lots of small fixes & little changes
+- Support for smb:// paths
+- Fix: When song_fallback is set to video title / video title (original) & artist_recognisition is set to hardcoded, just those values will be used. No further stripping or altering of the artist / song will be done
+- Added Feature: song_fallback: video title (original). Just use the original video title as the song title, just as it is on youtube.
 
 
 0.9.5.1:

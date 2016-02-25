@@ -12,8 +12,7 @@
     <string id="30104">Debug Mode</string>
 	<string id="30105">Mode</string>
 	<!--Library Settings-->
-	<string id="30201">Scan for new TV videos every X hours</string>
-	<string id="30206">Scan for new Music Video videos every X hours</string>
+	<string id="30201">Run the service every X minutes</string>
     <string id="30202">Update Video Library after updating new youtube vids</string>
     <string id="30203">Add these directories to your Kodi Library</string>
     <string id="30204">TV Shows Directory</string>

@@ -162,7 +162,7 @@ def setEditPlaylist(id, set, type=''):
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'onlygrab':
         options = ['0', '50', '100', '250', '500', '1000', '5000', '10000']
-        i = xbmcgui.Dialog().select('Choose Max old videos to grab', options)
+        i = xbmcgui.Dialog().select('Choose max old videos to grab', options)
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'updateevery':
@@ -191,10 +191,12 @@ def setEditPlaylist(id, set, type=''):
             i = 'do not add'
     #Song Fallback
     elif set == 'song_fallback' and type == 'musicvideo':
-        i = xbmcgui.Dialog().select('Choose Song Recognizition Fallback', ['video title', 'do not add'])
+        i = xbmcgui.Dialog().select('Choose Song Recognizition Fallback', ['video title', 'video title (original)', 'do not add'])
         if i == 0:
             i = 'video title'
         elif i == 1:
+            i = 'video title (original)'
+        elif i == 2:
             i = 'do not add'
     #Artist
     elif set == 'artist':
