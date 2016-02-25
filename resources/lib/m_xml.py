@@ -263,6 +263,9 @@ def xml_build_new_playlist(id, type=''):
         removedescription = dev.getAddonSetting("default_removedescription", '')
         striptitle = dev.getAddonSetting("default_striptitle", '')
         removetitle = dev.getAddonSetting("default_removetitle", '')
+        updateevery = dev.getAddonSetting("default_updateat", 'every 12 hours')
+        updateat = dev.getAddonSetting("default_updateat", '23:59')
+        
         
         #Build the playlist
         playlist = {
@@ -284,6 +287,8 @@ def xml_build_new_playlist(id, type=''):
                 # STRM & NFO Settings
                 'writenfo'             : writenfo,
                 'delete'                : '',
+                'updateevery'       : updateevery,
+                'updateat'        : updateat,
                 'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
                 'keepvideos'        : '',
                 'overwritefolder'   : '',

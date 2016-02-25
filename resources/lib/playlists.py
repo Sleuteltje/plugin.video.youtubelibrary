@@ -165,10 +165,17 @@ def setEditPlaylist(id, set, type=''):
         i = xbmcgui.Dialog().select('Choose Max old videos to grab', options)
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+    elif set == 'updateevery':
+        options = ['every 4 hours', 'every 8 hours', 'every 12 hours', 'every 24 hours', 'every day', 'every sunday', 'every monday', 'every tuesday', 'every wednesday', 'every thursday', 'every friday', 'every saturday']
+        i = xbmcgui.Dialog().select('Choose when to update this playlist', options)
+        i = options[i]
+        #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'minlength':
         i = xbmcgui.Dialog().numeric(2, 'Set a minimum length for videos')
     elif set == 'maxlength':
         i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
+    elif set == 'updateat':
+        i = xbmcgui.Dialog().numeric(2, 'Update this playlist on this time of the day')
     
     ###MUSIC VIDEOS
     #genre
@@ -328,8 +335,6 @@ def editPlaylist(id, type=''):
             url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'enable', 'type': type})
             dev.adddir('[COLOR red]Playlist is disabled![/COLOR]', url, thumb, fanart, 'The playlist is disabled, so you can change your settings before scanning into your Kodi Library. When you are done setting up this playlist, enable it so it gets scanned into the Kodi Library.')
         
-        #Only get last X videos
-        disp_setting('onlygrab', 'Grab last X videos', 'Instead of adding all old episodes, only add the last X episodes')
         
         #Title
         extra_desc = ''
@@ -394,9 +399,16 @@ def editPlaylist(id, type=''):
             disp_setting('published', 'Published', 'The date the show first aired', 1)
         #WriteNFO
         if vars.mode > 0:
+            #Only get last X videos
+            disp_setting('onlygrab', 'Grab last X videos', 'Instead of adding all old episodes, only add the last X episodes')
+            
+            
+            disp_setting('updateevery', 'Update every', 'Update this playlist at a specific time interval or day')
+            disp_setting('updateat', 'Update at', 'Update this playlist at a specific time if updateevery is set to a specific day.  (This setting is ignored when "update every" is set to every X hours)')
+        
             url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'writenfo', 'type': type})
             dev.adddir('[COLOR blue]Write NFO:[/COLOR] '+elem.find('writenfo').text, url, gear, fanart, 'NFO Files are needed for Kodi to recognise the youtube episodes as episodes, so it can scan it in its library. If you only want strm files, set this to No')
-        
+            
             #Filters
             #Only include
             disp_setting('onlyinclude', 'Only Include', 'Only include videos containing the following text in the title. Placing words in between | will create an or. So review|trailer will only pick up videos with either review or trailer in its title')

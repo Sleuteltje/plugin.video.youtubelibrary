@@ -1,7 +1,6 @@
 To Fix:
 - smb:// paths werken niet
 - Afbeeldingen, seizoenen e.d. opslaan in de submappen
-- Update bepaalde playlists op een bepaald tijdstip
 - Localize all strings
 - Artist / song recognizition met Epic Rap Battles
 
@@ -13,6 +12,10 @@ To Fix:
 - Fixed Bug: Unicode file paths (japanese characters etc work)
 - Fix: special://profile is now used (fix for double userdata/userdata included :S)
 - Fix: Changed service start from startup to login
+- Completely redid the way the service works, making different updating rules for each playlist possible
+- Added Feature: Set frequency of updates for each playlist seperately
+- Added Feature: Set desired day of the week for the updating of playlists
+- Added Feature: Set desired time of the day for the updating of playlists
 
 
 

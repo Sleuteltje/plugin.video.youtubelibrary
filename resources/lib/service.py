@@ -25,6 +25,67 @@ from resources.lib import generators
 from resources.lib import ytube
 
 
+#Outputs the updatevery setting in normal 
+def updateevery_normal(t, time, scansince):
+    import datetime
+    if time is None:
+        hour = 23
+        minute = 59
+    else:
+        hour = int(time[:2])
+        minute = int(time[3:5])
+        
+    if t == 'every 4 hours':
+        return scansince + datetime.timedelta(hours=4)
+    if t == 'every 8 hours':
+        return scansince + datetime.timedelta(hours=8)
+    if t == 'every 12 hours':
+        dev.log('12 hours since last scan is: '+str(scansince + datetime.timedelta(hours=12)))
+        return scansince + datetime.timedelta(hours=12)
+    if t == 'every 24 hours':
+        return scansince + datetime.timedelta(hours=24)
+    
+    
+    dev.log('t is '+t)
+    today = datetime.datetime.now()
+    weekday = (today.weekday() + 1) % 7 # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
+    
+    y = today
+    if t == 'every sunday':
+        if weekday is not 0:
+            y = today - datetime.timedelta(7+weekday)
+    if t == 'every monday':
+        if weekday is not 1:
+            y = today - datetime.timedelta(7+weekday-1)
+    if t == 'every tuesday':
+        if weekday is not 2:
+            y = today - datetime.timedelta(7+weekday-2)
+    if t == 'every wednesday':
+        if weekday is not 3:
+            y = today - datetime.timedelta(7+weekday-3)
+    if t == 'every thursday':
+        if weekday is not 4:
+            y = today - datetime.timedelta(7+weekday-4)
+    if t == 'every friday':
+        if weekday is not 5:
+            y = today - datetime.timedelta(7+weekday-5)
+    if t == 'every saturday':
+        if weekday is not 6:
+            y = today - datetime.timedelta(7+weekday-6)
+    
+    if t == 'every day':
+        #See if the playlist has been scaneed since yesterday
+        y = today - datetime.timedelta(days=1)
+        y = y.replace(hour=hour, minute=minute)
+        
+        if dev.timedelta_total_seconds(y-scansince) < 0:
+            dev.log('The time of yesterday is already scanned, so we will send the date&time of today')
+            y = today
+    
+    dev.log(t+' ago is: '+str(y.replace(hour=hour, minute=minute)))
+    return y.replace(hour=hour, minute=minute)
+
+
 #Writes the nfo & strm files for all playlists
 def update_playlists(type=''):
     xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube '+dev.typeName(type)+' Playlists...', vars.__icon__, 3000)
@@ -37,6 +98,21 @@ def update_playlists(type=''):
     if pl is not None: 
         for child in pl: #Loop through each playlist
             if child.attrib['enabled'] == 'yes': #Playlist has to be enabled
+                dev.log('SERVICE: Checking if playlist '+child.find('title').text+' should be updated...')
+                #Grab the settings from this playlist
+                #Loads the correct information from the settings.xml
+                #settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type)
+                #Grab when this playlist should be updated
+                updateat = '23:59'
+                if child.find('updateevery') is None:
+                    dev.log('NOTICE: Playlist should have an instruction when to be updated!. Asssumed default (12 hours) for now', 1)
+                    updateevery = 'every 12 hours'
+                else:
+                    updateevery = child.find('updateevery').text
+                    if child.find('updateat') is not None:
+                        updateat = child.find('updateat').text
+                
+                
                 #Check when this playlist was last updated, and if it is time for this playlist to be updated again
                 import datetime
                 try:
@@ -47,11 +123,31 @@ def update_playlists(type=''):
                 timenow = datetime.datetime.now()
                 dev.log('Playlist last scanned on: '+str(scansince)+', now: '+str(timenow), 1)
                 #diff = (timenow-scansince).total_seconds()
-                diff = dev.timedelta_total_seconds(timenow-scansince)
-                dev.log('Difference is '+str(diff))
-                if diff < (int(vars.__settings__.getSetting(scan_interval)) * 60 * 60):
-                    dev.log('Difference '+str(diff)+' was not enough, '+str(int(vars.__settings__.getSetting("service_interval")) * 60 * 60)+' seconds needed. This Playlist will not be updated now.')
+                
+                
+                #diff = dev.timedelta_total_seconds(timenow-scansince)
+                #dev.log('Difference from last scan is '+str(diff))
+                
+                #Get when this playlist should have last been updated
+                should_update = updateevery_normal(updateevery, updateat, scansince)
+                
+                #dev.log('The difference between should_update & scansince: '+str(dev.timedelta_total_seconds(should_update-scansince)))
+                if dev.timedelta_total_seconds(should_update-scansince) > 0:
+                    #The last scan was earlier than when this playlist should have last been updated!
+                    if dev.timedelta_total_seconds(timenow-should_update) > 0:
+                        #The time for updating lies in the past, so update this playlist
+                        dev.log('This playlist should be updated')
+                    else:
+                        dev.log('Its not time yet to update this playlist')
+                        continue
+                else:
+                    dev.log('Last update was after the time this playlist should have been updated')
                     continue
+                
+                #WITH OLD SCAN INTERVAL:
+                #if diff < (int(vars.__settings__.getSetting(scan_interval)) * 60 * 60):
+                #    dev.log('Difference '+str(diff)+' was not enough, '+str(int(vars.__settings__.getSetting("service_interval")) * 60 * 60)+' seconds needed. This Playlist will not be updated now.')
+                #    continue
                 
             
                 update_playlist(child.attrib['id'], type=type) #Update the nfo & strm files for this playlist

@@ -34,6 +34,8 @@
 		<setting id="default_removetitle" label="30313" type="text" default="" />
         <setting id="default_generate_nfo" label="30302" type="bool" default="true" />
         <setting id="default_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+		<setting id="default_updateevery" label="30316" type="select" values="12 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="off" />
+		<setting id="default_updateat" type="time" label="30317" default="23:59"/>
 	</category>    
     <!-- Default Music Video Playlist Settings -->
     <category label="30400">
