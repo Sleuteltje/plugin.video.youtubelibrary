@@ -1,6 +1,5 @@
 To Fix:
 - smb:// paths werken niet
-- Haal alleen de laatste X videos op
 - Afbeeldingen, seizoenen e.d. opslaan in de submappen
 - Update bepaalde playlists op een bepaald tijdstip
 - Localize all strings
@@ -9,6 +8,7 @@ To Fix:
 
 0.9.6:
 - Uses normal icon/fanart again. (if you liked the newyear art better, you can still find it in the root)
+- Added Feature: Only grab the last X videos instead of grabbing all videos from the channel / playlist
 - Fixed Bug: Unicode error when playing videos
 - Fixed Bug: Unicode file paths (japanese characters etc work)
 - Fix: special://profile is now used (fix for double userdata/userdata included :S)

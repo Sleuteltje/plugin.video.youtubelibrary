@@ -284,6 +284,7 @@ def xml_build_new_playlist(id, type=''):
                 # STRM & NFO Settings
                 'writenfo'             : writenfo,
                 'delete'                : '',
+                'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
                 'keepvideos'        : '',
                 'overwritefolder'   : '',
                 #Filters

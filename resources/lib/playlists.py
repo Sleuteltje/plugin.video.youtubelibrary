@@ -160,6 +160,11 @@ def setEditPlaylist(id, set, type=''):
         elif i == 6:
             i = dev.user_input('', 'Set a regular expression')
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
+    elif set == 'onlygrab':
+        options = ['0', '50', '100', '250', '500', '1000', '5000', '10000']
+        i = xbmcgui.Dialog().select('Choose Max old videos to grab', options)
+        i = options[i]
+        #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'minlength':
         i = xbmcgui.Dialog().numeric(2, 'Set a minimum length for videos')
     elif set == 'maxlength':
@@ -322,6 +327,9 @@ def editPlaylist(id, type=''):
         else:
             url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'enable', 'type': type})
             dev.adddir('[COLOR red]Playlist is disabled![/COLOR]', url, thumb, fanart, 'The playlist is disabled, so you can change your settings before scanning into your Kodi Library. When you are done setting up this playlist, enable it so it gets scanned into the Kodi Library.')
+        
+        #Only get last X videos
+        disp_setting('onlygrab', 'Grab last X videos', 'Instead of adding all old episodes, only add the last X episodes')
         
         #Title
         extra_desc = ''

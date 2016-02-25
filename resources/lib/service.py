@@ -100,21 +100,29 @@ def update_playlist(id, type=''):
     #the elementtree element containing the playlist xml settings
     #the id of the fist videoId, so it can save that one in the xml if it parsed all videos. Since the newest is the video it should be stopping the next time.
 def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False, type=type):
+    onlygrab = 100 #grab max 100 pages by default
     
     ##Get all Youtube Videos belonging to this playlist
     #resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
     #vids = resp.get("items", [])
-    
+    if settings.find('onlygrab') is not None:
+        onlygrab = int(settings.find('onlygrab').text) / 50 #Get the maximum number of pages we should gather
     all_vids = []
     duration = {}
     #First we are going to collect all youtube videos until we come across a list containing a videoId we already got
     uptodate = False
+    times = 0 #keep track how many times we grabbed yt videos
     while uptodate == False:
         all_vidids = []
         
         resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
         vids = resp.get("items", [])
         for vid in vids:
+            if onlygrab <= times:
+                #We have grabbed as many videos as allowed by the setting onlygrab
+                uptodate = True
+                continue#continue to the next video in the list
+            
             if m_xml.episode_exists(id, vid['contentDetails']['videoId'], type=type):
                 #This list contains a videoId we already got, assume we are up to date
                 uptodate = True
@@ -137,6 +145,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
         else:
             uptodate = True #Since there are no more pages, we are uptodate
             #update_playlist_vids(id, folder, settings, resp['nextPageToken'], firstvid)
+        times = times+1
     
     dev.log('( ._.)~~~~~~~~~~ DONE GRABBING VIDS FROM YOUTUBE FOR :'+settings.find('title').text+' ~~~~~~~~~~(._. )')
     ##Grab settings from the settings.xml for this playlist

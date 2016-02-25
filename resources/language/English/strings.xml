@@ -33,6 +33,7 @@
     <string id="30312">Strip Title</string>
     <string id="30313">Remove Title</string>
     <string id="30314">Tags</string>
+    <string id="30315">Only grab the last X videos</string>
     <!--Default MusicVideo Settings-->
     <string id="30401">Default settings for Music Videos</string>
     <string id="30402">Generate NFO files</string>
