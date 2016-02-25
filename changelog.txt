@@ -1,25 +1,22 @@
-To Fix:
-- Localize all strings
-- Artist / song recognizition met Epic Rap Battles
-
-
 0.9.6:
 - Uses normal icon/fanart again. (if you liked the newyear art better, you can still find it in the root)
 - Added Feature: Only grab the last X videos instead of grabbing all videos from the channel / playlist
-- Fixed Bug: Unicode error when playing videos
-- Fixed Bug: Unicode file paths (japanese characters etc work)
-- Fix: special://profile is now used (fix for double userdata/userdata included :S)
-- Fix: Changed service start from startup to login
 - Completely redid the way the service works, making different updating rules for each playlist possible
 - Added Feature: Set frequency of updates for each playlist seperately
 - Added Feature: Set desired day of the week for the updating of playlists
 - Added Feature: Set desired time of the day for the updating of playlists
-- Fanart also saved in a subdir called extrafanart
-- .strm & .nfo files are now stored in subdirectories of their season
-- Lots of small fixes & little changes
-- Support for smb:// paths
-- Fix: When song_fallback is set to video title / video title (original) & artist_recognisition is set to hardcoded, just those values will be used. No further stripping or altering of the artist / song will be done
 - Added Feature: song_fallback: video title (original). Just use the original video title as the song title, just as it is on youtube.
+- Added Feature: Creates artist.nfo & artwork (unfortunatly kodi does not seem to grab these. Perhaps some skins will)
+- Added: TV Fanart also saved in a subdir called extrafanart
+- Added: TV .strm & .nfo files are now stored in subdirectories of their season
+- Fixed Bug: Unicode error when playing videos
+- Fixed Bug: Unicode file paths (japanese characters etc work)
+- Fix: Support for smb:// paths
+- Fix: When song_fallback is set to video title / video title (original) & artist_recognisition is set to hardcoded, just those values will be used. No further stripping or altering of the artist / song will be done
+- Fix: special://profile is now used (fix for double userdata/userdata included :S)
+- Fix: Changed service start from startup to login
+- Fix: Since the googleoathclient module is fixed, ytlibrary can depend on that now and loses its own oathclient.
+- LOTS of small fixes & little changes
 
 
 0.9.5.1:

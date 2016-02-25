@@ -318,8 +318,6 @@ def get_songinfo(vid, settings, duration):
         dev.log('Artist is hardcoded and song is set to video title, leave it at that: '+setting_artist_hardcoded)
         artist = setting_artist_hardcoded
         song = vid_title
-        if setting_song_fallback == 'video title (original)':
-            song = vid['snippet']['title']
         featured = ''
     else:
         artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
@@ -360,6 +358,9 @@ def get_songinfo(vid, settings, duration):
             
     ##Determine the genre
     genre = setting_genre_hardcoded
+    
+    if setting_song_fallback == 'video title (original)':
+        song = vid['snippet']['title']
     
     vid_info = {
         'title': song,
@@ -999,6 +1000,83 @@ def write_tvshow_nfo(fold, settings):
     file.write(str(content.encode("utf-8"))) #Write the content in the file
     file.close() #Close the file
     dev.log('write_tvshow_nfo: Written tvshow.nfo file: '+fold+'/'+enc_name+'.nfo')
+    
+    #If the setting download_images is true, we should also download the images as actual files into the directory
+    if vars.__settings__.getSetting("download_images") == "true":
+        extrafanart = os.path.join(folder, 'extrafanart') #Set to extrafanart
+        xbmcvfs.mkdir(extrafanart) #Create this subfolder if it does not exist yet
+        
+        dev.log('download_images enabled, so downloading images to '+folder)
+        download_img(settings.find('thumb').text, folder+"/folder.jpg")
+        download_img(settings.find('banner').text, folder+"/banner.jpg")
+        download_img(settings.find('fanart').text, folder+"/fanart.jpg")
+        download_img(settings.find('fanart').text, extrafanart+"/fanart.jpg")
+
+        
+#Writes the NFO for the artist
+    #fold: The folder the nfo should be written to
+    #settings: The elementtree element containing the playlist xml settings
+def write_artist_nfo(fold, settings):
+    dev.log('write_artist_nfo('+fold+')')
+    name = 'artist'
+    movieLibrary = vars.musicvideo_folder #Use the directory from the addon settings
+
+    #Grab the published date and convert it to a normal date
+    d = ytube.convert_published(settings.find('published').text)
+    normaldate = d['year']+'-'+d['month']+'-'+d['day']
+    
+    #Grab the tags and convert them to xml
+    tags = settings.find('tags')
+    tags_xml = ''
+    if tags is not None:
+        tags = settings.find('tags').text
+        if '/' in tags:
+            multi_tags = tags.split('/')
+            tags_xml = ''
+            for tag in multi_tags:
+                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        elif tags.strip(' \t\n\r') is not '':
+            tags_xml = '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+    
+    #Create the contents of the xml file
+    content = u"""
+        <artist>
+          <name>%(title)s</name>
+          <genre clear=true>%(genre)s</genre>
+          <formed>%(date)s</formed>
+          <thumb>%(thumb)s</thumb>
+          <thumb aspect="poster">%(thumb)s</thumb>
+          <thumb aspect="banner">%(banner)s</thumb>
+          <fanart>
+              <thumb>%(fanart)s</thumb>
+          </fanart>    
+          %(tags)s
+        </artist>
+    """ % {
+        'title': settings.find('title').text,
+        'genre': settings.find('genre').text,
+        'thumb': settings.find('thumb').text,
+        'banner': settings.find('banner').text,
+        'fanart': settings.find('fanart').text,
+        'date': normaldate,
+        'tags': tags_xml,
+    }
+    
+    xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
+    enc_name = dev.legal_filename(name) #Set the filename to a legal filename
+    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
+    
+    import codecs
+    # process Unicode text
+    #with codecs.open(stream,'w',encoding='utf8') as f:
+    #    f.write(content)
+    #    f.close()
+    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
+    file.write(str(content.encode("utf-8"))) #Write the content in the file
+    file.close() #Close the file
+    dev.log('write_tvshow_nfo: Written artist.nfo file: '+fold+'/'+enc_name+'.nfo')
     
     #If the setting download_images is true, we should also download the images as actual files into the directory
     if vars.__settings__.getSetting("download_images") == "true":

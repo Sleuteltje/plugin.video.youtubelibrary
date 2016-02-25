@@ -44,6 +44,8 @@ def updateevery_normal(t, time, scansince):
         return scansince + datetime.timedelta(hours=12)
     if t == 'every 24 hours':
         return scansince + datetime.timedelta(hours=24)
+    if t == 'every 168 hours':
+        return scansince + datetime.timedelta(hours=168)
     
     
     dev.log('t is '+t)
@@ -180,6 +182,8 @@ def update_playlist(id, type=''):
         if writenfo != 'no':
             if type == '' or type == 'tv':
                 generators.write_tvshow_nfo(folder, settings)
+            elif type == 'musicvideo':
+                generators.write_artist_nfo(folder, settings)
         
         update_playlist_vids(id, folder, settings, type=type)
         

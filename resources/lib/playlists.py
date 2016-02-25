@@ -166,7 +166,7 @@ def setEditPlaylist(id, set, type=''):
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'updateevery':
-        options = ['every 4 hours', 'every 8 hours', 'every 12 hours', 'every 24 hours', 'every day', 'every sunday', 'every monday', 'every tuesday', 'every wednesday', 'every thursday', 'every friday', 'every saturday']
+        options = ['every 4 hours', 'every 8 hours', 'every 12 hours', 'every 24 hours', 'every 168 hours', 'every day', 'every sunday', 'every monday', 'every tuesday', 'every wednesday', 'every thursday', 'every friday', 'every saturday']
         i = xbmcgui.Dialog().select('Choose when to update this playlist', options)
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting

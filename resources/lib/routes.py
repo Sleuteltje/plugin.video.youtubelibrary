@@ -28,7 +28,7 @@ from resources.lib import playlists
 ###SERVICE
 #Runs the service    
 def run_service():
-    dev.log('SERVICE started updates again in % minutes' % vars.service_interval)
+    dev.log('SERVICE started updates again in %s minutes' % vars.service_interval)
     import time
 
     service.update_playlists()
