@@ -57,9 +57,14 @@ databaseFile = os.path.join(dataPath, 'settings.db')
 addonPath = xbmcaddon.Addon().getAddonInfo("path")
 IMG_DIR = os.path.join(addonPath,'resources/media')
 gearArt = os.path.join(addonPath,'resources/media/gear.png')
-addondataPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary'), '')
-settingsPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Settings'), '')
-streamsPath = os.path.join(xbmc.translatePath('special://userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+addondataPath = os.path.join(xbmc.translatePath('special://profile/userdata/addon_data/plugin.video.youtubelibrary'), '')
+settingsPath = os.path.join(xbmc.translatePath('special://profile/userdata/addon_data/plugin.video.youtubelibrary/Settings'), '')
+streamsPath = os.path.join(xbmc.translatePath('special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams'), '')
+
+settingsPath = settingsPath.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+addondataPath = addondataPath.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+streamsPath = streamsPath.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+
 #Addonname and icon
 __addonname__ = xbmcaddon.Addon().getAddonInfo('name')
 __icon__ = xbmcaddon.Addon().getAddonInfo('icon')
@@ -79,6 +84,10 @@ musicvideo_folder = os.path.join(musicvideo_folder_path, '') #The directory wher
 update_videolibrary = __settings__.getSetting("update_videolibrary") #Should we update the video library after updating all playlists?
 mode = int(__settings__.getSetting("mode"))
 
+tv_folder = tv_folder.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+tv_folder_path = tv_folder_path.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+musicvideo_folder = musicvideo_folder.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
+musicvideo_folder_path = musicvideo_folder_path.replace('\\userdata\\userdata', '\\userdata') #Fix for double userdata :S?
 
 #Extra Kodi Paths
 #skinPath = xbmc.translatePath('special://skin/')

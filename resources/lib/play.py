@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #    Kodi Addon: Youtube Library
 #    Copyright 2015 Sleuteltje
 #
@@ -100,15 +101,17 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
         for i in meta:
             dev.log('Meta: '+i['file'].encode('utf8'))
             dev.log('Looking for :'+filename)
+            dev.log('File :'+i['file'])
+            i['file'] = i['file'].encode('utf-8')
             if i['file'].endswith(filename):
                 dev.log('Found the episode we are looking for')
                 meta = i
                 break
         DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
+        
+        meta = {'title': meta['title'].encode('utf-8'), 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'].encode('utf-8'), 'premiered' : meta['firstaired'].encode('utf-8'), 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director']).encode('utf-8')), 'writer': str(' / '.join(meta['writer']).encode('utf-8')), 'plot': meta['plot'].encode('utf-8')}
 
-        meta = {'title': meta['title'], 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'], 'premiered' : meta['firstaired'], 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director'])), 'writer': str(' / '.join(meta['writer'])), 'plot': meta['plot']}
-
-        poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle)
+        poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
         poster = unicode(poster, 'utf-8', errors='ignore')
         poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
 

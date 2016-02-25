@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #    Kodi Addon: Youtube Library
 #    Copyright 2015 Sleuteltje
 #
@@ -39,7 +40,9 @@ def log(message, debug=None):
 #Returns a legal filename (without characters the OS wont accept)
 def legal_filename(filename):
     import re
-    return re.sub('[^\w\-_\. ]', '_', filename)
+    #return re.sub('[^\w\-_\. ]', '_', filename)
+    #return slugify(filename) #Use the slugify function to get a valid filename (with utf8 characters)
+    return re.sub(r'[/\\:*?"<>|]', '', filename)
     
 #Construct a url to this plugin
 # Params:
@@ -172,3 +175,17 @@ def get_setting(setting, settings):
     if setting is None:
         setting = ''
     return setting
+	
+	
+	
+#Slugifies a string (thus also making it a valid filename) (borrowed from Django framework, All credits to Django)
+def slugify(value):
+    import re
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    import unicodedata
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
+    return re.sub('[-\s]+', '-', value)

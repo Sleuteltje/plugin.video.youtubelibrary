@@ -14,8 +14,8 @@
 		<setting id="service_interval_musicvideo" type="select" label="30206" values="4|8|12|24|48|168|672" default="672" />
 		<setting id="update_videolibrary" type="bool" label="30202" default="true"/>
 		<setting label="30203" type="lsep"/>
-		<setting id="tv_folder" type="folder" label="30204" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
-		<setting id="musicvideo_folder" type="folder" label="30205" default="special://userdata/addon_data/plugin.video.youtubelibrary/Streams/MusicVideos" />
+		<setting id="tv_folder" type="folder" label="30204" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
+		<setting id="musicvideo_folder" type="folder" label="30205" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/MusicVideos" />
 	</category>
     <!-- Default Playlist Settings -->
     <category label="30300">

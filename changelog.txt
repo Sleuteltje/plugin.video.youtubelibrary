@@ -1,3 +1,21 @@
+To Fix:
+- smb:// paths werken niet
+- Haal alleen de laatste X videos op
+- Afbeeldingen, seizoenen e.d. opslaan in de submappen
+- Update bepaalde playlists op een bepaald tijdstip
+- Localize all strings
+- Artist / song recognizition met Epic Rap Battles
+
+
+0.9.6:
+- Uses normal icon/fanart again. (if you liked the newyear art better, you can still find it in the root)
+- Fixed Bug: Unicode error when playing videos
+- Fixed Bug: Unicode file paths (japanese characters etc work)
+- Fix: special://profile is now used (fix for double userdata/userdata included :S)
+- Fix: Changed service start from startup to login
+
+
+
 0.9.5.1:
 - Fixed Bug: Images (folder.jpg etc.) will not be downloaded everytime the playlist is updated.
 - Fixed Error: If the youtube server is not connectable, it will retry in 15 seconds with SSL disabled

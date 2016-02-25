@@ -561,7 +561,7 @@ def find_artist_song_description(text):
             artist = song
             song = m.group(1)
             return artist, song
-        dev.log('find_artist_song_description() Found Artist - Song 4th: '+str(artist).encode('utf-8')+' - '+str(song).encode('utf-8'))
+        dev.log('find_artist_song_description() Found Artist - Song 4th: '+str(artist.encode('utf-8'))+' - '+str(song.encode('utf-8')))
         dev.log('Description: '+text)
         return artist, song
 
