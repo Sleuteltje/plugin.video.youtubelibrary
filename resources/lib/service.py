@@ -16,7 +16,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import xbmc, xbmcgui
+import xbmc, xbmcgui, xbmcaddon
 
 from resources.lib import vars
 from resources.lib import dev
@@ -90,7 +90,7 @@ def updateevery_normal(t, time, scansince):
 
 #Writes the nfo & strm files for all playlists
 def update_playlists(type=''):
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube '+dev.typeName(type)+' Playlists...', vars.__icon__, 3000)
+    #xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Youtube '+dev.typeName(type)+' Playlists...', vars.__icon__, 3000)
     dev.log('Updating All '+type+' Youtube Playlists')
     #scan_interval = 'service_interval'
     #if type == 'musicvideo':
@@ -139,6 +139,8 @@ def update_playlists(type=''):
                     if dev.timedelta_total_seconds(timenow-should_update) > 0:
                         #The time for updating lies in the past, so update this playlist
                         dev.log('This playlist should be updated')
+                        if xbmcaddon.Addon("plugin.video.youtubelibrary").getSetting('notify_update'):
+                            xbmcgui.Dialog().notification(vars.__addonname__, 'Updating Playlist: '+child.find('title').text+'... ', vars.__icon__, 3000)
                     else:
                         dev.log('Its not time yet to update this playlist')
                         continue
@@ -153,7 +155,10 @@ def update_playlists(type=''):
                 
             
                 update_playlist(child.attrib['id'], type=type) #Update the nfo & strm files for this playlist
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Done Updating Youtube '+dev.typeName(type)+' Playlists', vars.__icon__, 3000)
+                if xbmcaddon.Addon("plugin.video.youtubelibrary").getSetting('notify_update'):
+                    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating Playlist: '+child.find('title').text+'! ', vars.__icon__, 3000)
+                
+    #xbmcgui.Dialog().notification(vars.__addonname__, 'Done Updating Youtube '+dev.typeName(type)+' Playlists', vars.__icon__, 3000)
     #Should we also update the video library?
     if vars.update_videolibrary == "true" and type=='':
         update_dir = vars.tv_folder_path
