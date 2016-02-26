@@ -7,6 +7,7 @@
 - Added Feature: Set desired time of the day for the updating of playlists
 - Added Feature: song_fallback: video title (original). Just use the original video title as the song title, just as it is on youtube.
 - Added Feature: Creates artist.nfo & artwork (unfortunatly kodi does not seem to grab these. Perhaps some skins will)
+- Added: You can turn on/off the notify message when a playlist gets updated
 - Added: TV Fanart also saved in a subdir called extrafanart
 - Added: TV .strm & .nfo files are now stored in subdirectories of their season
 - Fixed Bug: Unicode error when playing videos
