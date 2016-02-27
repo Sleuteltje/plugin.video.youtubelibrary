@@ -1,3 +1,6 @@
+0.9.6.2:
+- Fixed Bug: Addon setting "nofify update" was missing its text
+
 0.9.6.1:
 - Fix: Hopefully the double userdata fix also works on linux now.
 
