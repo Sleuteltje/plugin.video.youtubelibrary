@@ -1,3 +1,9 @@
+0.9.7:
+- Added [Donor only]: Browse & Add pre-configured playlists from youtubelibrary.nl
+- Youtubelibrary now has its repo! Install via the repo to get auto updates!
+- Added Feature: You can now also search & add playlists by their name, id or even their url!
+- Added Feature: You can now browse more then 50 playlists from a channel
+
 0.9.6.2:
 - Fixed Bug: Addon setting "nofify update" was missing its text
 

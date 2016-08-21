@@ -24,6 +24,7 @@ from resources.lib import ytube
 from resources.lib import m_xml
 from resources.lib import service
 from resources.lib import playlists
+from resources.lib import ytlibrary_api
 
 ###SERVICE
 #Runs the service    
@@ -73,6 +74,10 @@ def index():
 def index_dir():      
     import xbmcaddon
     #Manage TV Playlists
+    #Separator
+    url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
+    dev.adddir('[COLOR blue]-------------------MANAGE-------------------[/COLOR]', url, '')
+    
     url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists'})
     context_url = dev.build_url({'mode': 'updateplaylists'})
     commands = []
@@ -86,13 +91,38 @@ def index_dir():
     commands.append(( dev.lang(31003), 'XBMC.RunPlugin('+context_url+')', ))
     dev.adddir(dev.lang(31011), url, description=dev.lang(31012), context=commands)
     
+    #Separator
+    url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
+    dev.adddir('[COLOR blue]-------------------ADD-------------------[/COLOR]', url, '')
+    
+    
+    
     #Search TV Channel
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel'})
     dev.adddir(dev.lang(31004), url, description=dev.lang(31005))
     
+    #Search TV Playlist
+    url = dev.build_url({'mode': 'folder', 'foldername': 'searchplaylist'})
+    dev.adddir(dev.lang(31016), url, description=dev.lang(31017))
+    
     #Search Music Video Channel
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel', 'type': 'musicvideo'})
     dev.adddir(dev.lang(31008), url, description=dev.lang(31009))
+    
+    #Search Music Video Playlist
+    url = dev.build_url({'mode': 'folder', 'foldername': 'searchplaylist', 'type': 'musicvideo'})
+    dev.adddir(dev.lang(31014), url, description=dev.lang(31015))
+
+    #Separator
+    url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
+    dev.adddir('[COLOR blue]-------------------DONOR-------------------[/COLOR]', url, '')
+    
+    
+    #DONOR FUCNTION - Browse Playlists
+    url = dev.build_url({'mode': 'ApiIndex', 'api_url': 'default'})
+    dev.adddir('Browse Youtubelibrary.nl', url, description='Easily add pre-configured playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+    
+    
     
     #TEST
     #url = dev.build_url({'mode': 'striptest'})
@@ -108,33 +138,80 @@ def search_channel(type=''):
     if len(result) > 0:
         ytube.search_channel(result, type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
+    
+### Playlist Search
+#Searches for a youtube channel by name & displays the results
+def search_playlist(type=''):
+    result = dev.user_input('', 'Search for '+dev.typeName(type)+' Playlist')
+    if len(result) > 0:
+        searched_playlist(result, type)
+
+def searched_playlist(result, type='', pagetoken=''):
+    response = ytube.search_playlist(result, type, pagetoken)
+    
+    if isinstance(response['items'], list):
+        # Go through each playlist and display the playlist
+        for playlist in response['items']:
+          #videos.append(search_result)
+          title = playlist['snippet']['title']
+          url = dev.build_url({'mode': 'addPlaylist', 'id': playlist['id']['playlistId'], 'type': type})
+          dev.adddir(title, url, playlist['snippet']['thumbnails']['high']['url'], fanart=playlist['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
+    
+    
+    if 'prevPageToken' in response:
+        if response['prevPageToken'] is not None:
+            url = dev.build_url({'mode': 'searchedplaylist', 'search': result, 'type': type, 'pagetoken': response['prevPageToken']})
+            dev.adddir('<< Prev Page', url, description='Go to the previous page of available playlists')
+    
+    if 'nextPageToken' in response:
+        if response['nextPageToken'] is not None:
+            url = dev.build_url({'mode': 'searchedplaylist', 'search': result, 'type': type, 'pagetoken': response['nextPageToken']})
+            dev.adddir('Next Page >>', url, description='Go to the next page of available playlists')
+
+    
+    xbmcplugin.endOfDirectory(vars.addon_handle)#Adds a playlist & loads the view to edit it
 
 #Route: show_playlists_by_channel
-def show_playlists_by_channel(Channelid, type=''):
-    search_response = ytube.yt_get_channel_info(Channelid)
-    
-    #Grab the playlists from the response
-    playlists = search_response['items'][0]['contentDetails']['relatedPlaylists']
-    
-    # Go through each playlist and display the playlist
-    for key, value in playlists.iteritems():
-      #Grab the number of videos to
-      pl = ytube.yt_get_playlist_info(value)
-      number_vids = str(pl['items'][0]['contentDetails']['itemCount'])
-      #videos.append(search_result)
-      url = dev.build_url({'mode': 'addPlaylist', 'id': value, 'type': type})
-      dev.adddir(key.capitalize()+' ('+number_vids+')', url, search_response['items'][0]['snippet']['thumbnails']['high']['url'], fanart=search_response['items'][0]['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+search_response['items'][0]['snippet']['description'])
+def show_playlists_by_channel(Channelid, type='', pagetoken='default'):
+    if pagetoken == 'default' or pagetoken == '':
+        search_response = ytube.yt_get_channel_info(Channelid)
+        
+        #Grab the playlists from the response
+        playlists = search_response['items'][0]['contentDetails']['relatedPlaylists']
+        
+        # Go through each playlist and display the playlist
+        for key, value in playlists.iteritems():
+          #Grab the number of videos to
+          pl = ytube.yt_get_playlist_info(value)
+          number_vids = str(pl['items'][0]['contentDetails']['itemCount'])
+          #videos.append(search_result)
+          url = dev.build_url({'mode': 'addPlaylist', 'id': value, 'type': type})
+          dev.adddir(key.capitalize()+' ('+number_vids+')', url, search_response['items'][0]['snippet']['thumbnails']['high']['url'], fanart=search_response['items'][0]['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+search_response['items'][0]['snippet']['description'])
     
     # Grab other playlists this user has created to
-    response = ytube.yt_get_playlists_by_channel(Channelid)
+    response = ytube.yt_get_playlists_by_channel(Channelid, pagetoken)
     
-    if isinstance(response, list):
+    
+    if isinstance(response['items'], list):
         # Go through each playlist and display the playlist
-        for playlist in response:
+        for playlist in response['items']:
           #videos.append(search_result)
           title = playlist['snippet']['title']+' ('+str(playlist['contentDetails']['itemCount'])+')'
           url = dev.build_url({'mode': 'addPlaylist', 'id': playlist['id'], 'type': type})
           dev.adddir(title, url, playlist['snippet']['thumbnails']['high']['url'], fanart=playlist['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
+    
+    
+    if 'prevPageToken' in response:
+        if response['prevPageToken'] is not None:
+            url = dev.build_url({'mode': 'pickedChannel', 'id': Channelid, 'type': type, 'pagetoken': response['prevPageToken']})
+            dev.adddir('<< Prev Page', url, description='Go to the previous page of available playlists')
+    
+    if 'nextPageToken' in response:
+        if response['nextPageToken'] is not None:
+            url = dev.build_url({'mode': 'pickedChannel', 'id': Channelid, 'type': type, 'pagetoken': response['nextPageToken']})
+            dev.adddir('Next Page >>', url, description='Go to the next page of available playlists')
+
+    
     xbmcplugin.endOfDirectory(vars.addon_handle)#Adds a playlist & loads the view to edit it
 
 
@@ -191,5 +268,74 @@ def refreshPlaylist(type=''):
     playlists.refresh_playlist(id, type=type) #Remove this playlist
     xbmc.executebuiltin("Container.Refresh")
     
+
+
+
+
+####API
+def api_index():
+    if vars.__settings__.getSetting('enable_donor') == 'false':
+        xbmcgui.Dialog().ok(dev.lang(31991), dev.lang(31992))
+    elif len(vars.__settings__.getSetting('api_token')) < 60:
+         xbmcgui.Dialog().ok(dev.lang(31993), dev.lang(31994)) 
+    else:
+        import xbmcaddon
+        #Browse All Playlists
+        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': 'default'})
+        dev.adddir('Browse All Playlists', url, description='Easily add pre-configured playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Browse All Genres
+        url = dev.build_url({'mode': 'ApiGenres', 'api_url': 'default'})
+        dev.adddir('Browse By Genre', url, description='Easily add pre-configured playlists by Genre from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Browse By Tag
+        url = dev.build_url({'mode': 'ApiTags', 'api_url': 'default'})
+        dev.adddir('Browse By Tag', url, description='Easily add pre-configured playlists by Tag from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Search by Title / Description
+        url = dev.build_url({'mode': 'ApiSearch'})
+        dev.adddir('Search by Title / Description', url, description='Search by title / description to add a pre-configured playlist from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Search by Channel
+        url = dev.build_url({'mode': 'ApiSearchChannel'})
+        dev.adddir('Search by Channel', url, description='Search by channel name to add a pre-configured playlist from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+
+        
+        
+def apiBrowse(api_url = ''):
+    ytlibrary_api.browse(api_url)
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+def apiGenres(api_url = ''):
+    ytlibrary_api.browse_genres(api_url)
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+def apiTags(api_url = ''):
+    ytlibrary_api.browse_tags(api_url)
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+    
+def apiAddPlaylist(id, type=''):
+    playlist = ytlibrary_api.add_playlist(id)
+    m_xml.xml_add_playlist(playlist['ytplaylistid'], type, playlist)
+    playlists.editPlaylist(playlist['ytplaylistid'], type) #Load the view to edit this playlist
+    #xbmc.executebuiltin("Container.Update")
+    xbmcplugin.endOfDirectory(vars.addon_handle, updateListing=True)
+
+def apiSearch():
+    result = dev.user_input('', 'Search by Title / Description')
+    if len(result) > 0:
+        ytlibrary_api.browse(params={'search': result})
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+def apiSearchChannel():
+    result = dev.user_input('', 'Search by Channel')
+    if len(result) > 0:
+        ytlibrary_api.browse(params={'channel': result})
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+
+
+
+
+
+
+
     
 ###TESTS

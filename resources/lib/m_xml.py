@@ -169,12 +169,15 @@ def xml_remove_playlist(id, type=''):
 #   musicvideo
 #   music
 #   movies
-def xml_add_playlist(id, type=''):
+def xml_add_playlist(id, type='', api=''):
     dev.log('XML_add_playlist('+id+')')
     #Check if this playlist isnt in the xml file yet
     if xml_get_elem('playlists/playlist', 'playlist', {'id' : id}, type=type) is None:
-        #Create the playlist according to its type
-        playlist = xml_build_new_playlist(id, type)
+        #Create the playlist according to its type & if its from the api
+        if api == '':
+            playlist = xml_build_new_playlist(id, type)
+        else:
+            playlist = api_xml_build_new_playlist(api, type)
 
         pl = xml_create_playlist(playlist)
         root = document.getroot()
@@ -185,6 +188,58 @@ def xml_add_playlist(id, type=''):
         dev.log('XML_add_playlist: not added playlist '+id+' ('+type+') since the playlist already exists', 2)    
     
 
+def api_xml_build_new_playlist(api, type=''):
+    #### Build new playlist (tv, musicvideo) ###
+    if type=='' or type=='tv':
+        ##Get the default settings from the addon settings
+        writenfo = 'Yes'
+        if dev.getAddonSetting("default_generate_nfo") == "false":
+            writenfo = 'no'
+             
+        #Build the playlist
+        playlist = {
+            'id'    : api['ytplaylistid'],
+            'enabled'      : 'yes',
+            'settings'      : {
+                'type'                  : 'TV',
+                'title'                   : api['title'],
+                'channel'            : api['channel'],
+                'description'        : api['description'],
+                'genre'                : api['genre'],
+                'tags'                  : api['tags'],
+                'published'          : api['published'],
+                #Art
+                'thumb'               : api['thumb'],
+                'fanart'                : api['fanart'],
+                'banner'              : api['banner'],
+                'epsownfanart'    : 'No',
+                # STRM & NFO Settings
+                'writenfo'             : writenfo,
+                'delete'                : api['delete'],
+                'updateevery'       : api['updateevery'],
+                'updateat'        : api['updateat'],
+                'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
+                'keepvideos'        : api['keepvideos'],
+                'overwritefolder'   : api['overwritefolder'],
+                #Filters
+                'minlength'         : api['minlength'],
+                'maxlength'         : api['maxlength'],
+                'excludewords'    : api['excludewords'],
+                'onlyinclude'       : api['onlyinclude'],
+                #NFO information
+                'season'            : api['season'],
+                'episode'           : api['episode'],
+                'striptitle'        : api['striptitle'],
+                'removetitle'       : api['removetitle'],
+                'stripdescription' : api['stripdescription'],
+                'removedescription' : api['removedescription'],
+                #Scan Settings
+                'lastvideoId'       : '',
+            }
+        }
+        return playlist
+    return False
+    
 def xml_build_new_playlist(id, type=''):
     response = ytube.yt_get_playlist_info(id)
     #Save relevant information in res

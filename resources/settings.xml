@@ -82,6 +82,14 @@
         <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_musicvideo_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
 		<setting id="default_musicvideo_updateat" type="time" label="30317" default="23:59"/>
+	</category>
+    <!--Donor -->
+    <category label="30500">
+		<setting id="enable_donor" type="bool" label="30504" default="false" />
+		<setting id="api_token" type="text" label="30501" default=""/>
+		<setting id="api_language" type="select" label="30503" values="none|en|nl|es|ger" default="en" />
+		<setting id="api_language2" type="select" label="30503" values="none|en|nl|es|ger" default="none" />
+		<setting id="api_language3" type="select" label="30503" values="none|en|nl|es|ger" default="none" />
 	</category>    
 </settings>
 

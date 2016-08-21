@@ -5,6 +5,7 @@
     <string id="30200">Library Settings</string>
     <string id="30300">Default TV Shows Settings</string>
     <string id="30400">Default MusicVideo Settings</string>
+    <string id="30500">Donor Functions</string>
     <!--General-->
     <string id="30101">Download Images</string>
     <string id="30102">Resume Playback</string>
@@ -67,6 +68,13 @@
     <string id="30463">Skip Live Videos</string>
     <string id="30464">Skip Album Videos</string>
     <string id="30465">Skip Audio Only Videos</string>
+	
+	<!--Donor-->
+    <string id="30501">Api Token</string>
+    <string id="30503">Language</string>	
+    <string id="30504">Enable Donor functions</string>
+	
+	
 	<!-- Addon Text -->
 	<!-- Main Menu -->
 	<string id="31001">Manage TV Playlists</string>
@@ -76,6 +84,10 @@
 	<string id="31003">Update Now</string>
 	<string id="31004">Add new Channel as TV Show</string>
 	<string id="31005">Search by channel name for a new Playlist to add as Tv Show to your Kodi Library</string>
+	<string id="31016">Add new Playlist as TV Show</string>
+	<string id="31017">Search for a new Playlist to add as a Tv Show to your Kodi Library</string>
+	<string id="31014">Add new Playlist as Music Videos</string>
+	<string id="31015">Search for a new Playlist to add to your Kodi Music Video Library</string>
 	<string id="31008">Add new Channel as Music Videos</string>
 	<string id="31009">Search by channel name for a new Playlist to add to your Kodi Music Video Library</string>
 	<!-- Manage Playlists -->
@@ -93,4 +105,10 @@
 	<string id="31103">New Feature!</string>
 	<string id="31104">Now you can also add Musicvideos! See the thread on the Kodi forums for more help or to say thank you :). You can send donations to mailsleuteltje@gmail.com.</string>
 	<string id="31105">Search Channel</string>
+	
+	<!-- Donor -->
+	<string id="31991">For donors only</string>
+	<string id="31992">Sorry, this function is currently for donors only. You can send paypal donations to mailsleuteltje@gmail.com. This addon is made in my free time, but you are free to use it without donating to ;). If you have donated, please enable your settings in the addon settings.</string>
+	<string id="31993">Please fill in your Youtubelibrary.nl Donor API Token</string>
+	<string id="31994">Sorry, this function is currently for donors only. Please fill in your api token from your youtubelibrary.nl account in the addon settings under 'Donor functions'.</string>
 </strings>

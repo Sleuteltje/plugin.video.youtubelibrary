@@ -80,17 +80,22 @@ def yt_get_playlist_info(id):
 
 
 #Grabs the playlists that the given channelid has created
-def yt_get_playlists_by_channel(id):
+def yt_get_playlists_by_channel(id, pagetoken='default'):
+    if pagetoken == 'default':
+        pagetoken = ''
     #Connect to youtube API
     youtube = build_youtube()
+    dev.log('GET yt_get_playlists_by_channel: https://www.googleapis.com/youtube/v3/playlists?part=snippet%2C+contentDetails&maxResults=50&channelId='+id+'&key='+vars.API_KEY+'&pageToken='+pagetoken)
+
     #Retrieve the information from the youtube API
     response = youtube.playlists().list(
       part="contentDetails,snippet",
       channelId=id,
-      maxResults=50
+      maxResults=50,
+      pageToken=pagetoken
     ).execute()
     
-    return response['items']
+    return response
       
 
 
@@ -129,9 +134,26 @@ def search_channel(keyword, type=''):
 
     for search_result in search_response.get("items", []):
       #videos.append(search_result)
-      url = dev.build_url({'mode': 'pickedChannel', 'id': search_result['id']['channelId'], 'type': type})
+      url = dev.build_url({'mode': 'pickedChannel', 'id': search_result['id']['channelId'], 'type': type, 'pagetoken': 'default'})
       dev.adddir(search_result['snippet']['title'], url, search_result['snippet']['thumbnails']['high']['url'], fanart=search_result['snippet']['thumbnails']['high']['url'], description=search_result['snippet']['description'])
 
+#Searches for playlists by keyword
+# Params:
+    # keyword : The keyword we want to use to search for channels
+    # type: The type (tv, musicvideo, music, movie), so we know which links to build
+def search_playlist(keyword, type='', pagetoken=''):
+    if pagetoken == 'default':
+        pagetoken = ''
+    youtube = build_youtube()
+    search_response = youtube.search().list(
+      q=keyword,
+      part="id,snippet",
+      maxResults=50,
+      type = "playlist",
+      pageToken = pagetoken
+    ).execute()
+    
+    return search_response
       
 #Searches for Youtube videos by a given keyword
 # Params:
