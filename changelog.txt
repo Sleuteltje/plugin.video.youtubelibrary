@@ -1,6 +1,8 @@
 0.9.7.1:
 - Added Feature: Now creates a backup file of a settings.xml every time it alters it (in case it gets corrupted)
-
+- Bugfix: Videos with & in the title gave an error when playing.
+- Fix: Doesnt scan the library after refreshing a plyalist anymore
+- 
 
 0.9.7:
 - Added [Donor only]: Browse & Add pre-configured playlists from youtubelibrary.nl

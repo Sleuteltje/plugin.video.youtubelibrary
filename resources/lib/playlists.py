@@ -540,12 +540,12 @@ def refresh_playlist(id, type=''):
                 dir = os.path.join(movieLibrary, folder) #Set the folder to the maindir/dir
                 
                 success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory
-                if vars.update_videolibrary == "true" and type=='':
-                    update_dir = vars.tv_folder_path
-                    if type == 'musicvideo':
-                        update_dir = vars.musicvideo_folder_path
-                    dev.log('Updating video library is enabled. Cleaning librarys directory %s' % update_dir, True)
-                    xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
+                #if vars.update_videolibrary == "true" and type=='':
+                #    update_dir = vars.tv_folder_path
+                #    if type == 'musicvideo':
+                #        update_dir = vars.musicvideo_folder_path
+                #    dev.log('Updating video library is enabled. Cleaning librarys directory %s' % update_dir, True)
+                #    xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
 
                 xbmcgui.Dialog().ok('Removed from library', 'Deleted the previous videos from your library (You should clean your library, otherwise they will still show in your library)')
             editPlaylist(id, type=type) #Load the editplaylist view

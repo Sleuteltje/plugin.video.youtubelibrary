@@ -42,7 +42,7 @@ def legal_filename(filename):
     import re
     #return re.sub('[^\w\-_\. ]', '_', filename)
     #return slugify(filename) #Use the slugify function to get a valid filename (with utf8 characters)
-    return re.sub(r'[/\\:*?"<>|]', '', filename)
+    return re.sub(r'[/\\:*?"<>|&]', '', filename)
     
 #Construct a url to this plugin
 # Params:
