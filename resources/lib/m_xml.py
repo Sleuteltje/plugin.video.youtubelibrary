@@ -45,13 +45,25 @@ def xml_get(type=''):
 def write_xml(elem, dir='', output='', type=''):
     if output == '':
         output = dev.typeXml(type)
-    dev.log('write_xml('+type+','+output+')')
-
+    dev.log('write_xml('+type+','+output+').')
+    
+    
     xbmcvfs.mkdir(vars.settingsPath) #Create the settings dir if it does not exist already
     if dir is not '': xbmcvfs.mkdir(vars.settingsPath+dir) #Create the settings dir if it does not exist already
     #Write these settings to a .xml file in the addonfolder
     output_file = os.path.join(vars.settingsPath+dir, output) #Set the outputfile to settings.xml
-
+    
+    #Creating a backup of the .xml file (in case it gets corrupted)
+    backupfile = os.path.join(vars.settingsPath+dir, output+'.backup')
+    if xbmcvfs.exists(output_file):
+        if xbmcvfs.copy(output_file, backupfile):
+            dev.log('Created a backup of the xml file at: '+backupfile)
+        else:
+            dev.log('Failed to create a backup of the xml file at: '+backupfile)
+    else:
+        dev.log(output_file+' could not be found, so not able to create a backup')
+    
+    
     indent( elem ) #Prettify the xml so its not on one line
     tree = ElementTree.ElementTree( elem ) #Convert the xml back to an element
     tree.write(output_file) #Save the XML in the settings file

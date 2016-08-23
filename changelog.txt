@@ -1,3 +1,7 @@
+0.9.7.1:
+- Added Feature: Now creates a backup file of a settings.xml every time it alters it (in case it gets corrupted)
+
+
 0.9.7:
 - Added [Donor only]: Browse & Add pre-configured playlists from youtubelibrary.nl
 - Youtubelibrary now has its repo! Install via the repo to get auto updates!
