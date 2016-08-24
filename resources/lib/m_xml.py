@@ -230,6 +230,7 @@ def api_xml_build_new_playlist(api, type=''):
                 'delete'                : api['delete'],
                 'updateevery'       : api['updateevery'],
                 'updateat'        : api['updateat'],
+                'update_gmt'        : api['update_gmt'],
                 'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
                 'keepvideos'        : api['keepvideos'],
                 'overwritefolder'   : api['overwritefolder'],
@@ -332,6 +333,7 @@ def xml_build_new_playlist(id, type=''):
         removetitle = dev.getAddonSetting("default_removetitle", '')
         updateevery = dev.getAddonSetting("default_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_updateat", '23:59')
+        update_gmt = dev.getAddonSetting("default_update_gmt", '99')
         
         
         #Build the playlist
@@ -356,6 +358,7 @@ def xml_build_new_playlist(id, type=''):
                 'delete'                : '',
                 'updateevery'       : updateevery,
                 'updateat'        : updateat,
+                'update_gmt'        : update_gmt,
                 'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
                 'keepvideos'        : '',
                 'overwritefolder'   : '',
@@ -522,7 +525,7 @@ def xml_update_playlist_setting(id, tag, newsetting, type=''):
         if setting == None:
             #Could not find setting
             dev.log('XML_update_playlist_setting: could not find setting '+tag+' of '+id)
-            #Les create it
+            #Lets create it
             setting = Element(tag)
             setting.text = newsetting
             elem.append(setting)

@@ -33,13 +33,6 @@ import YDStreamExtractor
 ##### PLAY VIDEO 
 #Plays a youtube video by id
 def playYoutubeVid(id, meta=None, poster=None):
-    '''
-    from resources.lib import pafy
-    pafy.set_api_key(vars.API_KEY)
-    #Resolve the youtube video url for ourselves
-    v = pafy.new(id)
-    stream_url = v.getbest().url
-    '''
     if meta is None:
         #Create an empty meta, so we can fill it with the information grabbed from youtube
         meta = {}

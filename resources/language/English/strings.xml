@@ -37,6 +37,7 @@
     <string id="30315">Only grab the last X videos</string>
     <string id="30316">Update every</string>
     <string id="30317">Update at HH:MM</string>
+    <string id="30317">Timezone</string>
     <!--Default MusicVideo Settings-->
     <string id="30401">Default settings for Music Videos</string>
     <string id="30402">Generate NFO files</string>

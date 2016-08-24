@@ -26,7 +26,7 @@ from resources.lib import ytube
 
 
 #Outputs the updatevery setting in normal 
-def updateevery_normal(t, time, scansince):
+def updateevery_normal(t, time, scansince, update_gmt):
     import datetime
     if time is None:
         hour = 23
@@ -76,7 +76,7 @@ def updateevery_normal(t, time, scansince):
             y = today - datetime.timedelta(7+weekday-6)
     
     if t == 'every day':
-        #See if the playlist has been scaneed since yesterday
+        #See if the playlist has been scanned since yesterday
         y = today - datetime.timedelta(days=1)
         y = y.replace(hour=hour, minute=minute)
         
@@ -84,8 +84,16 @@ def updateevery_normal(t, time, scansince):
             dev.log('The time of yesterday is already scanned, so we will send the date&time of today')
             y = today
     
-    dev.log(t+' ago is: '+str(y.replace(hour=hour, minute=minute)))
-    return y.replace(hour=hour, minute=minute)
+    y = y.replace(hour=hour, minute=minute)
+    dev.log(t+' ago is: '+str(y))
+    
+    
+
+    if update_gmt is not None and update_gmt is not 99 and update_gmt is not 98:   
+        y = y + datetime.timedelta(hours = update_gmt) #Offset the time according to the current system timezone and which timezone it should be updated to
+        dev.log('with gmt offset ('+str(update_gmt)+'): '+str(y))
+
+    return y
 
 
 #Writes the nfo & strm files for all playlists
@@ -104,8 +112,14 @@ def update_playlists(type=''):
                 #Grab the settings from this playlist
                 #Loads the correct information from the settings.xml
                 #settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type)
+                #Get the current GMT offset and consider this when updating
+                import datetime      
+                import time
+
+                
                 #Grab when this playlist should be updated
                 updateat = '23:59'
+                update_gmt = 99
                 if child.find('updateevery') is None:
                     dev.log('NOTICE: Playlist should have an instruction when to be updated!. Asssumed default (12 hours) for now', 1)
                     updateevery = 'every 12 hours'
@@ -113,10 +127,16 @@ def update_playlists(type=''):
                     updateevery = child.find('updateevery').text
                     if child.find('updateat') is not None:
                         updateat = child.find('updateat').text
+                        if child.find('update_gmt') is not None:
+                            if child.find('update_gmt').text is not '':
+                                update_gmt = dev.timezones(child.find('update_gmt').text)
+                            
+             
+                
                 
                 
                 #Check when this playlist was last updated, and if it is time for this playlist to be updated again
-                import datetime
+                
                 try:
                     s = child.attrib['scansince']
                     scansince = datetime.datetime.strptime(s,"%d/%m/%Y %H:%M:%S")
@@ -124,6 +144,12 @@ def update_playlists(type=''):
                     scansince = datetime.datetime.now() - datetime.timedelta(days=3*365)
                 timenow = datetime.datetime.now()
                 dev.log('Playlist last scanned on: '+str(scansince)+', now: '+str(timenow), 1)
+                if update_gmt is not None and update_gmt is not 99 and update_gmt is not 98: #If update_gmt is set to any other then the own timezone, consider this when calculating when the playlist should update
+                    offset = time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
+                    offset = offset / 60 / 60 * -1
+                    timenow = timenow + datetime.timedelta(hours = offset)
+                    scansince = scansince + datetime.timedelta(hours = offset)
+                    dev.log('UCT timecorrection (because update_gmt is set): '+str(scansince)+', now: '+str(timenow), 1)
                 #diff = (timenow-scansince).total_seconds()
                 
                 
@@ -131,7 +157,7 @@ def update_playlists(type=''):
                 #dev.log('Difference from last scan is '+str(diff))
                 
                 #Get when this playlist should have last been updated
-                should_update = updateevery_normal(updateevery, updateat, scansince)
+                should_update = updateevery_normal(updateevery, updateat, scansince, update_gmt)
                 
                 #dev.log('The difference between should_update & scansince: '+str(dev.timedelta_total_seconds(should_update-scansince)))
                 if dev.timedelta_total_seconds(should_update-scansince) > 0:

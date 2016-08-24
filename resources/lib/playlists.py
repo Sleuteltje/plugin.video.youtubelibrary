@@ -65,6 +65,9 @@ def disp_bool_setting(setting, title, description, level=0):
     dev.adddir('[COLOR blue]'+title+':[/COLOR] '+val, url, gear, fanart, description)
 
 
+    
+    
+
 #Displays and saves the user input if something from editplaylist should be set
 def setEditPlaylist(id, set, type=''):
     if set == 'enable':
@@ -168,6 +171,10 @@ def setEditPlaylist(id, set, type=''):
     elif set == 'updateevery':
         options = ['every 4 hours', 'every 8 hours', 'every 12 hours', 'every 24 hours', 'every 168 hours', 'every day', 'every sunday', 'every monday', 'every tuesday', 'every wednesday', 'every thursday', 'every friday', 'every saturday']
         i = xbmcgui.Dialog().select('Choose when to update this playlist', options)
+        i = options[i]
+    elif set == 'update_gmt':
+        options = dev.timezones()
+        i = xbmcgui.Dialog().select('In which timezone should this list be updated?', options)
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'minlength':
@@ -407,6 +414,7 @@ def editPlaylist(id, type=''):
             
             disp_setting('updateevery', 'Update every', 'Update this playlist at a specific time interval or day')
             disp_setting('updateat', 'Update at', 'Update this playlist at a specific time if updateevery is set to a specific day.  (This setting is ignored when "update every" is set to every X hours)')
+            disp_setting('update_gmt', 'Timezone', 'Set the timezone for this playlist. YTlibrary will calculate the time to update according to the difference to your current timezone. (This setting is ignored when "update every" is set to every X hours)')
         
             url = dev.build_url({'mode': 'editPlaylist', 'id': id, 'set': 'writenfo', 'type': type})
             dev.adddir('[COLOR blue]Write NFO:[/COLOR] '+elem.find('writenfo').text, url, gear, fanart, 'NFO Files are needed for Kodi to recognise the youtube episodes as episodes, so it can scan it in its library. If you only want strm files, set this to No')

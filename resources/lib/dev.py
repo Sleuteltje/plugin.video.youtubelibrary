@@ -189,3 +189,75 @@ def slugify(value):
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
     value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
     return re.sub('[-\s]+', '-', value)
+    
+    
+#Arrays containing all timezons as string or as integers as hours
+def timezones(convert = False):
+    timezones = [
+        'Default',
+        'Systems Timezone',
+        'GMT (UTC)',
+        'GMT+1:00',
+        'GMT+2:00',
+        'GMT+3:00',
+        'GMT+3:30',
+        'GMT+4:00',
+        'GMT+5:00',
+        'GMT+5:30',
+        'GMT+6:00',
+        'GMT+7:00',
+        'GMT+8:00',
+        'GMT+9:00',
+        'GMT+9:30',
+        'GMT+10:00',
+        'GMT+11:00',
+        'GMT+12:00',
+        'GMT-11:00',
+        'GMT-10:00',
+        'GMT-9:00',
+        'GMT-8:00',
+        'GMT-7:00',
+        'GMT-6:00',
+        'GMT-5:00',
+        'GMT-4:00',
+        'GMT-3:30',
+        'GMT-3:00',
+        'GMT-2:00',
+        'GMT-1:00'
+    ]    
+    timezones_as_numbers = [
+        98,
+        99,
+        0,
+        1,
+        2,
+        3,
+        3.5,
+        4,
+        5,
+        5.3,
+        6,
+        7,
+        8,
+        9,
+        9.5,
+        10,
+        11,
+        12,
+        -11,
+        -10,
+        -9,
+        -8,
+        -7,
+        -6,
+        -5,
+        -4,
+        -3.5,
+        -3,
+        -2,
+        -1
+    ]
+    
+    if convert == False:
+        return timezones
+    return timezones_as_numbers[timezones.index(convert)]
