@@ -190,7 +190,8 @@ def update_playlist(id, type=''):
             elif type == 'musicvideo':
                 generators.write_artist_nfo(folder, settings)
         
-        update_playlist_vids(id, folder, settings, type=type)
+        if update_playlist_vids(id, folder, settings, type=type) == False:
+            return False #something failed while updating the videos of the playlist
         
         #Save the time this playlist got updated in the xml
         import datetime
@@ -221,6 +222,8 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
         all_vidids = []
         
         resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
+        if resp == False:
+            return False #Something failed while retrieving the playlist
         vids = resp.get("items", [])
         for vid in vids:
             if onlygrab <= times:

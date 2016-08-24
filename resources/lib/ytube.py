@@ -178,20 +178,31 @@ def vids_by_playlist(id, nextpage = False):
     youtube = build_youtube()
     if nextpage == False:
         dev.log('GET vids_by_playlist: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2C+contentDetails&maxResults=50&playlistId='+id+'&key='+vars.API_KEY)
-        search_response = youtube.playlistItems().list(
-          part="snippet,contentDetails",
-          maxResults=50,
-          playlistId=id
-        ).execute()
+        try:
+            search_response = youtube.playlistItems().list(
+              part="snippet,contentDetails",
+              maxResults=50,
+              playlistId=id
+            ).execute()
+        except KeyboardInterrupt:
+            raise
+        except:
+            dev.log('Playlist '+id+' could not be retrieved!')
+            return False
     else:
         dev.log('GET vids_by_playlist: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2C+contentDetails&maxResults=50&playlistId='+id+'&pageToken='+nextpage+'&key='+vars.API_KEY)
-        search_response = youtube.playlistItems().list(
-          part="snippet,contentDetails",
-          maxResults=50,
-          playlistId=id,
-          pageToken=nextpage
-        ).execute()
-    
+        try:
+            search_response = youtube.playlistItems().list(
+              part="snippet,contentDetails",
+              maxResults=50,
+              playlistId=id,
+              pageToken=nextpage
+            ).execute()
+        except KeyboardInterrupt:
+            raise
+        except:
+            dev.log('Playlist '+id+' could not be retrieved!')
+            return False
     return search_response
 
     # for search_result in search_response.get("items", []):
