@@ -261,3 +261,7 @@ def timezones(convert = False):
     if convert == False:
         return timezones
     return timezones_as_numbers[timezones.index(convert)]
+    
+#Puts a string to maximum length
+def cap(s, l):
+    return s if len(s)<=l else s[0:l-3]+'...'

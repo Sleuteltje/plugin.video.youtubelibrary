@@ -25,6 +25,7 @@ import urllib
 from resources.lib import dev
 from resources.lib import vars
 from resources.lib import ytube
+from resources.lib import m_imdb
 
 ################## Generators ####################
 #Does a regex expression from the settings.xml. Will return None if it fails, the match otherwise    
@@ -50,6 +51,37 @@ def reg(se, txt):
     else:
         return None #This is not a regex setting
     
+    
+    
+    
+## Movies
+#Generates the season and episode number
+    #Vid: The video response from the youtube api
+    #settings: The elementtree element containing the playlist settings
+    #totalresults = The total results of the playlist, so that the episode can be calculated if the episode recognisition is set to pos
+    #playlist = the id of the playlist we are checking episode numbers for
+def scan_movie(title, settings, year=False):
+    search_imdb = int(settings.find('search_imdb').text) #Should we search on imdb for this movie?
+    imdb_match_cutoff = int(settings.find('imdb_match_cutoff').text)
+    deny_without_poster = False
+    use_ytimage = settings.find('use_ytimage').text
+    if use_ytimage == '2': #Dont add if no image on imdb found
+        deny_without_poster = True
+    #title = vid['snippet']['title']
+    
+   
+    
+    
+    dev.log('scan_movie('+str(search_imdb)+','+str(imdb_match_cutoff)+')')
+    
+    if search_imdb == 2: ##2 = Just let the addon handle it
+        return False
+    
+    dev.log('We should search on imdb for information about this movie')
+    return m_imdb.search(title, imdb_match_cutoff, deny_without_poster, year) 
+    
+    
+## TVShows    
 #Generates the season and episode number
     #Vid: The video response from the youtube api
     #settings: The elementtree element containing the playlist settings
@@ -146,6 +178,10 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
             episode = '0'
             
     return season, episode, vid
+
+
+
+
 
 
     
@@ -642,6 +678,8 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
     movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
     if type=='musicvideo':
         movieLibrary = vars.musicvideo_folder
+    if type=='movies':
+        movieLibrary = vars.movies_folder
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
     enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
     
@@ -653,6 +691,8 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
             if endpoint != None:
                 content += '&endpoint='+endpoint
             content += '&id=%s&artist=%s&song=%s&album=%s&year=%s&filename=%s' % (sysname, artist, song, album, year, enc_name) #Set the content of the strm file with a link back to this addon for playing the video 
+        elif type == 'movies':
+            content = 'plugin://plugin.video.youtubelibrary/?mode=playmovie&id=%s&filename=%s' % (sysname, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
         else:
             content = 'plugin://plugin.video.youtubelibrary/?mode=play&id=%s&show=%s&season=%s&episode=%s&filename=%s' % (sysname, show, season, episode, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
     else:
@@ -675,31 +715,8 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
         
 
         
-###### NFO GENERATOR ##############
-#Creates a .nfo file
-# Name : The name of the nfo file
-# folder:   The name of the folder the nfo file should be written in (Not the mainfolder, but the name of the show, so the nfo get in that subdir)
-# vid: THe video youtube response we want to add
-# settings:  The elementtree containing the settings from the playlist
-# season: The season of the episode
-#episode: The episode number
-#duration: The duration of the video
-#overwrite_title: If you want to use another title than the vid['snippet']['title']
-#overwrite_description: Same as above, but for description
-#type: tv (''), musicvideo, music, movies
-def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', overwrite_title=None, overwrite_description=None, musicvideo=None, type=''):
-    #dev.log('write_nfo('+name+', '+fold+')')
-    movieLibrary = vars.tv_folder #Use the directory from the addon settings
-    if type=='musicvideo':
-        movieLibrary = vars.musicvideo_folder
-    snippet = vid['snippet']
-    
-    
-    #See if we should do something to the title according to the settings
-    title = snippet['title']
-    if overwrite_title != None:
-        title = overwrite_title
-    removetitle = settings.find('removetitle').text
+#### FILTERS ####
+def removetitle(title, removetitle):
     if removetitle == None:
         removetitle = ''
     if len(removetitle) > 0:
@@ -721,8 +738,9 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
             title = re.sub(removetitle, '', title, flags=re.IGNORECASE)
             #if removetitle in title:
                 #title = title.replace(removetitle, '')
-    #See if we should do something to the title according to the settings
-    striptitle = settings.find('striptitle').text
+    return title
+
+def striptitle(title, striptitle):
     if striptitle == None:
         striptitle = ''
     if len(striptitle) > 0:
@@ -739,13 +757,9 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
                 striptitle = rem #Regex was succesfull, set striptitle to the found string so it can be stripped as normal
             if striptitle in title:
                 title = title[:title.index(striptitle)] #Strip everything to the point where the line was found
-                
-                
-    #See if we should do something to the description according to the settings
-    description = snippet['description']
-    if overwrite_description != None:
-        description = overwrite_description
-    removedescription = settings.find('removedescription').text
+    return title
+
+def removedescription(description, removedescription):
     if removedescription == None:
         removedescription = ''
     if len(removedescription) > 0:
@@ -762,8 +776,9 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
                 removedescription = rem #Regex was succesfull, set removedescription to the found string so it can be removed as normal
             if removedescription in description:
                 description = description.replace(removedescription, '')
-    #See if we should do something to the description according to the settings
-    stripdescription = settings.find('stripdescription').text
+    return description
+
+def stripdescription(description, stripdescription):
     if stripdescription == None:
         stripdescription = ''
     if len(stripdescription) > 0:
@@ -780,59 +795,370 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
                 stripdescription = rem #Regex was succesfull, set stripdescription to the found string so it can be stripped as normal
             if stripdescription in description:
                 description = description[:description.index(stripdescription)] #Strip everything to the point where the line was found
+    return description
+
+## Movies
+#Strip unwanted text from the text
+def movie_strip_full(text):
+    album = ['fullhdmovie', 'fullmovie', 'full movie online', 'full movie', 'complete movie', 'new movie', 'movie', 'fullhdfilm', 'fullfilm', 'full film online', 'full film', 'complete film', 'new film', 'film', 'cabaret', 'w / subtitles', 'with subtitles', 'new', 'free']
+    text = strip_from_text(text, album)
+    return remove_extra_spaces(text)
+def movie_strip_quality(text):
+    album = ['fullhd', 'hdready', 'hd', '720p', '1080p', 'sd', 'dvd quality', 'dvd', 'good quality']
+    text = strip_from_text(text, album)
+    return remove_extra_spaces(text)
+
+def movie_get_year(vid_title, vid_description):
+    year, vid_title = find_year(vid_title)
+    if year != False:
+        return year, vid_title, vid_description
+        year, vid_description = find_year(vid_description)
+        if year != False:
+            return year, vid_title, vid_description
+        
+    return False, vid_title, vid_description
+def movie_get_director(vid_title, vid_description):
+    year, vid_title = find_director(vid_title)
+    if year != False:
+        return year, vid_title, vid_description
+        year, vid_description = find_director(vid_description)
+        if year != False:
+            return year, vid_title, vid_description
+        
+    return False, vid_title, vid_description
+
+def find_director(text):
+    regex = "(?:director|directed)\s?(?:by)?\s?:?\s?\n?((?:[^\n.]+))"
+    m = re.search(regex, text, re.IGNORECASE)
+    if m:
+        if len(m.group(1)) > 0:
+            #Found a year!
+            dev.log(u'Found a director!: '+m.group(1)+ ' Whole match: '+m.group(0))
+            text = text.replace(m.group(0), '') #Remove the copyright / year notice from the title
+            return m.group(1), text
+    return False, text
+
+def smart_search(info):
+    #Try to get the year
+    year, title, description = movie_get_year(info['title'], info['description'])
+    if year is not False: #Found a year
+        info['year'] = year
+        info['year_new'] = year
+        info['title'] = title
+        info['description'] = description
+    #Try to get the director
+    director, title, director = movie_get_director(info['title'], info['description'])
+    if director is not False: #Found a year
+        info['year'] = year
+        info['title'] = title
+        info['director'] = director
+    #Strip Unwanted title stuff
+    info['title'] = movie_strip_full(info['title'])
+    info['title'] = movie_strip_quality(info['title'])
+    
+    return info
+
+    
+    
+###### NFO GENERATOR ##############
+#Creates a .nfo file
+# Name : The name of the nfo file
+# folder:   The name of the folder the nfo file should be written in (Not the mainfolder, but the name of the show, so the nfo get in that subdir)
+# vid: THe video youtube response we want to add
+# settings:  The elementtree containing the settings from the playlist
+# season: The season of the episode
+#episode: The episode number
+#duration: The duration of the video
+#overwrite_title: If you want to use another title than the vid['snippet']['title']
+#overwrite_description: Same as above, but for description
+#type: tv (''), musicvideo, music, movies
+#movie: movie-information
+#usefilters: If filters like striptitle should be done on the title
+#statistics: the statistics object from the ytapi containing ratings and such
+def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', overwrite_title=None, overwrite_description=None, musicvideo=None, type='', movie=None, usefilters=True, statistics = None):
+    #dev.log('write_nfo('+name+', '+fold+')')
+    
+    info = {} #Create a dict for all info we gonna determine for in the .nfo
+    
+    movieLibrary = vars.tv_folder #Use the directory from the addon settings
+    if type=='musicvideo':
+        movieLibrary = vars.musicvideo_folder
+    elif type=='movies':
+        movieLibrary = vars.movies_folder
+    snippet = vid['snippet']
+    
+    info['year_new'] = False
+    
+    info['rating'] = ''
+    info['votes'] = ''
+    if statistics is not None:
+        thumbsup = int(statistics['likeCount'])
+        thumbsdown = int(statistics['dislikeCount'])
+        info['votes'] = thumbsup + thumbsdown
+        info['rating'] = thumbsup / info['votes']
+        info['votes'] = '<votes>'+str(info['votes'])+'</votes>'
+        info['rating'] = '<rating>'+str(info['rating'])+'</rating>'
+    
+    
+    info['title'] = snippet['title']
+    info['original_title'] = snippet['title']
+    if overwrite_title != None:
+        info['title'] = overwrite_title
+    info['description'] = snippet['description']
+    if overwrite_description != None:
+        info['description'] = overwrite_description
+    
+     
+    if usefilters is True:
+        info['title'] = removetitle(info['title'], settings.find('removetitle').text)
+        info['title'] = striptitle(info['title'], settings.find('striptitle').text)
+        info['description'] = removedescription(info['description'], settings.find('removedescription').text)
+        info['description'] = stripdescription(info['description'], settings.find('stripdescription').text)    
+                
+                
+
    
    
     #Grab the best possible thumbnail
     #if 'maxres' in snippet['thumbnails']:
     #    thumbnail = snippet['thumbnails']['maxres']
     if 'standard' in snippet['thumbnails']:
-        thumbnail = snippet['thumbnails']['standard']['url']
+        info['thumbnail'] = snippet['thumbnails']['standard']['url']
     elif 'high' in snippet['thumbnails']:
-        thumbnail = snippet['thumbnails']['high']['url']
+        info['thumbnail'] = snippet['thumbnails']['high']['url']
     elif 'medium' in snippet['thumbnails']:
-        thumbnail = snippet['thumbnails']['medium']['url']
+        info['thumbnail'] = snippet['thumbnails']['medium']['url']
     elif 'default' in snippet['thumbnails']:
-        thumbnail = snippet['thumbnails']['default']['url']
+        info['thumbnail'] = snippet['thumbnails']['default']['url']
     else:
-        thumbnail = settings.find('thumbnail').text
+        info['thumbnail'] = settings.find('thumbnail').text
     
     #Grab the published date and convert it to a normal date
     d = ytube.convert_published(snippet['publishedAt'])
-    normaldate = d['year']+'/'+d['month']+'/'+d['day']
+    info['normaldate'] = d['year']+'/'+d['month']+'/'+d['day']
+    info['year'] = d['year']
     
     #Convert the duration (seconds) in number of minutes
-    durationminutes = int(int(duration) / 60)
+    info['duration'] = duration
+    info['durationminutes'] = int(int(duration) / 60)
     
-    durationhms = dev.convert_sec_to_hms(duration)
+    info['durationhms'] = dev.convert_sec_to_hms(duration)
     
     if type == 'musicvideo':
-        if musicvideo == None:
-            return False
-        #Grab the featured artists and convert them to xml
-        featured_xml = ''
-        if musicvideo['featured'] != False:
-            for artist in musicvideo['featured']:
-                featured_xml += '<artist>'+artist.strip(' \t\n\r')+'</artist>'
-        #Grab the tags and convert them to xml
-        tags_xml = ''
-        if musicvideo['tags'] != False:
-            for tag in musicvideo['tags']:
-                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
-        tags = settings.find('tags')
-        if tags is not None:
-            tags = settings.find('tags').text
-            if '/' in tags:
-                multi_tags = tags.split('/')
-                for tag in multi_tags:
-                    tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
-            elif tags.strip(' \t\n\r') is not '':
-                tags_xml += '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+        content = write_nfo_musicvideo(info, settings, musicvideo)
+    elif type == 'movies':
+        content = write_nfo_movies(info, settings)
+    else:
+        content = write_nfo_tv(info, settings, season, episode)
+    
+    if content is False: #Video got skipped for some reason
+        return False
+    
+    xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
+    
+
+    #enc_name = name.translate('\/:*?"<>|').strip('.') #Escape special characters in the name
+    enc_name = dev.legal_filename(name)
+    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    if type == '' or type == 'tv':
+        folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
+        xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+
+    stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
+    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
+    file.write(str(content.encode("utf-8"))) #Write the content in the file
+    file.close() #Close the file
+    dev.log('write_nfo: Written nfo file: '+fold+'/'+enc_name+'.nfo')    
+    
+
+    
+def write_nfo_movies(info, settings):   
+    #Prepare optional xml tags if they are set
+    set = ''
+    if len(settings.find('set').text) > 0:
+        set = '<set>'+settings.find('set').text+'</set>'
         
-        genre = musicvideo['genre']
-        if genre is None:
-            genre = ''
+    outline = re.match(r'(?:[^.:;]+[.:;]){1}', info['description'])
+    if outline is not None:
+        outline = outline.group().strip(' \t\n\r')
+    else:
+        outline = dev.cap(info['description'], 50).strip(' \t\n\r')
+        
+    #If smart_search is enabled, try to grab info like, year, director and actors from the title & description on youtube, and clean up the title and description in the process
+    if settings.find('smart_search').text == '1':
+        info = smart_search(info)
+        
+    #Grab the movie information from the generator
+    movie = False
+    if settings.find('search_imdb') != '2': #2 equals "No, let the addon handle it"
+        movie = scan_movie(info['title'], settings, info['year_new'])
+        if movie == False and settings.find('search_imdb') == '1': #1 equals "Yes, dont add if IMDB fails"
+            dev.log('Search_imdb is set to "Yes, dont add if IMDB fails", so skipping this movie')
+            return False #Skip this video, it did not make it past the movies filters
+    
+
+    #Has the movie been found on IMDB?
+    if movie is not False: #The movie has been found on imdb
+        content_art = ''
+        if 'noimage' in movie['image']:
+            content_art = """
+            <thumb>%(thumb)s</thumb>
+            <thumb aspect="poster">%(thumb)s</thumb>
+            <thumb aspect="banner">%(banner)s</thumb>
+            <fanart>
+                <thumb>%(fanart)s</thumb>
+            </fanart>""" % {
+                'thumb' : info['thumbnail'],
+                'banner' : settings.find('banner').text,
+                'fanart' : settings.find('fanart').text
+            }
+
+        content = """
+        <movie>
+            <runtime>%(durationminutes)s</runtime>
+            <fileinfo>
+                <streamdetails>
+                    <durationinseconds>%(duration)s</durationinseconds>
+                </streamdetails>
+            </fileinfo>
+            %(set)s
+            %(art)s
+        </movie>
+        %(url)s""" % {
+            'durationminutes': info['durationminutes'],
+            'duration': info['duration'],
+            'art' : content_art,
+            'url' : movie['url'],
+            'set' : set,
+        }
+    else:
         #Create the contents of the xml file
         content = """
+        <movie>
+            <title>%(title)s</title>
+            <originaltitle>%(original_title)s</originaltitle>
+            <outline>%(outline)s</outline>
+            <plot>%(plot)s</plot> 
+            <tagline>%(outline)s</tagline>
+            <genre>%(genre)s</genre>
+            <year>%(year)s</year>
+
+            <studio>Youtube</studio>
+            <director>%(channel)s</director>   
+            
+            <thumb>%(thumb)s</thumb>
+            <thumb aspect="poster">%(thumb)s</thumb>
+            <thumb aspect="banner">%(banner)s</thumb>
+            <fanart>
+                <thumb>%(fanart)s</thumb>
+            </fanart>
+
+            
+            <runtime>%(durationminutes)s</runtime>
+            <fileinfo>
+                <streamdetails>
+                    <durationinseconds>%(duration)s</durationinseconds>
+                </streamdetails>
+            </fileinfo>
+            
+            %(set)s
+            %(tags)s
+            %(rating)s
+            %(votes)s
+
+        </movie>
+        """ % {
+            'title': info['title'].strip(' \t\n\r'),
+            'original_title' : info['original_title'].strip(' \t\n\r'),
+            'plot': info['description'].strip(' \t\n\r'),
+            'outline' : outline,
+            'genre' : settings.find('genre').text,
+            'year' : info['normaldate'],
+            'channel': settings.find('channel').text,
+            
+            'thumb': info['thumbnail'],
+            'banner' : settings.find('banner').text,
+            'fanart' : settings.find('fanart').text,
+            
+            'date': info['normaldate'],
+            'durationminutes': info['durationminutes'],
+            'duration': info['duration'],
+            
+            'set' : set,
+            'tags' : get_tags_xml(settings),
+            
+            'rating' : info['rating'],
+            'votes' : info['votes'],
+            
+        }
+    return content
+    
+## TV
+def write_nfo_tv(info, settings, season, episode):
+    content = """
+<episodedetails>
+    <title>%(title)s</title>
+    <season>%(season)s</season>
+    <episode>%(episode)s</episode>
+    <plot>%(plot)s</plot>
+    <thumb>%(thumb)s</thumb>
+    <credits>%(channel)s</credits>
+    <director>%(channel)s</director>
+    <aired>%(date)s</aired>
+    <premiered>%(date)s</premiered>
+    <studio>Youtube</studio>
+    <runtime>%(durationminutes)s</runtime>
+    <fileinfo>
+        <streamdetails>
+            <durationinseconds>%(duration)s</durationinseconds>
+        </streamdetails>
+    </fileinfo>
+</episodedetails>
+        """ % { 
+            'title': info['title'].strip(' \t\n\r'),
+            'plot': info['description'].strip(' \t\n\r'),
+            'channel': settings.find('channel').text,
+            'thumb': info['thumbnail'],
+            'date': info['normaldate'],
+            'season': season,
+            'episode': episode,
+            'durationminutes': info['durationminutes'],
+            'duration': info['duration']
+    }
+    return content
+    
+    
+## MUSICVIDEO (create the content of the .nfo file for musicvideos)
+# musicvideo : list containing info about the musicvideo
+def write_nfo_musicvideo(info, settings, musicvideo):
+    if musicvideo == None:
+        return False
+    #Grab the featured artists and convert them to xml
+    featured_xml = ''
+    if musicvideo['featured'] != False:
+        for artist in musicvideo['featured']:
+            featured_xml += '<artist>'+artist.strip(' \t\n\r')+'</artist>'
+    #Grab the tags and convert them to xml
+    tags_xml = ''
+    if musicvideo['tags'] != False:
+        for tag in musicvideo['tags']:
+            tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+    tags = settings.find('tags')
+    if tags is not None:
+        tags = settings.find('tags').text
+        if '/' in tags:
+            multi_tags = tags.split('/')
+            for tag in multi_tags:
+                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        elif tags.strip(' \t\n\r') is not '':
+            tags_xml += '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+    
+    genre = musicvideo['genre']
+    if genre is None:
+        genre = ''
+    #Create the contents of the xml file
+    content = """
 <musicvideo>
     <title>%(title)s</title>
     <artist>%(artist)s</artist>
@@ -856,75 +1182,41 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     </fileinfo>
     %(tags)s
 </musicvideo>
-        """ % {
-            'title': musicvideo['title'].strip(' \t\n\r'),
-            'artist': musicvideo['artist'].strip(' \t\n\r'),
-            'featured': featured_xml,
-            'album': musicvideo['album'].strip(' \t\n\r'),
-            'genre': genre.strip(' \t\n\r'),
-            'plot': musicvideo['plot'].strip(' \t\n\r'),
-            'year': musicvideo['year'].strip(' \t\n\r'),
-            'studio': musicvideo['studio'].strip(' \t\n\r'),
-            'thumb': thumbnail,
-            'durationhms': durationhms,
-            'tracknr': musicvideo['tracknr'].strip(' \t\n\r'),
-            'fanart': settings.find('fanart').text,
-            'tags': tags_xml,
-            'durationminutes': durationminutes,
-            'duration': duration
-        }
-    else:
-        ##TV
-        #Create the contents of the xml file
-        content = """
-<episodedetails>
-    <title>%(title)s</title>
-    <season>%(season)s</season>
-    <episode>%(episode)s</episode>
-    <plot>%(plot)s</plot>
-    <thumb>%(thumb)s</thumb>
-    <credits>%(channel)s</credits>
-    <director>%(channel)s</director>
-    <aired>%(date)s</aired>
-    <premiered>%(date)s</premiered>
-    <studio>Youtube</studio>
-    <runtime>%(durationminutes)s</runtime>
-    <fileinfo>
-        <streamdetails>
-            <durationinseconds>%(duration)s</durationinseconds>
-        </streamdetails>
-    </fileinfo>
-</episodedetails>
-        """ % {
-            'title': title.strip(' \t\n\r'),
-            'plot': description.strip(' \t\n\r'),
-            'channel': settings.find('channel').text,
-            'thumb': thumbnail,
-            'date': normaldate,
-            'season': season,
-            'episode': episode,
-            'durationminutes': durationminutes,
-            'duration': duration
-        }
+    """ % {
+        'title': musicvideo['title'].strip(' \t\n\r'),
+        'artist': musicvideo['artist'].strip(' \t\n\r'),
+        'featured': featured_xml,
+        'album': musicvideo['album'].strip(' \t\n\r'),
+        'genre': genre.strip(' \t\n\r'),
+        'plot': musicvideo['plot'].strip(' \t\n\r'),
+        'year': musicvideo['year'].strip(' \t\n\r'),
+        'studio': musicvideo['studio'].strip(' \t\n\r'),
+        'thumb': info['thumbnail'],
+        'durationhms': info['durationhms'],
+        'tracknr': musicvideo['tracknr'].strip(' \t\n\r'),
+        'fanart': settings.find('fanart').text,
+        'tags': tags_xml,
+        'durationminutes': info['durationminutes'],
+        'duration': info['duration']
+    }
+    return content
     
-    xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     
-
-    #enc_name = name.translate('\/:*?"<>|').strip('.') #Escape special characters in the name
-    enc_name = dev.legal_filename(name)
-    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
-    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
-    if type == '' or type == 'tv':
-        folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
-        xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
-
-    stream = os.path.join(folder, enc_name + '.nfo') #Set the file to maindir/name/name.strm
-    file = xbmcvfs.File(stream, 'w') #Open / create this file for writing
-    file.write(str(content.encode("utf-8"))) #Write the content in the file
-    file.close() #Close the file
-    dev.log('write_nfo: Written nfo file: '+fold+'/'+enc_name+'.nfo')
-
-        
+    
+#Gets the tags from the settings and converts it to xml for the .nfo file        
+def get_tags_xml(settings):
+    tags = settings.find('tags')
+    tags_xml = ''
+    if tags is not None:
+        tags = settings.find('tags').text
+        if '/' in tags:
+            multi_tags = tags.split('/')
+            tags_xml = ''
+            for tag in multi_tags:
+                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
+        elif tags.strip(' \t\n\r') is not '':
+            tags_xml = '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+    return tags_xml
         
         
 #Writes the NFO for the tvshow
@@ -940,17 +1232,7 @@ def write_tvshow_nfo(fold, settings):
     normaldate = d['year']+'-'+d['month']+'-'+d['day']
     
     #Grab the tags and convert them to xml
-    tags = settings.find('tags')
-    tags_xml = ''
-    if tags is not None:
-        tags = settings.find('tags').text
-        if '/' in tags:
-            multi_tags = tags.split('/')
-            tags_xml = ''
-            for tag in multi_tags:
-                tags_xml += '<tag>'+tag.strip(' \t\n\r')+'</tag>'
-        elif tags.strip(' \t\n\r') is not '':
-            tags_xml = '<tag>'+tags.strip(' \t\n\r')+'</tag>'
+    tags_xml = get_tags_xml(settings)
     
     #Create the contents of the xml file
     content = u"""

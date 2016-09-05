@@ -209,25 +209,27 @@ def vids_by_playlist(id, nextpage = False):
       # dev.additem(search_result['snippet']['title'], 'http://somevid.mkv', search_result['snippet']['thumbnails']['default']['url'])
 
 #Grabs the duration of a list of youtube video IDs (you can add a max of 50 videoIDs to each call)
-def get_duration_vids(vid_ids):
+def get_duration_vids(vid_ids, extra_info=False):
     dev.log('Grabbing duration of youtube videos')
-    
+
     #Create a seperated string of vid_ids to give to the API
     idlist = ''
     for id in vid_ids:
         idlist += id+','
     idlist = idlist[:-1]
-    
+    dev.log('GET duration vids: https://www.googleapis.com/youtube/v3/videos?part=snippet%2C+contentDetails&maxResults=50&id='+idlist+'&key='+vars.API_KEY)
+
     youtube = build_youtube()
     
     search_response = youtube.videos().list(
-      part="contentDetails",
+      part="contentDetails,statistics",
       maxResults=50,
       id=idlist
     ).execute()
 
     #Get the duration of each video in the response
     durations = {}
+    extra = {}
     for vid in search_response.get("items", []):      
         dur = vid['contentDetails']['duration']
         dur = dur[2:] #Strip PT from the duration
@@ -238,10 +240,13 @@ def get_duration_vids(vid_ids):
         #dev.log('Which makes the video %s seconds long' % seconds)
         vidid = vid['id']
         durations[vidid] = seconds
+        if extra_info is not False:
+            extra[vidid] = vid['statistics']
         #except Exception as e:
             #dev.log("Couldnt extract time: %s" % e)
             #pass
-    
+    if extra_info is not False:
+        return durations, extra
     return durations
     
     

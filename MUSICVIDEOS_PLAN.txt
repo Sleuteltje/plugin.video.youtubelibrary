@@ -1,3 +1,50 @@
+MOVIES settings:
+
+fallbakc: IMDB => no add, IMDB => own settings, own settings => IMDB, own settings => no add
+scrape IMDB: yes/no
+
+addon_description = use imdb / use youtube / use own
+addon_title = use imdb / use youtube / use own
+movie_set = use imdb / use own / use both
+
+smart_strip : on / off #Tries to be smart and find the movie title and strip all unneeded stuff from the title. 
+
+
+
+imdb_search = off / on, if fails dont add / on, if fails use addon settings
+
+remove_title
+strip_title
+remove_description
+strip_description
+  
+
+
+---- new thoughts ---
+
+search_imdb : should we search IMDB? Yes, fallback on addon | Yes, dont add otherwhise | No, just use addon settings
+imdb_match_cutoff : The cutoff percentage to accept titles from imdb as a match
+use_ytimage : Only if no image found on IMDB | Always
+
+set: The set the movies from the playlist will belong to (adds to what imdb recieves)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Spice Girls - Wannabe (2009)
 Spice Girls - Wannabe (Official Video)
 Spice Girls - Wannabe [Official Video]

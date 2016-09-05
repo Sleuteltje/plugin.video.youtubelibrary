@@ -18,6 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #For XML Reading & Writing
 import xbmcvfs
+import xbmcgui
 import os
 
 from xml.etree import ElementTree
@@ -39,7 +40,15 @@ def xml_get(type=''):
     file=dev.typeXml(type)
     dev.log('XML_get('+type+','+file+')')
     global document #Set the document variable as global, so every function can reach it
-    document = ElementTree.parse( vars.settingsPath+file )
+    try:
+        document = ElementTree.parse( vars.settingsPath+file )
+    except Exception:
+        xbmcgui.Dialog().ok("ERROR: "+file+" got corrupted", "ERROR!: "+file+" got corrupted. Please report this error to the addon developer on youtubelibrary.nl or the kodi forums. Luckily a backup has been created automatically before.")
+        dev.log('ERROR: '+file+' got corrupted.', 1)
+        raise ValueError(output_file+' got corrupted! Best to quit here')
+        return False
+    return document
+    
     
 # Converts the elementtree element to prettified xml and stores it in the settings.xml file
 def write_xml(elem, dir='', output='', type=''):
@@ -67,6 +76,10 @@ def write_xml(elem, dir='', output='', type=''):
     indent( elem ) #Prettify the xml so its not on one line
     tree = ElementTree.ElementTree( elem ) #Convert the xml back to an element
     tree.write(output_file) #Save the XML in the settings file
+    
+    #For backup purposes, check if the xml got corrupted by writing just now
+    if xml_get(type) is False:
+        dev.log('corrupt .xml file')
     
 
 #Pretty Print the xml    
@@ -216,6 +229,7 @@ def api_xml_build_new_playlist(api, type=''):
                 'type'                  : 'TV',
                 'title'                   : api['title'],
                 'channel'            : api['channel'],
+                'channelId'            : api['channelId'],
                 'description'        : api['description'],
                 'genre'                : api['genre'],
                 'tags'                  : api['tags'],
@@ -344,6 +358,7 @@ def xml_build_new_playlist(id, type=''):
                 'type'                  : 'TV',
                 'title'                   : title,
                 'channel'            : snippet['title'],
+                'channelId' : res['channelId'],
                 'description'        : description,
                 'genre'                : genre,
                 'tags'                  : tags,
@@ -370,6 +385,78 @@ def xml_build_new_playlist(id, type=''):
                 #NFO information
                 'season'            : season,
                 'episode'           : episode,
+                'striptitle'            : striptitle,
+                'removetitle'       : removetitle,
+                'stripdescription' : stripdescription,
+                'removedescription' : removedescription,
+                #Scan Settings
+                'lastvideoId'       : '',
+            }
+        }
+        return playlist
+    elif type=='movies':
+        ##Get the default settings from the addon settings
+        writenfo = 'Yes'
+        if dev.getAddonSetting("default_movies_generate_nfo") == "false":
+            writenfo = 'no'
+        genre = dev.getAddonSetting("default_movies_genre", '')
+        tags = dev.getAddonSetting("default_movies_tags", 'Youtube')
+        search_imdb = dev.getAddonSetting("default_movies_search_imdb", '2')
+        imdb_match_cutoff = dev.getAddonSetting("default_movies_imdb_match_cutoff", '0.75')
+        use_ytimage = dev.getAddonSetting("default_movies_use_ytimage", '0')
+        minlength = dev.getAddonSetting("default_movies_minlength", '')
+        maxlength = dev.getAddonSetting("default_movies_maxlength", '')
+        onlyinclude = dev.getAddonSetting("default_movies_onlyinclude", '')
+        excludewords = dev.getAddonSetting("default_movies_excludewords", '')
+        stripdescription = dev.getAddonSetting("default_movies_stripdescription", '')
+        removedescription = dev.getAddonSetting("default_movies_removedescription", '')
+        striptitle = dev.getAddonSetting("default_movies_striptitle", '')
+        removetitle = dev.getAddonSetting("default_movies_removetitle", '')
+        updateevery = dev.getAddonSetting("default_movies_updateevery", 'every 12 hours')
+        updateat = dev.getAddonSetting("default_movies_updateat", '23:59')
+        update_gmt = dev.getAddonSetting("default_movies_update_gmt", '99')
+        set = dev.getAddonSetting("default_movies_set", '')
+        smart_search = dev.getAddonSetting("default_movies_smart_search", '1')
+        
+        
+        #Build the playlist
+        playlist = {
+            'id'    : id,
+            'enabled'      : 'no',
+            'settings'      : {
+                'type'                  : 'movies',
+                'title'                   : title,
+                'channel'            : snippet['title'],
+                'channelId' : res['channelId'],
+                'description'        : description,
+                'genre'                : genre,
+                'tags'                  : tags,
+                'set'                   : set,
+                'published'          : snippet['publishedAt'],
+                #Art
+                'thumb'               : thumbnail,
+                'fanart'                : bannerTv,
+                'banner'              : brand['image']['bannerImageUrl'],
+                'epsownfanart'    : 'No',
+                # STRM & NFO Settings
+                'writenfo'             : writenfo,
+                'delete'                : '',
+                'updateevery'       : updateevery,
+                'updateat'        : updateat,
+                'update_gmt'        : update_gmt,
+                'onlygrab'          : dev.getAddonSetting("default_movies_onlygrab", ''),
+                'keepvideos'        : '',
+                'overwritefolder'   : '',
+                #Filters
+                'minlength'         : minlength,
+                'maxlength'         : maxlength,
+                'excludewords'    : excludewords,
+                'onlyinclude'       : onlyinclude,
+                #NFO information
+                'search_imdb'            : search_imdb,
+                'imdb_match_cutoff'           : imdb_match_cutoff,
+                'use_ytimage'           : use_ytimage,
+                'smart_search'          : smart_search,
                 'striptitle'            : striptitle,
                 'removetitle'       : removetitle,
                 'stripdescription' : stripdescription,
@@ -417,6 +504,7 @@ def xml_build_new_playlist(id, type=''):
         removetitle = dev.getAddonSetting("default_musicvideo_removetitle", '')
         updateevery = dev.getAddonSetting("default_musicvideo_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_musicvideo_updateat", '23:59')
+        update_gmt = dev.getAddonSetting("default_musicvideo_update_gmt", '99')
         
         #Build the playlist
         playlist = {
@@ -426,6 +514,7 @@ def xml_build_new_playlist(id, type=''):
                 'type'                  : 'MusicVideo',
                 'title'                   : title,
                 'channel'            : snippet['title'],
+                'channelId' : res['channelId'],
                 'description'        : description,
                 'published'          : snippet['publishedAt'],
                 #Library Info
@@ -454,6 +543,7 @@ def xml_build_new_playlist(id, type=''):
                 'writenfo'             : writenfo,
                 'updateevery'       : updateevery,
                 'updateat'        : updateat,
+                'update_gmt'        : update_gmt,
                 'onlygrab'          : dev.getAddonSetting("default_musicvideo_onlygrab", ''),
                 'delete'                : '',
                 'keepvideos'        : '',

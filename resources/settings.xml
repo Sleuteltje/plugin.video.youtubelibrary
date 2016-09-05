@@ -16,6 +16,7 @@
 		<setting label="30203" type="lsep"/>
 		<setting id="tv_folder" type="folder" label="30204" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
 		<setting id="musicvideo_folder" type="folder" label="30205" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/MusicVideos" />
+		<setting id="movies_folder" type="folder" label="30206" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/Movies" />
 	</category>
     <!-- Default Playlist Settings -->
     <category label="30300">
@@ -83,14 +84,40 @@
         <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_musicvideo_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
 		<setting id="default_musicvideo_updateat" type="time" label="30317" default="23:59"/>
+		<setting id="default_musicvideo_update_gmt" label="30318" type="select" values="Default|Systems Timezone|GMT (UTC)|GMT+1:00|GMT+2:00|GMT+3:00|GMT+3:30|GMT+4:00|GMT+5:00|GMT+5:30|GMT+6:00|GMT+7:00|GMT+8:00|GMT+9:00|GMT+9:30|GMT+10:00|GMT+11:00|GMT+12:00|GMT-11:00|GMT-10:00|GMT-9:00|GMT-8:00|GMT-7:00|GMT-6:00|GMT-5:00|GMT-4:00|GMT-3:30|GMT-3:00|GMT-2:00|GMT-1:00" default="Default" />
 	</category>
-    <!--Donor -->
+	    <!-- Default Movies Playlist Settings -->
     <category label="30500">
-		<setting id="enable_donor" type="bool" label="30504" default="false" />
-		<setting id="api_token" type="text" label="30501" default=""/>
-		<setting id="api_language" type="select" label="30503" values="none|en|nl|es|ger" default="en" />
-		<setting id="api_language2" type="select" label="30503" values="none|en|nl|es|ger" default="none" />
-		<setting id="api_language3" type="select" label="30503" values="none|en|nl|es|ger" default="none" />
+		<setting label="30501" type="lsep"/>
+		<setting id="default_movies_genre" label="30503" type="text" default="" />
+		<setting id="default_movies_tags" label="30514" type="text" default="Youtube" />
+		<setting id="default_movies_set" label="30519" type="text" default="" />
+		<setting id="default_movies_smart_search" type="bool" label="30521" default="true" />
+		<setting id="default_movies_search_imdb" type="enum" label="30504" values="Yes, fallback on addon settings|Yes, dont add if imdb fails|No, just use addon settings" default="2" />
+		<setting label="30505" type="slider" id="default_movies_imdb_match_cutoff" default="75" range="0,5,100" option="int" />
+		<setting id="default_movies_use_ytimage" type="enum" label="30520" values="Only if no image found on IMDB|Always|Dont add if no image found on imdb" default="0" />
+		<setting id="default_movies_minlength" type="time" label="30506" default=""/>
+		<setting id="default_movies_maxlength" type="time" label="30507" default=""/>
+		<setting id="default_movies_onlyinclude" label="30508" type="text" default="" />
+		<setting id="default_movies_excludewords" label="30509" type="text" default="" />
+		<setting id="default_movies_stripdescription" label="30510" type="text" default="" />
+		<setting id="default_movies_removedescription" label="30511" type="text" default="" />
+		<setting id="default_movies_striptitle" label="30512" type="text" default="" />
+		<setting id="default_movies_removetitle" label="30513" type="text" default="" />
+        <setting id="default_movies_generate_nfo" label="30502" type="bool" default="true" />
+        <setting id="default_movies_onlygrab" label="30515" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+		<setting id="default_movies_updateevery" label="30516" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
+		<setting id="default_movies_updateat" type="time" label="30517" default="23:59"/>
+		<setting id="default_movies_update_gmt" label="30518" type="select" values="Default|Systems Timezone|GMT (UTC)|GMT+1:00|GMT+2:00|GMT+3:00|GMT+3:30|GMT+4:00|GMT+5:00|GMT+5:30|GMT+6:00|GMT+7:00|GMT+8:00|GMT+9:00|GMT+9:30|GMT+10:00|GMT+11:00|GMT+12:00|GMT-11:00|GMT-10:00|GMT-9:00|GMT-8:00|GMT-7:00|GMT-6:00|GMT-5:00|GMT-4:00|GMT-3:30|GMT-3:00|GMT-2:00|GMT-1:00" default="Default" />
+	</category>    
+
+    <!--Donor -->
+    <category label="30600">
+		<setting id="enable_donor" type="bool" label="30604" default="false" />
+		<setting id="api_token" type="text" label="30601" default=""/>
+		<setting id="api_language" type="select" label="30603" values="none|en|nl|es|ger" default="en" />
+		<setting id="api_language2" type="select" label="30603" values="none|en|nl|es|ger" default="none" />
+		<setting id="api_language3" type="select" label="30603" values="none|en|nl|es|ger" default="none" />
 	</category>    
 </settings>
 

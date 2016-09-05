@@ -30,6 +30,7 @@ from resources.lib import generators
 from resources.lib import routes    
 from resources.lib import play    
 from resources.lib import playlists  
+from resources.lib import m_imdb  
 
 
 xbmcplugin.setContent(vars.addon_handle, 'episodes')
@@ -52,6 +53,12 @@ if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings_musicvideo.xml")) == 
     xbmcvfs.mkdir(vars.streamsPath+'MusicVideos') #Create the streams musicvideos dir if it does not exist already
     
     m_xml.create_xml('settings_musicvideo.xml')
+if xbmcvfs.exists(os.path.join(vars.settingsPath,"settings_movies.xml")) == False:
+    xbmcgui.Dialog().ok(dev.lang(31103), dev.lang(31106))
+    
+    xbmcvfs.mkdir(vars.streamsPath+'Movies') #Create the streams musicvideos dir if it does not exist already
+    
+    m_xml.create_xml('settings_movies.xml')
 
 ########## ROUTES ##############      
 #Grab which mode the plugin is in    
@@ -185,6 +192,15 @@ else:
         routes.apiSearch()
     elif mode[0] == 'ApiSearchChannel':
         routes.apiSearchChannel()
+
+
+
+
+
+
+
+    elif mode[0] == 'testIMDB':
+        m_imdb.test()
 
 
 

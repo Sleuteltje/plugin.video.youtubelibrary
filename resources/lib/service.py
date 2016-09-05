@@ -190,6 +190,8 @@ def update_playlists(type=''):
         update_dir = vars.tv_folder_path
         if type == 'musicvideo':
             update_dir = vars.musicvideo_folder_path
+        elif type == 'movies':
+            update_dir = vars.movies_folder_path
         dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
         xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
         
@@ -250,6 +252,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
         resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
         if resp == False:
             return False #Something failed while retrieving the playlist
+        amount = resp['pageInfo']['totalResults']
         vids = resp.get("items", [])
         for vid in vids:
             if onlygrab <= times:
@@ -352,6 +355,27 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             season = musicvideo_info['album']
             if season == '':
                 season = musicvideo_info['artist']
+        ##Movies
+        elif type == 'movies':
+            #Prepare the title as best as we can for the imdb search and stuff
+            #title = vid['snippet']['title']
+            #description = vid['snippet']['description']
+            #title = removetitle(title, settings.find('removetitle').text)
+            #title = striptitle(title, settings.find('striptitle').text)
+            
+            #if settings.find('smart_search') == '2':
+                #title, description = generators.smart_search(title, description, vid, settings)
+            
+            filename = vid['snippet']['title'] #Create the filename for the .strm & .nfo file
+            
+            if settings.find('writenfo').text != 'no':
+                create_strm = generators.write_nfo(filename, folder, vid, settings, duration = duration[vid['contentDetails']['videoId']], type=type) #Write the nfo file for this episode
+                if create_strm is False:
+                    m_xml.playlist_add_episode(id, '1', vid['contentDetails']['videoId'], type=type) #Add it to the episode list, so it doesnt get picked up again
+                    continue #Skip this video, it did not make it past the filters
+            
+            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], type=type) #Write the strm file for this episode
+            season = '1'
             
             
         #Add this episode to the episodenr/playlist.xml file so we can remember we scanned this episode already
@@ -366,7 +390,8 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             m_xml.xml_update_playlist_setting(id, 'lastvideoId', firstvid) #Set the lastvideoId to this videoId so the playlist remembers the last video it has. This will save on API calls, since it will quit when it comes across a video that already has been set
     '''
     dev.log('( ._.)========== Done ripping videos from playlist '+settings.find('title').text+' (ID: '+id+') ==========(._. )')
-
+    return amount
+    
 ##Helper Functions to check requirements of a youtube video according to the playlist settings
 #Check onlyinclude
     #vid : The vid from the youtube response its about

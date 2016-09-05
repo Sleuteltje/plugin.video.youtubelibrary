@@ -28,7 +28,7 @@ import sys
 # for your project.
 API_KEY = "AIzaSyBtO0Bl38DJKCuPh9e4mRW3-1UcGPPnQfs"
 YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"    
+YOUTUBE_API_VERSION = "v3"
 
 
 
@@ -78,6 +78,8 @@ tv_folder_path = xbmc.translatePath(__settings__.getSetting("tv_folder"))
 tv_folder = os.path.join(tv_folder_path, '') #The directory where all the tv-shows .strm & nfo files will be added
 musicvideo_folder_path = xbmc.translatePath(__settings__.getSetting("musicvideo_folder"))
 musicvideo_folder = os.path.join(musicvideo_folder_path, '') #The directory where all the music videos .strm & nfo files will be added
+movies_folder_path = xbmc.translatePath(__settings__.getSetting("movies_folder"))
+movies_folder = os.path.join(movies_folder_path, '') #The directory where all the music videos .strm & nfo files will be added
 update_videolibrary = __settings__.getSetting("update_videolibrary") #Should we update the video library after updating all playlists?
 mode = int(__settings__.getSetting("mode"))
 
@@ -99,6 +101,8 @@ for key, val in double.iteritems():
     tv_folder_path = tv_folder_path.replace(key, val) #Fix for double userdata :S?
     musicvideo_folder = musicvideo_folder.replace(key, val) #Fix for double userdata :S?
     musicvideo_folder_path = musicvideo_folder_path.replace(key, val) #Fix for double userdata :S?
+    movies_folder = movies_folder.replace(key, val) #Fix for double userdata :S?
+    movies_folder_path = movies_folder_path.replace(key, val) #Fix for double userdata :S?
 
 #Extra Kodi Paths
 #skinPath = xbmc.translatePath('special://skin/')

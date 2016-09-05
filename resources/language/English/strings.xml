@@ -5,6 +5,7 @@
     <string id="30200">Library Settings</string>
     <string id="30300">Default TV Shows Settings</string>
     <string id="30400">Default MusicVideo Settings</string>
+	<string id="30500">Default Movies Settings</string>
     <string id="30500">Donor Functions</string>
     <!--General-->
     <string id="30101">Download Images</string>
@@ -19,6 +20,7 @@
     <string id="30204">TV Shows Directory</string>
     <string id="30205">Music Videos Directory</string>
     <string id="30206">Notify on updating of playlist</string>
+    <string id="30206">Movies Directory</string>
     <!--Default TV Show Settings-->
     <string id="30301">Default settings for TV Shows</string>
     <string id="30302">Generate NFO files</string>
@@ -37,7 +39,7 @@
     <string id="30315">Only grab the last X videos</string>
     <string id="30316">Update every</string>
     <string id="30317">Update at HH:MM</string>
-    <string id="30317">Timezone</string>
+    <string id="30318">Timezone</string>
     <!--Default MusicVideo Settings-->
     <string id="30401">Default settings for Music Videos</string>
     <string id="30402">Generate NFO files</string>
@@ -69,11 +71,41 @@
     <string id="30463">Skip Live Videos</string>
     <string id="30464">Skip Album Videos</string>
     <string id="30465">Skip Audio Only Videos</string>
+	    <!--Default Movies Settings-->
+    <string id="30501">Default settings for Movies</string>
+    <string id="30502">Generate NFO files</string>
+    <string id="30503">Genre</string>
+    <string id="30504">Search IMDB</string>
+    <string id="30505">IMDB Match cutoff</string>
+    <string id="30506">Min length</string>
+    <string id="30507">Max length</string>
+    <string id="30508">Only include</string>
+    <string id="30509">Exclude</string>
+    <string id="30510">Strip Description</string>
+    <string id="30511">Remove Description</string>
+    <string id="30512">Strip Title</string>
+    <string id="30513">Remove Title</string>
+    <string id="30514">Tags</string>
+    <string id="30515">Only grab the last X videos</string>
+    <string id="30516">Update every</string>
+    <string id="30517">Update at HH:MM</string>
+    <string id="30518">Timezone</string>
+    <string id="30519">Movie Set</string>
+    <string id="30520">Use YT image</string>
+    <string id="30521">Smart Search</string>
+
+	
+	
+	
+	
+	
+	
+	
 	
 	<!--Donor-->
-    <string id="30501">Api Token</string>
-    <string id="30503">Language</string>	
-    <string id="30504">Enable Donor functions</string>
+    <string id="30601">Api Token</string>
+    <string id="30603">Language</string>	
+    <string id="30604">Enable Donor functions</string>
 	
 	
 	<!-- Addon Text -->
@@ -91,6 +123,20 @@
 	<string id="31015">Search for a new Playlist to add to your Kodi Music Video Library</string>
 	<string id="31008">Add new Channel as Music Videos</string>
 	<string id="31009">Search by channel name for a new Playlist to add to your Kodi Music Video Library</string>
+	<string id="31018">Add new Channel as Movies</string>
+	<string id="31019">Search by channel name for a new Playlist to add to your Kodi Movies Library</string>
+	<string id="31020">Add new Playlist as Movies</string>
+	<string id="31021">Search for a new Playlist to add to your Kodi Movies Library</string>
+	<string id="31022">Manage Movies Playlists</string>
+	<string id="31023">Manage the Channels Playlists you have added as Movies in the Kodi Library</string>
+	
+	<string id="31024">MANAGE</string>
+	<string id="31025">ADD</string>
+	<string id="31026">DONOR</string>
+	
+	<string id="31027">Browse Youtubelibrary.nl</string>
+	<string id="31028">Easily add pre-configured playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!</string>
+
 	<!-- Manage Playlists -->
 	<string id="31006">Update Now</string>
 	<string id="31007">Delete playlist</string>
@@ -106,6 +152,7 @@
 	<string id="31103">New Feature!</string>
 	<string id="31104">Now you can also add Musicvideos! See the thread on the Kodi forums for more help or to say thank you :). You can send donations to mailsleuteltje@gmail.com.</string>
 	<string id="31105">Search Channel</string>
+	<string id="31106">Now you can also add Movies! See youtubelibrary.nl or the thread on the Kodi forums for more info or to say thank you :).</string>
 	
 	<!-- Donor -->
 	<string id="31991">For donors only</string>

@@ -40,6 +40,12 @@ def disp_setting(setting, title, description, level=0):
         if setting == 'published':
             d = ytube.convert_published(val)
             val = d['day']+'-'+d['month']+'-'+d['year']
+        elif setting == 'search_imdb': #Search_IMDB (movies setting)
+            options = ['Yes, fallback on addon settings', 'Yes, dont add if imdb fails', 'No, just use addon settings']
+            val = options[int(val)]
+        elif setting == 'use_ytimage': 
+            options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB']
+            val = options[int(val)]
     if val == None or val == 'None':
         val = ''
     url = dev.build_url({'mode': 'editPlaylist', 'id': plid, 'set': setting, 'type': pltype})
@@ -57,7 +63,7 @@ def disp_bool_setting(setting, title, description, level=0):
     val = None
     if elem.find(setting) != None:
         val = elem.find(setting).text
-    if val == 'true':
+    if val == 'true' or val == '1':
         val = '[COLOR green]ON[/COLOR]'
     else:
         val = '[COLOR red]OFF[/COLOR]'
@@ -183,6 +189,25 @@ def setEditPlaylist(id, set, type=''):
         i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
     elif set == 'updateat':
         i = xbmcgui.Dialog().numeric(2, 'Update this playlist on this time of the day')
+    
+    
+    ###MOVIES
+    elif set == 'search_imdb':
+        i = xbmcgui.Dialog().select(dev.lang(30504), ['Yes, fallback on addon settings', 'Yes, dont add if imdb fails', 'No, just use addon settings'])
+        i = str(i)
+    elif set == 'imdb_match_cutoff':
+        options = ['25', '40', '50', '60', '70', '75', '80', '85', '90', '95', '99', '100']
+        i = xbmcgui.Dialog().select(dev.lang(30505), options)
+        i = options[i]
+    elif set == 'use_ytimage':
+        options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB']
+        i = xbmcgui.Dialog().select(dev.lang(30520), options)
+        i = str(i)
+    elif set == 'smart_search':
+        i = xbmcgui.Dialog().yesno("Skip Live", "Skip Live Videos?")
+        i = str(i)
+
+    
     
     ###MUSIC VIDEOS
     #genre
@@ -379,7 +404,7 @@ def editPlaylist(id, type=''):
             if elem.find('artist').text == 'hardcoded' or elem.find('artist_fallback').text == 'hardcoded':
                 disp_setting('artist_hardcoded', 'Artist Hardcoded', dev.lang(31901))
             #albums
-            disp_setting('album', 'album', 'album Recognizition', 1)
+            disp_setting('album', 'album', 'Album Recognizition', 1)
             album = elem.find('album').text
             if album != 'hardcoded' and album != 'video title' and album != 'playlist channelname' and album != 'published year' and album != 'video channelname' and album != 'artist + published year' and album != 'video description':
                 disp_setting('album_fallback', 'album Fallback', dev.lang(31900), 1)
@@ -403,6 +428,16 @@ def editPlaylist(id, type=''):
         else:
             #Genre
             disp_setting('genre', 'Genre', 'Settings as displayed in Kodi. For multiple genres use genre1 / genre2 / genre3 (note the space between each / )')
+        
+        ###MOVIES
+        if type == 'movies':
+            disp_setting('set', dev.lang(30519), 'The set the movies will belong to in the Kodi library')
+            disp_bool_setting('smart_search', dev.lang(30521), 'Use some smart filters to strip out must unwanted stuff from titles. Also try to guess info like Director and year in the process.')
+            disp_setting('search_imdb', dev.lang(30504), 'Do you want to try to find a match on imdb? And if so, what to do if no match is found?')
+            disp_setting('imdb_match_cutoff', dev.lang(30505), 'How much of a percentage does the title need to match the IMDB result?')
+            disp_setting('use_ytimage', dev.lang(30520), 'In case of an IMDB match, would you still like to use the Youtube Image as the Poster image?')
+        
+        
         #Published
         if type == '' or type == 'tv':
             disp_setting('published', 'Published', 'The date the show first aired', 1)
@@ -545,6 +580,8 @@ def refresh_playlist(id, type=''):
                 movieLibrary = vars.tv_folder #Use the directory from the addon settings
                 if type == 'musicvideo':
                     movieLibrary = vars.musicvideo_folder
+                elif type == 'movies':
+                    movieLibrary = vars.movies_folder
                 dir = os.path.join(movieLibrary, folder) #Set the folder to the maindir/dir
                 
                 success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory

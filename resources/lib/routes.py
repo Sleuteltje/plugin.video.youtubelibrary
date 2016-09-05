@@ -76,7 +76,7 @@ def index_dir():
     #Manage TV Playlists
     #Separator
     url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
-    dev.adddir('[COLOR blue]-------------------MANAGE-------------------[/COLOR]', url, '')
+    dev.adddir('[COLOR blue]-------------------'+dev.lang(31024)+'-------------------[/COLOR]', url, '')
     
     url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists'})
     context_url = dev.build_url({'mode': 'updateplaylists'})
@@ -91,9 +91,16 @@ def index_dir():
     commands.append(( dev.lang(31003), 'XBMC.RunPlugin('+context_url+')', ))
     dev.adddir(dev.lang(31011), url, description=dev.lang(31012), context=commands)
     
+    #Manage Movies Playlists
+    url = dev.build_url({'mode': 'folder', 'foldername': 'managePlaylists', 'type':'movies'})
+    context_url = dev.build_url({'mode': 'updateplaylists', 'type':'movies'})
+    commands = []
+    commands.append(( dev.lang(31003), 'XBMC.RunPlugin('+context_url+')', ))
+    dev.adddir(dev.lang(31022), url, description=dev.lang(31023), context=commands)
+    
     #Separator
     url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
-    dev.adddir('[COLOR blue]-------------------ADD-------------------[/COLOR]', url, '')
+    dev.adddir('[COLOR blue]-------------------'+dev.lang(31025)+'-------------------[/COLOR]', url, '')
     
     
     
@@ -113,14 +120,31 @@ def index_dir():
     url = dev.build_url({'mode': 'folder', 'foldername': 'searchplaylist', 'type': 'musicvideo'})
     dev.adddir(dev.lang(31014), url, description=dev.lang(31015))
 
+    #Search Movie Channel
+    url = dev.build_url({'mode': 'folder', 'foldername': 'searchchannel', 'type': 'movies'})
+    dev.adddir(dev.lang(31018), url, description=dev.lang(31019))
+    
+    #Search Movie Playlist
+    url = dev.build_url({'mode': 'folder', 'foldername': 'searchplaylist', 'type': 'movies'})
+    dev.adddir(dev.lang(31020), url, description=dev.lang(31021))
+
     #Separator
     url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
-    dev.adddir('[COLOR blue]-------------------DONOR-------------------[/COLOR]', url, '')
+    dev.adddir('[COLOR blue]-------------------'+dev.lang(31026)+'-------------------[/COLOR]', url, '')
     
     
     #DONOR FUCNTION - Browse Playlists
     url = dev.build_url({'mode': 'ApiIndex', 'api_url': 'default'})
-    dev.adddir('Browse Youtubelibrary.nl', url, description='Easily add pre-configured playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+    dev.adddir(dev.lang(31027), url, description=dev.lang(31028))
+    
+    #Separator
+    url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
+    dev.adddir('[COLOR blue]-------------------TEST-------------------[/COLOR]', url, '')
+    
+    
+    #DONOR FUCNTION - Browse Playlists
+    url = dev.build_url({'mode': 'testIMDB', 'api_url': 'default'})
+    dev.adddir('IMDB TEST', url, description=dev.lang(31028))
     
     
     
