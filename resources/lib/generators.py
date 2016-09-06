@@ -72,7 +72,7 @@ def scan_movie(title, settings, year=False):
    
     
     
-    dev.log('scan_movie('+str(search_imdb)+','+str(imdb_match_cutoff)+')')
+    dev.log('scan_movie('+title+', '+str(search_imdb)+','+str(imdb_match_cutoff)+', '+str(year)+')')
     
     if search_imdb == 2: ##2 = Just let the addon handle it
         return False
@@ -131,6 +131,7 @@ def episode_season(vid, settings, totalresults = False, playlist = False):
             found = True
     if found == False: #If the episode has not been found yet, either it is not regex, or regex failed
         if se == 'year': #We want to save the season of the video as the year it is published
+            dev.log('`~.~`~... PublishedAt: '+vid['snippet']['publishedAt'])
             d = ytube.convert_published(vid['snippet']['publishedAt'])
             season = d['year']
         elif se.isdigit(): #If the season is set to a hardcoded number
@@ -682,7 +683,8 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
         movieLibrary = vars.movies_folder
     sysname = urllib.quote_plus(videoid) #Escape strings in the videoid if needed
     enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
-    
+    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+
     if vars.__settings__.getSetting("strm_link") == "Youtube Library":
         if type == 'musicvideo':
             content = 'plugin://plugin.video.youtubelibrary/?mode=playmusicvideo'
@@ -692,7 +694,7 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
                 content += '&endpoint='+endpoint
             content += '&id=%s&artist=%s&song=%s&album=%s&year=%s&filename=%s' % (sysname, artist, song, album, year, enc_name) #Set the content of the strm file with a link back to this addon for playing the video 
         elif type == 'movies':
-            content = 'plugin://plugin.video.youtubelibrary/?mode=playmovie&id=%s&filename=%s' % (sysname, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
+            content = 'plugin://plugin.video.youtubelibrary/?mode=playmovie&id=%s&filename=%s&folder=%s' % (sysname, enc_name, fold) #Set the content of the strm file with a link back to this addon for playing the video
         else:
             content = 'plugin://plugin.video.youtubelibrary/?mode=play&id=%s&show=%s&season=%s&episode=%s&filename=%s' % (sysname, show, season, episode, enc_name) #Set the content of the strm file with a link back to this addon for playing the video
     else:
@@ -700,7 +702,6 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
 
     xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exists yet
     
-    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
     xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
     if type == '' or type == 'tv':
         folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
@@ -812,9 +813,9 @@ def movie_get_year(vid_title, vid_description):
     year, vid_title = find_year(vid_title)
     if year != False:
         return year, vid_title, vid_description
-        year, vid_description = find_year(vid_description)
-        if year != False:
-            return year, vid_title, vid_description
+    year, vid_description = find_year(vid_description)
+    if year != False:
+        return year, vid_title, vid_description
         
     return False, vid_title, vid_description
 def movie_get_director(vid_title, vid_description):
@@ -842,16 +843,18 @@ def smart_search(info):
     #Try to get the year
     year, title, description = movie_get_year(info['title'], info['description'])
     if year is not False: #Found a year
+        dev.log('Smart search: found a year: '+year)
         info['year'] = year
         info['year_new'] = year
         info['title'] = title
         info['description'] = description
     #Try to get the director
-    director, title, director = movie_get_director(info['title'], info['description'])
-    if director is not False: #Found a year
-        info['year'] = year
-        info['title'] = title
+    director, title, description = movie_get_director(info['title'], info['description'])
+    if director is not False: #Found a director
+        dev.log('Smart Search: found a director: '+director)
         info['director'] = director
+        info['title'] = title
+        info['description'] = description
     #Strip Unwanted title stuff
     info['title'] = movie_strip_full(info['title'])
     info['title'] = movie_strip_quality(info['title'])
@@ -975,44 +978,42 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     
 def write_nfo_movies(info, settings):   
     #Prepare optional xml tags if they are set
+    info['director'] = settings.find('channel').text
     set = ''
     if len(settings.find('set').text) > 0:
         set = '<set>'+settings.find('set').text+'</set>'
-        
-    outline = re.match(r'(?:[^.:;]+[.:;]){1}', info['description'])
-    if outline is not None:
-        outline = outline.group().strip(' \t\n\r')
-    else:
-        outline = dev.cap(info['description'], 50).strip(' \t\n\r')
-        
+                
     #If smart_search is enabled, try to grab info like, year, director and actors from the title & description on youtube, and clean up the title and description in the process
     if settings.find('smart_search').text == '1':
         info = smart_search(info)
         
     #Grab the movie information from the generator
     movie = False
-    if settings.find('search_imdb') != '2': #2 equals "No, let the addon handle it"
+    if settings.find('search_imdb').text != '2': #2 equals "No, let the addon handle it"
         movie = scan_movie(info['title'], settings, info['year_new'])
-        if movie == False and settings.find('search_imdb') == '1': #1 equals "Yes, dont add if IMDB fails"
+        if movie == False and settings.find('search_imdb').text == '1': #1 equals "Yes, dont add if IMDB fails"
             dev.log('Search_imdb is set to "Yes, dont add if IMDB fails", so skipping this movie')
             return False #Skip this video, it did not make it past the movies filters
     
 
     #Has the movie been found on IMDB?
     if movie is not False: #The movie has been found on imdb
+        dev.log('The Movie has been found on IMDB; '+movie['image'])
+        dev.log('Use_ytimage is on: '+settings.find('use_ytimage').text)
         content_art = ''
-        if 'noimage' in movie['image']:
-            content_art = """
-            <thumb>%(thumb)s</thumb>
-            <thumb aspect="poster">%(thumb)s</thumb>
-            <thumb aspect="banner">%(banner)s</thumb>
-            <fanart>
-                <thumb>%(fanart)s</thumb>
-            </fanart>""" % {
-                'thumb' : info['thumbnail'],
-                'banner' : settings.find('banner').text,
-                'fanart' : settings.find('fanart').text
-            }
+        if 'nopicture' in movie['image'] and settings.find('use_ytimage').text is not '3': #3 = never
+                dev.log('No image on imdb found, so using Youtube Image')
+                content_art = """
+                <thumb>%(thumb)s</thumb>
+                <thumb aspect="poster">%(thumb)s</thumb>
+                <thumb aspect="banner">%(banner)s</thumb>
+                <fanart>
+                    <thumb>%(fanart)s</thumb>
+                </fanart>""" % {
+                    'thumb' : info['thumbnail'],
+                    'banner' : settings.find('banner').text,
+                    'fanart' : info['thumbnail']
+                }
 
         content = """
         <movie>
@@ -1033,19 +1034,18 @@ def write_nfo_movies(info, settings):
             'set' : set,
         }
     else:
+        dev.log('This movie has not been found on IMDB')
         #Create the contents of the xml file
         content = """
         <movie>
             <title>%(title)s</title>
             <originaltitle>%(original_title)s</originaltitle>
-            <outline>%(outline)s</outline>
             <plot>%(plot)s</plot> 
-            <tagline>%(outline)s</tagline>
             <genre>%(genre)s</genre>
             <year>%(year)s</year>
 
             <studio>Youtube</studio>
-            <director>%(channel)s</director>   
+            <director>%(director)s</director>   
             
             <thumb>%(thumb)s</thumb>
             <thumb aspect="poster">%(thumb)s</thumb>
@@ -1072,14 +1072,13 @@ def write_nfo_movies(info, settings):
             'title': info['title'].strip(' \t\n\r'),
             'original_title' : info['original_title'].strip(' \t\n\r'),
             'plot': info['description'].strip(' \t\n\r'),
-            'outline' : outline,
             'genre' : settings.find('genre').text,
             'year' : info['normaldate'],
-            'channel': settings.find('channel').text,
+            'director': info['director'],
             
             'thumb': info['thumbnail'],
             'banner' : settings.find('banner').text,
-            'fanart' : settings.find('fanart').text,
+            'fanart' : info['thumbnail'],
             
             'date': info['normaldate'],
             'durationminutes': info['durationminutes'],

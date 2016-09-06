@@ -1,22 +1,23 @@
 to do before 1.0:
-- Add movies support
-- Add imdb support for movies
+X Add movies support
+X Add imdb support for movies
 - Add reverse option for small playlists
 - Regex option to get title or description
 - smart search movies;
-	- get year
-	- get director
+	x get year
+	x get director
 	- get actors
-	- strip all unneeded stuff from the title and/or description
+	x strip all unneeded stuff from the title and/or description
 
 
 
 0.9.7.8:
 - Added Feature: Ability to set timezones for tv playlists. For example this playlist updates @ 19:00 GMT+2.
 - Added Feature: Now creates a backup file of a settings.xml every time it alters it (in case it gets corrupted) and validates the file.
+- Added Feature: You can now refresh a playlist from its context menu
 - Bugfix: Videos with & in the title gave an error when playing.
 - Fix: Doesnt scan the library after refreshing a plyalist anymore
-- Bugfix: If an error happens while retrieving a playlist, it would raise an exception and stop working until a restart of kodi.
+- Bugfix: If an error happened while retrieving a playlist, it would raise an exception and stop working until a restart of kodi.
 
 Youtubelibrary.nl:
 - API: added channelId & update_gmt

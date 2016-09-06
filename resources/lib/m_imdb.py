@@ -23,7 +23,7 @@ import sys
 import re
 from BeautifulSoup import BeautifulSoup
 import requests
-
+import time
 
 from resources.lib import vars
 from resources.lib import dev
@@ -41,8 +41,18 @@ def search(search, cutoff = '75', deny_without_poster = False, year=False):
     url = 'http://www.imdb.com/find?q='+search_urlfriendly+'&s=tt&ttype=ft'
     
     
-    
-    r = requests.get(url) # where url is the above url    
+    try:
+        r = requests.get(url) # where url is the above url
+    except:
+        dev.log('IMDB refused our connection. Retry again in 12 seconds')
+        time.sleep(12)
+        try:
+            r = requests.get(url)
+        except:
+            dev.log('IMDB refused the connection again. Retrying last time in 60 seconds')
+            time.sleep(60)
+            r = requests.get(url)
+        
     dev.log('imdb.search() url: '+url)
     
     bs = BeautifulSoup(r.text)

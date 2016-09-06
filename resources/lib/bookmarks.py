@@ -73,9 +73,12 @@ def deleteBookmark(name, imdb='0'):
 
     
 #Mark the video as watched through the JSON of Kodi   
-def mark_as_watched(DBID, folderPath):    
+def mark_as_watched(DBID, folderPath, type=''):    
     try:
-        xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.SetEpisodeDetails", "params": {"episodeid" : %s, "playcount" : 1 }, "id": 1 }' % str(DBID))
+        if type == 'movies':
+            xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.SetMovieDetails", "params": {"movieid" : %s, "playcount" : 1 }, "id": 1 }' % str(DBID))
+        else:
+            xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.SetEpisodeDetails", "params": {"episodeid" : %s, "playcount" : 1 }, "id": 1 }' % str(DBID))
         if not folderPath.startswith('plugin://'): xbmc.executebuiltin('Container.Refresh')
     except:
         pass

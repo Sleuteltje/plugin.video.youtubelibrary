@@ -391,6 +391,7 @@ def xml_build_new_playlist(id, type=''):
                 'removedescription' : removedescription,
                 #Scan Settings
                 'lastvideoId'       : '',
+                'reverse'           : '0',
             }
         }
         return playlist
@@ -463,6 +464,7 @@ def xml_build_new_playlist(id, type=''):
                 'removedescription' : removedescription,
                 #Scan Settings
                 'lastvideoId'       : '',
+                'reverse'           : ''
             }
         }
         return playlist
@@ -565,6 +567,7 @@ def xml_build_new_playlist(id, type=''):
                 'removedescription' : removedescription,
                 #Scan Settings
                 'lastvideoId'       : '',
+                'reverse'           : '',
             }
         }
         return playlist

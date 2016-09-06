@@ -63,6 +63,8 @@ def update_playlist(type=''):
         update_dir = vars.tv_folder_path
         if type == 'musicvideo':
             update_dir = vars.musicvideo_folder_path
+        elif type == 'movies':
+            update_dir = vars.movies_folder_path
         dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
         xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
 
@@ -258,9 +260,11 @@ def manage_playlists(type=''):
             #Build the contextmenu item to force the updating of one playlist
             context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id'], 'type': type})
             context_url2 = dev.build_url({'mode': 'deletePlaylist', 'id': child.attrib['id'], 'type': type})
+            context_url3 = dev.build_url({'mode': 'refreshPlaylist', 'id': child.attrib['id'], 'type': type})
             commands = []
             commands.append(( dev.lang(31006), 'XBMC.RunPlugin('+context_url+')', ))
             commands.append(( dev.lang(31007), 'XBMC.RunPlugin('+context_url2+')', ))
+            commands.append(( dev.lang(31029), 'XBMC.RunPlugin('+context_url3+')', ))
             dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text, context=commands)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     

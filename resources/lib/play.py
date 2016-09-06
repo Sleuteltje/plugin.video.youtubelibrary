@@ -68,7 +68,7 @@ def playMusicVid(id, filename=None, artist = None, song = None):
     return playYoutubeVid(id, meta, poster)
             
 #Plays the requested Youtube Video
-def playVid(id, filename=None, season = None, episode = None, show = None):    
+def playVid(id, filename=None, season = None, episode = None, show = None, folder = None, type=''):    
     import time
     import json
     
@@ -87,10 +87,21 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     filename = filename.translate(None, '\/:*?"<>|').strip('.')
 
     #Grab the metadata of this episode
-    meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"filter":{"and": [{"field": "season", "operator": "is", "value": "%s"}, {"field": "episode", "operator": "is", "value": "%s"}]}, "properties": ["title", "season", "episode", "showtitle", "firstaired", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (season, episode))
+    if type == 'movies':
+        #meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"filter":{"field": "studio", "operator": "is", "value": "Youtube"}, "properties": ["title", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (filename))
+        query = '{"jsonrpc": "2.0", "params": {"sort": {"order": "ascending", "method": "title"}, "filter": {"operator": "contains", "field": "path", "value": "%s"}, "properties": ["title", "art", "file", "thumbnail", "runtime", "rating", "plot"]}, "method": "VideoLibrary.GetMovies", "id": "libMovies"}' % (folder)
+        dev.log('trying meta query now: '+query)
+        meta = xbmc.executeJSONRPC(query)
+    
+    else:
+        meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": {"filter":{"and": [{"field": "season", "operator": "is", "value": "%s"}, {"field": "episode", "operator": "is", "value": "%s"}]}, "properties": ["title", "season", "episode", "showtitle", "firstaired", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (season, episode))
     meta = unicode(meta, 'utf-8', errors='ignore')
-    if 'episodes' in json.loads(meta)['result']:  
-        meta = json.loads(meta)['result']['episodes']
+    dev.log('Meta: '+meta)
+    if 'episodes' in json.loads(meta)['result'] or 'movies' in json.loads(meta)['result']:  
+        if type == 'movies':
+            meta = json.loads(meta)['result']['movies']
+        else:
+            meta = json.loads(meta)['result']['episodes']
         for i in meta:
             dev.log('Meta: '+i['file'].encode('utf8'))
             dev.log('Looking for :'+filename)
@@ -100,13 +111,23 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
                 dev.log('Found the episode we are looking for')
                 meta = i
                 break
-        DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
-        
-        meta = {'title': meta['title'].encode('utf-8'), 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'].encode('utf-8'), 'premiered' : meta['firstaired'].encode('utf-8'), 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director']).encode('utf-8')), 'writer': str(' / '.join(meta['writer']).encode('utf-8')), 'plot': meta['plot'].encode('utf-8')}
+                
+        if type == 'movies':
+            DBID = meta['movieid'] ; thumb = meta['thumbnail'] ;
+            
+            meta = {'title': meta['title'].encode('utf-8'), 'duration' : meta['runtime'], 'rating': meta['rating'], 'plot': meta['plot'].encode('utf-8')}
+            poster = 'Default.png'
+            #poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
+            #poster = unicode(poster, 'utf-8', errors='ignore')
+            #poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+        else:
+            DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
+            
+            meta = {'title': meta['title'].encode('utf-8'), 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'].encode('utf-8'), 'premiered' : meta['firstaired'].encode('utf-8'), 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director']).encode('utf-8')), 'writer': str(' / '.join(meta['writer']).encode('utf-8')), 'plot': meta['plot'].encode('utf-8')}
 
-        poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
-        poster = unicode(poster, 'utf-8', errors='ignore')
-        poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+            poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
+            poster = unicode(poster, 'utf-8', errors='ignore')
+            poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
 
         #If resume playback is set in the settings, display a resume menu
         try:
@@ -160,7 +181,7 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     try:
         bookmarks.deleteBookmark(name) #Delete the previous saved bookmark
         dev.log('Deleted the previous bookmark')
-        ok = int(currentTime) > 60 and (currentTime / totalTime) <= .9 #Has the video been playing long enough and is it viewed less then 90%?
+        ok = int(currentTime) > 120 and (currentTime / totalTime) <= .9 #Has the video been playing long enough and is it viewed less then 90%?
         if ok:
             bookmarks.addBookmark(currentTime, name) #Add the new bookmark
             dev.log('Added new bookmark @ %s' % currentTime)
@@ -169,6 +190,8 @@ def playVid(id, filename=None, season = None, episode = None, show = None):
     
     #Mark the episode as watched if enough was watched
     ok = diff >= .9 #Did the episode get watched for 90% or more?
+    if int(currentTime) < 120:
+        ok = diff >= .75 #Since the runtime is very short, we'll accept a view through as 75%
     if ok:
         dev.log('Episode has been watched for %s, mark as watched' % diff)
         bookmarks.mark_as_watched(DBID, folderPath) #Mark the episode as watched

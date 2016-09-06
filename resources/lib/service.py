@@ -246,23 +246,47 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
     #First we are going to collect all youtube videos until we come across a list containing a videoId we already got
     uptodate = False
     times = 0 #keep track how many times we grabbed yt videos
+    reverse = '0'
+    if settings.find('reverse') is not None:
+        reverse = settings.find('reverse').text
+        total_last_time = settings.find('lastvideoId').text
+        if total_last_time == '' or total_last_time == None:
+            total_last_time = '0'
+        total_last_time = int(total_last_time)
+            
+
+    
     while uptodate == False:
         all_vidids = []
         
         resp = ytube.vids_by_playlist(id, nextpage) #Grab the videos belonging to this playlist
         if resp == False:
             return False #Something failed while retrieving the playlist
-        amount = resp['pageInfo']['totalResults']
+        amount = int(resp['pageInfo']['totalResults'])
         vids = resp.get("items", [])
-        for vid in vids:
-            if onlygrab <= times:
-                #We have grabbed as many videos as allowed by the setting onlygrab
-                uptodate = True
-                continue#continue to the next video in the list
+        
+        if reverse == '1' and times == 0:
+            m_xml.xml_update_playlist_setting(id, 'lastvideoId', str(amount), type=type) #Update the amount of videos to the current one
+            if total_last_time < amount: #There are more videos in the playlist now, so time to update
+                dev.log('Reversed is enabled and there are more videos ('+str(amount)+' vs '+str(total_last_time)+') then last time.')
+            else:
+                dev.log('Reversed is enabled, but there are no more videos ('+str(amount)+' vs '+str(total_last_time)+') then last time.')
+                return amount #No more videos then last time, so leave it at this
+            if amount > 5000:
+                dev.log('This playlist is way to big (more then 5000 videos) to be reversed')
+                return amount
+        
+        if onlygrab <= times:
+            #We have grabbed as many videos as allowed by the setting onlygrab
+            uptodate = True
+            break#quit updating the list
             
+        
+        for vid in vids:
             if m_xml.episode_exists(id, vid['contentDetails']['videoId'], type=type):
-                #This list contains a videoId we already got, assume we are up to date
-                uptodate = True
+                if reverse != '1':
+                    #This list contains a videoId we already got, assume we are up to date
+                    uptodate = True
                 continue #continue to the next video in the list
             
             if vid['snippet']['title'].lower() != 'private video' and vid['snippet']['title'].lower() != 'deleted video' and vid['snippet']['description'].lower() != 'this video is unavailable.':
@@ -284,7 +308,11 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             #update_playlist_vids(id, folder, settings, resp['nextPageToken'], firstvid)
         times = times+1
     
+    dev.log('')
+    dev.log('')
     dev.log('( ._.)~~~~~~~~~~ DONE GRABBING VIDS FROM YOUTUBE FOR :'+settings.find('title').text+' ~~~~~~~~~~(._. )')
+    dev.log('')
+    dev.log('')
     ##Grab settings from the settings.xml for this playlist
     minlength = settings.find('minlength').text
     maxlength = settings.find('maxlength').text
@@ -304,10 +332,12 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
         maxlength = None    
 
     
-        
+    if reverse == '1':
+        all_vids = list(reversed(all_vids))
     
-    ##Loop through all 50< vids and check with filters if we should add it
-    for vid in reversed(all_vids):    
+    ##Loop through all vids and check with filters if we should add it
+    for vid in reversed(all_vids): 
+        dev.log('')
         #Check if we already had this video, if so we should skip it
         if m_xml.episode_exists(id, vid['contentDetails']['videoId'], type=type):
             dev.log('Episode '+vid['contentDetails']['videoId']+' is already scanned into the library')
@@ -390,6 +420,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             m_xml.xml_update_playlist_setting(id, 'lastvideoId', firstvid) #Set the lastvideoId to this videoId so the playlist remembers the last video it has. This will save on API calls, since it will quit when it comes across a video that already has been set
     '''
     dev.log('( ._.)========== Done ripping videos from playlist '+settings.find('title').text+' (ID: '+id+') ==========(._. )')
+    dev.log('\n\n\n\n')
     return amount
     
 ##Helper Functions to check requirements of a youtube video according to the playlist settings

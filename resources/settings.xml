@@ -95,7 +95,7 @@
 		<setting id="default_movies_smart_search" type="bool" label="30521" default="true" />
 		<setting id="default_movies_search_imdb" type="enum" label="30504" values="Yes, fallback on addon settings|Yes, dont add if imdb fails|No, just use addon settings" default="2" />
 		<setting label="30505" type="slider" id="default_movies_imdb_match_cutoff" default="75" range="0,5,100" option="int" />
-		<setting id="default_movies_use_ytimage" type="enum" label="30520" values="Only if no image found on IMDB|Always|Dont add if no image found on imdb" default="0" />
+		<setting id="default_movies_use_ytimage" type="enum" label="30520" values="Only if no image found on IMDB|Always|Dont add if no image found on imdb|Never" default="0" />
 		<setting id="default_movies_minlength" type="time" label="30506" default=""/>
 		<setting id="default_movies_maxlength" type="time" label="30507" default=""/>
 		<setting id="default_movies_onlyinclude" label="30508" type="text" default="" />

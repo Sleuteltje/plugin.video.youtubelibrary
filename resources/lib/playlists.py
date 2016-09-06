@@ -44,7 +44,7 @@ def disp_setting(setting, title, description, level=0):
             options = ['Yes, fallback on addon settings', 'Yes, dont add if imdb fails', 'No, just use addon settings']
             val = options[int(val)]
         elif setting == 'use_ytimage': 
-            options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB']
+            options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB', 'Never']
             val = options[int(val)]
     if val == None or val == 'None':
         val = ''
@@ -189,6 +189,9 @@ def setEditPlaylist(id, set, type=''):
         i = xbmcgui.Dialog().numeric(2, 'Set a maximum length for videos')
     elif set == 'updateat':
         i = xbmcgui.Dialog().numeric(2, 'Update this playlist on this time of the day')
+    elif set == 'reverse':
+        i = xbmcgui.Dialog().yesno("Reverse Playlist", "Reverse this playlist? \n\r (Only use this if the playlist is sorted oldest->newest and you cant find a playlist sorted newest->oldest)")
+        i = str(i)
     
     
     ###MOVIES
@@ -200,11 +203,11 @@ def setEditPlaylist(id, set, type=''):
         i = xbmcgui.Dialog().select(dev.lang(30505), options)
         i = options[i]
     elif set == 'use_ytimage':
-        options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB']
+        options = ['Only if no image found on IMDB', 'Always', 'Dont add if no image is found on IMDB', 'Never']
         i = xbmcgui.Dialog().select(dev.lang(30520), options)
         i = str(i)
     elif set == 'smart_search':
-        i = xbmcgui.Dialog().yesno("Skip Live", "Skip Live Videos?")
+        i = xbmcgui.Dialog().yesno("Smart Search", "Enable Smart Search?")
         i = str(i)
 
     
@@ -432,9 +435,11 @@ def editPlaylist(id, type=''):
         ###MOVIES
         if type == 'movies':
             disp_setting('set', dev.lang(30519), 'The set the movies will belong to in the Kodi library')
-            disp_bool_setting('smart_search', dev.lang(30521), 'Use some smart filters to strip out must unwanted stuff from titles. Also try to guess info like Director and year in the process.')
+            if vars.mode > 1: #Expert mode
+                disp_bool_setting('smart_search', dev.lang(30521), 'Use some smart filters to strip out must unwanted stuff from titles. Also try to guess info like Director and year in the process.')
             disp_setting('search_imdb', dev.lang(30504), 'Do you want to try to find a match on imdb? And if so, what to do if no match is found?')
-            disp_setting('imdb_match_cutoff', dev.lang(30505), 'How much of a percentage does the title need to match the IMDB result?')
+            if vars.mode > 1:
+                disp_setting('imdb_match_cutoff', dev.lang(30505), 'How much of a percentage does the title need to match the IMDB result?')
             disp_setting('use_ytimage', dev.lang(30520), 'In case of an IMDB match, would you still like to use the Youtube Image as the Poster image?')
         
         
@@ -443,6 +448,8 @@ def editPlaylist(id, type=''):
             disp_setting('published', 'Published', 'The date the show first aired', 1)
         #WriteNFO
         if vars.mode > 0:
+            disp_bool_setting('reverse', dev.lang(30522), 'Reverse this playlist? \n\r (Only use this if the playlist is sorted oldest->newest and you cant find a playlist sorted newest->oldest)')
+        
             #Only get last X videos
             disp_setting('onlygrab', 'Grab last X videos', 'Instead of adding all old episodes, only add the last X episodes')
             
@@ -494,7 +501,7 @@ Set to a [COLOR blue]number[/COLOR] to have a hardcoded episode for every episod
 Use [COLOR blue]regex[/COLOR] to type in a regular expression. Please use regex(yourregexhere). If your regex fails to recognise a episode it will fallback on calling it 0.'
             """
             disp_setting('episode', 'Episode recognisition', description)
-        if vars.mode > 0:
+        if vars.mode > 0: #Normal mode or higher
             #Stripdescription
             disp_setting('stripdescription', 'Strip Description', 'Deletes every text in the description from and including the text filled in here. For instance, if a channel always has a long text in its description thats always the same, like: Check out our website (..). You fill that line in here, and only the part before that line will be included in the description of episodes. For multiple lines to scan for put them between |')
             #removedescription
@@ -503,7 +510,7 @@ Use [COLOR blue]regex[/COLOR] to type in a regular expression. Please use regex(
             disp_setting('striptitle', 'Strip Title', 'Same as stripdescription but for the title')
             #Removetitle
             disp_setting('removetitle', 'Remove Title', 'Same as removedescription but for the title')
-
+        if vars.mode > 1: #Expert mode or higher
             #Overwritefolder
             disp_setting('overwritefolder', 'Folder', 'Use this directory to write the strm & nfo files to. If this is not filled in it will use the title as it will be displayed in the Addon and the Kodi Library')
         

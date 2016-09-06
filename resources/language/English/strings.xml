@@ -93,6 +93,7 @@
     <string id="30519">Movie Set</string>
     <string id="30520">Use YT image</string>
     <string id="30521">Smart Search</string>
+    <string id="30522">Reverse</string>
 
 	
 	
@@ -140,6 +141,7 @@
 	<!-- Manage Playlists -->
 	<string id="31006">Update Now</string>
 	<string id="31007">Delete playlist</string>
+	<string id="31029">Refresh playlist</string>
 	<!-- Add playlist -->
 	<string id="31010">Press Ok to add this playlist to your list of Youtube Kodi</string>
 	
