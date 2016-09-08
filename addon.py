@@ -181,24 +181,34 @@ else:
     ##########################  API
     ##Index
     elif mode[0] == 'ApiIndex':
-        routes.api_index()
+        routes.api_home()
+    ##Index
+    elif mode[0] == 'ApiIndex2':
+        type = vars.args['type'][0]
+        routes.api_index(type)
     elif mode[0] == "ApiAddPlaylist":
         #Display the videos of this playlistID
         id = vars.args['id'][0]
-        routes.apiAddPlaylist(id)
+        type = vars.args['type'][0]
+        routes.apiAddPlaylist(id, type)
     elif mode[0] == 'ApiBrowse':
         api_url = vars.args['api_url'][0]
-        routes.apiBrowse(api_url)
+        type = vars.args['type'][0]
+        routes.apiBrowse(api_url, type)
     elif mode[0] == 'ApiGenres':
         api_url = vars.args['api_url'][0]
-        routes.apiGenres(api_url)
+        type = vars.args['type'][0]
+        routes.apiGenres(api_url, type)
     elif mode[0] == 'ApiTags':
         api_url = vars.args['api_url'][0]
-        routes.apiTags(api_url)
+        type = vars.args['type'][0]
+        routes.apiTags(api_url, type)
     elif mode[0] == 'ApiSearch':
-        routes.apiSearch()
+        type = vars.args['type'][0]
+        routes.apiSearch(type)
     elif mode[0] == 'ApiSearchChannel':
-        routes.apiSearchChannel()
+        type = vars.args['type'][0]
+        routes.apiSearchChannel(type)
 
 
 

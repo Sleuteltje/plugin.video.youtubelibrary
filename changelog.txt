@@ -1,27 +1,33 @@
-to do before 1.0:
-X Add movies support
-X Add imdb support for movies
-- Add reverse option for small playlists
-- Regex option to get title or description
-- smart search movies;
-	x get year
-	x get director
-	- get actors
-	x strip all unneeded stuff from the title and/or description
-
-
-
-0.9.7.8:
-- Added Feature: Ability to set timezones for tv playlists. For example this playlist updates @ 19:00 GMT+2.
+0.9.8:
+- Added Feature (Donor): Add pre-configured Musicvideos playlists from youtubelibrary.nl from within the addon! (Free users can view the playlist settings on youtubelibrary.nl)
+- Added Feature (Donor): Add pre-configured Movies playlists from youtubelibrary.nl from within the addon! (Free users can view the playlist settings on youtubelibrary.nl)
+- Added Feature: Ability to set timezones for playlists. For example this playlist updates @ 19:00 GMT+2.
+- Added Feature: Reverse. (Reverses the playlists in its order. Useful for playlists sorted oldest -> newest instead of newest -> oldest. You should really try to find newest->oldest playlists tho. This function will not work with playlists containing to much videos. This functionality isnt perfect for obvious reasons.)
 - Added Feature: Now creates a backup file of a settings.xml every time it alters it (in case it gets corrupted) and validates the file.
 - Added Feature: You can now refresh a playlist from its context menu
+- Added Feature: Movies support
+	- Added Feature: IMDB scraper (Tries to identify movies on IMDB, if it succeeds let the IMDB scraper do its work. If it fails the user has the option to not add the video or fallback on addon settings)
+	- Added Feature: IMDB match cutoff (Determine how much of a percentage the title needs to match the title on IMDB to be acccepted as a match)
+	- Added Feature: Smart Search (Tries to identify movie information like year & director. It also tries to strip unneeded stuff from the title, for example: "(FULL MOVIE)")
+	- Added Feature: Use YT Image (Always use the image from Youtube | Never use the image from Youtube | Only if no image is found on IMDB | Dont add the video if no image is found on IMDB)
+	- Added Feature: Set (Determine the Movieset the movies from the playlists will belong to)
+	- Added Feature: Resume playback on videos added to the movielibrary
 - Bugfix: Videos with & in the title gave an error when playing.
-- Fix: Doesnt scan the library after refreshing a plyalist anymore
+- Bugfix: Doesnt scan the library after refreshing a playlist anymore
 - Bugfix: If an error happened while retrieving a playlist, it would raise an exception and stop working until a restart of kodi.
+- Bugfix: Turned artist-song around if artist-song found in "X by Y" regex.
+- Bugfix: Didnt remove musicvideo folder when deleting the playlist when asked to do so.
+- Numerous small fixes & tweaks I forgot to write down
 
 Youtubelibrary.nl:
-- API: added channelId & update_gmt
-- Fixed some styling issues
+- API: added fields: channelId, update_gmt, reverse
+- API: added movie
+- API: added musicvideos
+- AddedFeature: pre-configured Movies playlists
+- Added Feature: pre-configured Musicvideos playlists
+- Added Feature: See easily to which language a playlist is. You can also click on it to search other playlists by the same language.
+- Fix: some small bugs
+- Fix: some styling issues
 
 0.9.7:
 - Added [Donor only]: Browse & Add pre-configured playlists from youtubelibrary.nl

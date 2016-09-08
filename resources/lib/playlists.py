@@ -552,6 +552,10 @@ def delete_playlist(id, type=''):
                     else:
                         folder = dev.legal_filename(folder)
                     movieLibrary = vars.tv_folder #Use the directory from the addon settings
+                    if type == 'musicvideo':
+                        movieLibrary = vars.musicvideo_folder
+                    elif type == 'movies':
+                        movieLibrary = vars.movies_folder
                     dir = os.path.join(movieLibrary, folder) #Set the folder to the maindir/dir
                     
                     success = shutil.rmtree(dir, ignore_errors=True) #Remove the directory

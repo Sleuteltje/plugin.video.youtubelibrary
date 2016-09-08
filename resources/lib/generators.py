@@ -358,6 +358,7 @@ def get_songinfo(vid, settings, duration):
         featured = ''
     else:
         artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
+        dev.log('after get_artist_song, Artist - Song: '+str(artist)+' - '+song)
         if artist == False:
             artist = get_hardcoded('artist_fallback', settings, vid)
             if artist == False:
@@ -376,6 +377,8 @@ def get_songinfo(vid, settings, duration):
             if song == False:
                 dev.log('Song not found! Fallback was '+setting_song_fallback+', video: '+vid_title+' ('+vid_id+') not added')
                 return False
+    
+    dev.log('Artist - Song atm: '+artist+' - '+song)
     
     ##If the video kind is an album, the album is the song title
     if album == False:
@@ -398,6 +401,14 @@ def get_songinfo(vid, settings, duration):
     
     if setting_song_fallback == 'video title (original)':
         song = vid['snippet']['title']
+        
+    dev.log('Artist - Song determined: '+artist+' - '+song)
+    
+    if song.lower().strip(' \t\n\r') == setting_artist_hardcoded.lower().strip(' \t\n\r'):
+        dev.log('Turn around Artist & song, since we got that the wrong way around')
+        #Assume we got the artist - song the wrong way around
+        artist = song
+        song = setting_artist_hardcoded
     
     vid_info = {
         'title': song,
@@ -439,7 +450,7 @@ def strip_artist(text):
     text = strip_from_text(text, artists)
     return remove_extra_spaces(text)
 def strip_quality(text):
-    hooks = ['original video with subtitles', 'original video', 'Official Music Video', 'official video hd', 'Official Video','Videoclip', 'Video Clip', 'video', 'clip officiel', 'clip', 'official', 'officiel']
+    hooks = ['original video with subtitles', 'original video', 'extended music video', 'Official Music Video', 'music video' 'official video hd', 'Official Video','Videoclip', 'Video Clip', 'video', 'clip officiel', 'clip', 'official', 'officiel']
     text = strip_from_text(text, hooks)
     qualitys = ['hd 1080p', 'hd 720p', '1080p hd', '720p hd', '1080p quality', '720p quality', 'dvd quality', 'hd quality', 'high quality', '1080p', '720p', 'hd', 'hq']
     text = strip_from_text(text, qualitys)
@@ -560,7 +571,7 @@ def find_artist_song(text, hardcoded_artist):
         dev.log('find_artist_song() Found Artist - Song: '+str(m.group(1).encode('UTF-8'))+' - '+str(m.group(3).encode('UTF-8')))
         artist = remove_extra_spaces(m.group(1))
         song = remove_extra_spaces(m.group(3))
-        if m.group(2) == 'by' or artist.lower() == hardcoded_artist.lower():
+        if m.group(2) == 'by' or song.lower() == hardcoded_artist.lower():
             #Turn artist and song around
             artist = m.group(3)
             song = m.group(1)
@@ -625,20 +636,23 @@ def get_year(vid_title, vid_description, setting, settings, vid):
         year, vid_title = find_year(vid_title)
         if year != False:
             return year, vid_title
-            year, vid_description = find_year(vid_description)
-            if year != False:
-                return year, vid_title
+        year, vid_description = find_year(vid_description)
+        if year != False:
+            return year, vid_title
         
     return False, vid_title
 def find_year(text):
-    regex = "(\(?()c(opyright)?\)?)?\s*(\d{4})"
+    #regex = "(\(?()c(opyright)?\)?)?\s*(\d{4})" #Group 4 = year
+    regex = "(?:copyright|\(c\)|c)?\s*\[?\(?\s*(\d{4})\s*\)?\]?"
+    dev.log('finding the year... ')
     m = re.search(regex, text, re.IGNORECASE)
     if m:
-        if len(m.group(4)) == 4:
+        dev.log('found the year')
+        if len(m.group(1)) == 4:
             #Found a year!
-            dev.log(u'Found a year!: '+m.group(4)+ ' Whole match: '+m.group(0))
+            dev.log(u'Found a year!: '+m.group(1)+ ' Whole match: '+m.group(0))
             text = text.replace(m.group(0), '') #Remove the copyright / year notice from the title
-            return m.group(4), text
+            return m.group(1), text
     return False, text
     
 def get_plot(vid_description, setting, settings, vid):
@@ -984,7 +998,7 @@ def write_nfo_movies(info, settings):
         set = '<set>'+settings.find('set').text+'</set>'
                 
     #If smart_search is enabled, try to grab info like, year, director and actors from the title & description on youtube, and clean up the title and description in the process
-    if settings.find('smart_search').text == '1':
+    if settings.find('smart_search').text == '1' or settings.find('smart_search').text == 'true':
         info = smart_search(info)
         
     #Grab the movie information from the generator

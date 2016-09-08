@@ -33,6 +33,8 @@ def run_service():
     import time
 
     service.update_playlists()
+    service.update_playlists('musicvideo') #Update musicvideos as well
+    service.update_playlists('movies') #Update movies as well
     
     #vars.service_interval = xbmcplugin.getSetting(vars.addon_handle, 'vars.service_interval')
     #xbmcgui.Dialog().ok('Service started', 'Service started will run again in %s hours' % vars.service_interval)
@@ -46,6 +48,7 @@ def run_service():
         dev.log("SERVICE is running..! will update again in %s minutes" % vars.service_interval)
         service.update_playlists()
         service.update_playlists('musicvideo') #Update musicvideos as well
+        service.update_playlists('movies') #Update movies as well
     dev.log("Kodi not running anymore, Service terminated")
 
 #Force the running of the service    
@@ -139,14 +142,6 @@ def index_dir():
     url = dev.build_url({'mode': 'ApiIndex', 'api_url': 'default'})
     dev.adddir(dev.lang(31027), url, description=dev.lang(31028))
     
-    #Separator
-    url = dev.build_url({'mode': 'folder', 'foldername': 'index'})
-    dev.adddir('[COLOR blue]-------------------TEST-------------------[/COLOR]', url, '')
-    
-    
-    #DONOR FUCNTION - Browse Playlists
-    url = dev.build_url({'mode': 'testIMDB', 'api_url': 'default'})
-    dev.adddir('IMDB TEST', url, description=dev.lang(31028))
     
     
     
@@ -301,7 +296,7 @@ def refreshPlaylist(type=''):
 
 
 ####API
-def api_index():
+def api_home():
     if vars.__settings__.getSetting('enable_donor') == 'false':
         xbmcgui.Dialog().ok(dev.lang(31991), dev.lang(31992))
     elif len(vars.__settings__.getSetting('api_token')) < 60:
@@ -309,19 +304,38 @@ def api_index():
     else:
         import xbmcaddon
         #Browse All Playlists
-        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': 'default'})
+        url = dev.build_url({'mode': 'ApiIndex2', 'api_url': 'default', 'type' : 'tv'})
+        dev.adddir('TV', url, description='Easily add pre-configured TV playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Browse All Genres
+        url = dev.build_url({'mode': 'ApiIndex2', 'api_url': 'default', 'type' : 'musicvideo'})
+        dev.adddir('Musicvideos', url, description='Easily add pre-configured Musicvideo playlists by Genre from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        #Browse By Tag
+        url = dev.build_url({'mode': 'ApiIndex2', 'api_url': 'default', 'type' : 'movies'})
+        dev.adddir('Movies', url, description='Easily add pre-configured Movies playlists by Tag from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
+        
+    xbmcplugin.endOfDirectory(vars.addon_handle)
+####API
+def api_index(type=''):
+    if vars.__settings__.getSetting('enable_donor') == 'false':
+        xbmcgui.Dialog().ok(dev.lang(31991), dev.lang(31992))
+    elif len(vars.__settings__.getSetting('api_token')) < 60:
+         xbmcgui.Dialog().ok(dev.lang(31993), dev.lang(31994)) 
+    else:
+        import xbmcaddon
+        #Browse All Playlists
+        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': 'default', 'type' : type})
         dev.adddir('Browse All Playlists', url, description='Easily add pre-configured playlists from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
         #Browse All Genres
-        url = dev.build_url({'mode': 'ApiGenres', 'api_url': 'default'})
+        url = dev.build_url({'mode': 'ApiGenres', 'api_url': 'default', 'type' : type})
         dev.adddir('Browse By Genre', url, description='Easily add pre-configured playlists by Genre from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
         #Browse By Tag
-        url = dev.build_url({'mode': 'ApiTags', 'api_url': 'default'})
+        url = dev.build_url({'mode': 'ApiTags', 'api_url': 'default', 'type' : type})
         dev.adddir('Browse By Tag', url, description='Easily add pre-configured playlists by Tag from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
         #Search by Title / Description
-        url = dev.build_url({'mode': 'ApiSearch'})
+        url = dev.build_url({'mode': 'ApiSearch', 'type' : type})
         dev.adddir('Search by Title / Description', url, description='Search by title / description to add a pre-configured playlist from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
         #Search by Channel
-        url = dev.build_url({'mode': 'ApiSearchChannel'})
+        url = dev.build_url({'mode': 'ApiSearchChannel', 'type' : type})
         dev.adddir('Search by Channel', url, description='Search by channel name to add a pre-configured playlist from Youtubelibrary.nl. Available for Donors only at the moment. But you can still visit Youtubelibrary.nl to manually add them!')
         
     xbmcplugin.endOfDirectory(vars.addon_handle)
@@ -329,34 +343,34 @@ def api_index():
 
         
         
-def apiBrowse(api_url = ''):
-    ytlibrary_api.browse(api_url)
+def apiBrowse(api_url = '', type=''):
+    ytlibrary_api.browse(api_url, type=type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
 
-def apiGenres(api_url = ''):
-    ytlibrary_api.browse_genres(api_url)
+def apiGenres(api_url = '', type=''):
+    ytlibrary_api.browse_genres(api_url, type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
-def apiTags(api_url = ''):
-    ytlibrary_api.browse_tags(api_url)
+def apiTags(api_url = '', type=''):
+    ytlibrary_api.browse_tags(api_url, type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     
 def apiAddPlaylist(id, type=''):
-    playlist = ytlibrary_api.add_playlist(id)
+    playlist = ytlibrary_api.add_playlist(id, type)
     m_xml.xml_add_playlist(playlist['ytplaylistid'], type, playlist)
     playlists.editPlaylist(playlist['ytplaylistid'], type) #Load the view to edit this playlist
     #xbmc.executebuiltin("Container.Update")
     xbmcplugin.endOfDirectory(vars.addon_handle, updateListing=True)
 
-def apiSearch():
+def apiSearch(type=''):
     result = dev.user_input('', 'Search by Title / Description')
     if len(result) > 0:
-        ytlibrary_api.browse(params={'search': result})
+        ytlibrary_api.browse(params={'search': result}, type=type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
 
-def apiSearchChannel():
+def apiSearchChannel(type=''):
     result = dev.user_input('', 'Search by Channel')
     if len(result) > 0:
-        ytlibrary_api.browse(params={'channel': result})
+        ytlibrary_api.browse(params={'channel': result}, type=type)
     xbmcplugin.endOfDirectory(vars.addon_handle)
 
 

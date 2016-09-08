@@ -214,56 +214,95 @@ def xml_add_playlist(id, type='', api=''):
     
 
 def api_xml_build_new_playlist(api, type=''):
-    #### Build new playlist (tv, musicvideo) ###
+    #### Build new playlist (tv, musicvideo, movies) ###
+    #Build the playlist
+    playlist = {
+        'id'    : api['ytplaylistid'],
+        'enabled'      : 'yes',
+        'settings'      : {
+            'title'                   : api['title'],
+            'channel'            : api['channel'],
+            'channelId'            : api['channelId'],
+            'description'        : api['description'],
+            'genre'                : api['genre'],
+            'tags'                  : api['tags'],
+            'published'          : api['published'],
+            'reverse'            : api['reverse'],
+            #Art
+            'thumb'               : api['thumb'],
+            'fanart'                : api['fanart'],
+            'banner'              : api['banner'],
+            'epsownfanart'    : 'No',
+            # STRM & NFO Settings
+            'writenfo'             : api['writenfo'],
+            'delete'                : api['delete'],
+            'updateevery'       : api['updateevery'],
+            'updateat'        : api['updateat'],
+            'update_gmt'        : api['update_gmt'],
+            'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
+            'keepvideos'        : api['keepvideos'],
+            'overwritefolder'   : api['overwritefolder'],
+            #Filters
+            'minlength'         : api['minlength'],
+            'maxlength'         : api['maxlength'],
+            'excludewords'    : api['excludewords'],
+            'onlyinclude'       : api['onlyinclude'],
+            #NFO information
+            'striptitle'        : api['striptitle'],
+            'removetitle'       : api['removetitle'],
+            'stripdescription' : api['stripdescription'],
+            'removedescription' : api['removedescription'],
+            #Scan Settings
+            'lastvideoId'       : '',
+        }
+    }
+    
     if type=='' or type=='tv':
-        ##Get the default settings from the addon settings
-        writenfo = 'Yes'
-        if dev.getAddonSetting("default_generate_nfo") == "false":
-            writenfo = 'no'
-             
-        #Build the playlist
-        playlist = {
-            'id'    : api['ytplaylistid'],
-            'enabled'      : 'yes',
-            'settings'      : {
-                'type'                  : 'TV',
-                'title'                   : api['title'],
-                'channel'            : api['channel'],
-                'channelId'            : api['channelId'],
-                'description'        : api['description'],
-                'genre'                : api['genre'],
-                'tags'                  : api['tags'],
-                'published'          : api['published'],
-                #Art
-                'thumb'               : api['thumb'],
-                'fanart'                : api['fanart'],
-                'banner'              : api['banner'],
-                'epsownfanart'    : 'No',
-                # STRM & NFO Settings
-                'writenfo'             : writenfo,
-                'delete'                : api['delete'],
-                'updateevery'       : api['updateevery'],
-                'updateat'        : api['updateat'],
-                'update_gmt'        : api['update_gmt'],
-                'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
-                'keepvideos'        : api['keepvideos'],
-                'overwritefolder'   : api['overwritefolder'],
-                #Filters
-                'minlength'         : api['minlength'],
-                'maxlength'         : api['maxlength'],
-                'excludewords'    : api['excludewords'],
-                'onlyinclude'       : api['onlyinclude'],
-                #NFO information
+        settings = {
                 'season'            : api['season'],
                 'episode'           : api['episode'],
-                'striptitle'        : api['striptitle'],
-                'removetitle'       : api['removetitle'],
-                'stripdescription' : api['stripdescription'],
-                'removedescription' : api['removedescription'],
-                #Scan Settings
-                'lastvideoId'       : '',
-            }
         }
+        playlist['settings'].update(settings)
+        return playlist
+    elif type=='musicvideo':
+        settings = {
+                'skip_albums'                    : api['skip_albums'],
+                'skip_lyrics'           : api['skip_lyrics'],
+                'skip_audio'                    : api['skip_audio'],
+                'skip_live'           : api['skip_live'],
+
+                'genre_hardcoded'                    : api['genre_hardcoded'],
+                'genre_fallback'           : api['genre_fallback'],
+
+                'plot'                    : api['plot'],
+                'plot_fallback'           : api['plot_fallback'],
+                'plot_hardcoded'           : api['plot_hardcoded'],
+                
+                'artist'                    : api['artist'],
+                'artist_fallback'           : api['artist_fallback'],
+                'artist_hardcoded'           : api['artist_hardcoded'],
+                
+                'song_fallback'           : api['song_fallback'],
+                
+                'year'                      : api['year'],
+                'year_fallback'           : api['year_fallback'],
+                'year_hardcoded'           : api['year_hardcoded'],
+                
+                'album'                     : api['album'],
+                'album_fallback'           : api['album_fallback'],
+                'album_hardcoded'           : api['album_hardcoded'],
+        }
+        playlist['settings'].update(settings)
+        return playlist
+    elif type=='movies':
+        settings = {
+                'set'            : api['set'],
+                'search_imdb'           : api['search_imdb'],
+                'use_ytimage'           : api['use_ytimage'],
+                'imdb_match_cutoff'           : api['imdb_match_cutoff'],
+                'smart_search'           : api['smart_search'],
+        }
+        playlist['settings'].update(settings)
         return playlist
     return False
     

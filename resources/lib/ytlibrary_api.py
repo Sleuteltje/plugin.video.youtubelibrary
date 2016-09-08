@@ -42,9 +42,14 @@ def build_url():
 
 
 #Browse playlists
-def browse(api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+'&limit=20', params = False):
+def browse(api_url = 'default', params = False, type=''):
     if api_url == 'default':
-        api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+'&limit=20'
+        if type == '' or type == 'tv':
+            api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+'&limit=20'
+        if type == 'musicvideo':
+            api_url = 'http://youtubelibrary.nl/api/v1/playlists/musicvideos'+build_url()+'&limit=20'
+        if type == 'movies':
+            api_url = 'http://youtubelibrary.nl/api/v1/playlists/movies'+build_url()+'&limit=20'
     
     #Check if we should add params
     if isinstance(params,dict):
@@ -63,26 +68,34 @@ def browse(api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+
 
     for playlist in data['data']:
         #videos.append(search_result)
-        url = dev.build_url({'mode': 'ApiAddPlaylist', 'id': playlist['id']})
+        url = dev.build_url({'mode': 'ApiAddPlaylist', 'id': playlist['id'], 'type': type})
         dev.adddir(playlist['title'], url, playlist['thumb'], fanart=playlist['fanart'], description=playlist['description'])
         
     if 'paginator' in data:
         if 'prev_page' in data['paginator']:
             if data['paginator']['prev_page'] is not None:
-                url = dev.build_url({'mode': 'ApiBrowse', 'api_url': data['paginator']['prev_page']})
+                url = dev.build_url({'mode': 'ApiBrowse', 'api_url': data['paginator']['prev_page'], 'type': type})
                 dev.adddir('<< Page '+str(data['paginator']['current_page']-1), url, description='Go to the previous page')       
     
     if 'paginator' in data:
         if 'next_page' in data['paginator']:
             if data['paginator']['next_page'] is not None:
-                url = dev.build_url({'mode': 'ApiBrowse', 'api_url': data['paginator']['next_page']})
+                url = dev.build_url({'mode': 'ApiBrowse', 'api_url': data['paginator']['next_page'], 'type': type})
                 dev.adddir('>> Page '+str(data['paginator']['current_page']+1), url, description='Go to the next page to see more pre-configured playlists.')          
                 
 
 #Browse genres
-def browse_genres(api_url = 'http://youtubelibrary.nl/api/v1/genres/tv'+build_url()):
+def browse_genres(api_url = 'default', type=''):
     if api_url == 'default':
-        api_url = 'http://youtubelibrary.nl/api/v1/genres/tv'+build_url()
+        if type=='' or type == 'tv':
+            api_url = 'http://youtubelibrary.nl/api/v1/genres/tv'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'
+        if type=='musicvideo':
+            api_url = 'http://youtubelibrary.nl/api/v1/genres/musicvideos'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/musicvideos'
+        if type=='movies':
+            api_url = 'http://youtubelibrary.nl/api/v1/genres/movies'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/movies'
     
     
     dev.log('Browse genres at the API with url: '+api_url)
@@ -96,25 +109,33 @@ def browse_genres(api_url = 'http://youtubelibrary.nl/api/v1/genres/tv'+build_ur
 
     for genre in data['data']:
         #videos.append(search_result)
-        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+'&limit=10&genre='+str(genre['id'])})
+        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': base_url+build_url()+'&limit=10&genre='+str(genre['id']), 'type': type})
         dev.adddir(genre['title'], url, description='View all playlists from the genre '+genre['title'])
         
     if 'paginator' in data:
         if 'prev_page' in data['paginator']:
             if data['paginator']['prev_page'] is not None:
-                url = dev.build_url({'mode': 'ApiGenres', 'api_url': data['paginator']['prev_page']})
+                url = dev.build_url({'mode': 'ApiGenres', 'api_url': data['paginator']['prev_page'], 'type': type})
                 dev.adddir('<< Page '+str(data['paginator']['current_page']-1), url, description='Go to the previous page')       
     
     if 'paginator' in data:
         if 'next_page' in data['paginator']:
             if data['paginator']['next_page'] is not None:
-                url = dev.build_url({'mode': 'ApiGenres', 'api_url': data['paginator']['next_page']})
+                url = dev.build_url({'mode': 'ApiGenres', 'api_url': data['paginator']['next_page'], 'type': type})
                 dev.adddir('>> Page '+str(data['paginator']['current_page']+1), url, description='Go to the next page to see more genres of pre-configured playlists.')          
 
 #Browse tags
-def browse_tags(api_url = 'http://youtubelibrary.nl/api/v1/tags/tv'+build_url()):
+def browse_tags(api_url = 'default', type=''):
     if api_url == 'default':
-        api_url = 'http://youtubelibrary.nl/api/v1/tags/tv'+build_url()
+        if type=='' or type == 'tv':
+            api_url = 'http://youtubelibrary.nl/api/v1/tags/tv'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/tv'
+        if type=='musicvideo':
+            api_url = 'http://youtubelibrary.nl/api/v1/tags/musicvideos'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/musicvideos'
+        if type=='movies':
+            api_url = 'http://youtubelibrary.nl/api/v1/tags/movies'+build_url()
+            base_url = 'http://youtubelibrary.nl/api/v1/playlists/movies'
     
     
     dev.log('Browse tags at the API with url: '+api_url)
@@ -128,26 +149,31 @@ def browse_tags(api_url = 'http://youtubelibrary.nl/api/v1/tags/tv'+build_url())
 
     for tag in data['data']:
         #videos.append(search_result)
-        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': 'http://youtubelibrary.nl/api/v1/playlists/tv'+build_url()+'&limit=10&tag='+str(tag['id'])})
+        url = dev.build_url({'mode': 'ApiBrowse', 'api_url': base_url+build_url()+'&limit=10&tag='+str(tag['id']), 'type':type})
         dev.adddir(tag['title'], url, description='View all playlists from the tag '+tag['title'])
         
     if 'paginator' in data:
         if 'prev_page' in data['paginator']:
             if data['paginator']['prev_page'] is not None:
-                url = dev.build_url({'mode': 'ApiTags', 'api_url': data['paginator']['prev_page']})
+                url = dev.build_url({'mode': 'ApiTags', 'api_url': data['paginator']['prev_page'], 'type': type})
                 dev.adddir('<< Page '+str(data['paginator']['current_page']-1), url, description='Go to the previous page')       
     
     if 'paginator' in data:
         if 'next_page' in data['paginator']:
             if data['paginator']['next_page'] is not None:
-                url = dev.build_url({'mode': 'ApiTags', 'api_url': data['paginator']['next_page']})
+                url = dev.build_url({'mode': 'ApiTags', 'api_url': data['paginator']['next_page'], 'type': type})
                 dev.adddir('>> Page '+str(data['paginator']['current_page']+1), url, description='Go to the next page to see more tags of pre-configured playlists.')          
                 
 
 
 
-def add_playlist(id):
-    api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv/'+id+'?api_token='+vars.__settings__.getSetting('api_token')
+def add_playlist(id, type=''):
+    if type=='' or type=='tv':
+        api_url = 'http://youtubelibrary.nl/api/v1/playlists/tv/'+id+'?api_token='+vars.__settings__.getSetting('api_token')
+    if type=='musicvideo':
+        api_url = 'http://youtubelibrary.nl/api/v1/playlists/musicvideos/'+id+'?api_token='+vars.__settings__.getSetting('api_token')
+    if type=='movies':
+        api_url = 'http://youtubelibrary.nl/api/v1/playlists/movies/'+id+'?api_token='+vars.__settings__.getSetting('api_token')
     dev.log('Adding the Api playlist to the config: '+api_url)
     data = json.load(urllib2.urlopen(api_url))
     
@@ -160,7 +186,7 @@ def add_playlist(id):
     
     return playlist
     
-    url = dev.build_url({'mode': 'ApiAddPlaylist'})
+    url = dev.build_url({'mode': 'ApiAddPlaylist', 'type': type})
     dev.adddir(playlist['title'], url, description=playlist['description'])          
 
 

@@ -192,7 +192,7 @@ def update_playlists(type=''):
             update_dir = vars.musicvideo_folder_path
         elif type == 'movies':
             update_dir = vars.movies_folder_path
-        dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
+        dev.log('Updating video library is enabled. Updating '+type+' librarys directory %s' % update_dir, True)
         xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
         
 #Writes the nfo & strm files for the given playlist
