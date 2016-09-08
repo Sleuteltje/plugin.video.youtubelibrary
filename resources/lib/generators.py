@@ -358,7 +358,7 @@ def get_songinfo(vid, settings, duration):
         featured = ''
     else:
         artist, song = get_artist_song(vid_title, vid_description, 'artist', settings, vid)
-        dev.log('after get_artist_song, Artist - Song: '+str(artist)+' - '+song)
+        #dev.log('after get_artist_song, Artist - Song: '+str(artist)+' - '+song)
         if artist == False:
             artist = get_hardcoded('artist_fallback', settings, vid)
             if artist == False:
