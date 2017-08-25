@@ -994,7 +994,7 @@ def write_nfo_movies(info, settings):
     #Prepare optional xml tags if they are set
     info['director'] = settings.find('channel').text
     set = ''
-    if len(settings.find('set').text) > 0:
+    if settings.find('set') and len(settings.find('set').text) > 0:
         set = '<set>'+settings.find('set').text+'</set>'
                 
     #If smart_search is enabled, try to grab info like, year, director and actors from the title & description on youtube, and clean up the title and description in the process

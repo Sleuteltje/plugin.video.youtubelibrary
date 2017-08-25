@@ -265,3 +265,28 @@ def timezones(convert = False):
 #Puts a string to maximum length
 def cap(s, l):
     return s if len(s)<=l else s[0:l-3]+'...'
+	
+	
+
+
+	
+#Grabs the highest possible thumbnail, and if not found will try to fail gracefully
+#    default – playlist item or search result – is 120px wide and 90px tall. The default thumbnail for a channel is 88px wide and 88px tall.
+#    medium – 320px wide and 180px tall. For a channel, this image is 240px wide and 240px tall.
+#    high – 480px wide and 360px tall. For a channel, this image is 800px wide and 800px tall.
+#    standard – 640px wide and 480px tall.
+#   maxres – The highest resolution version of the thumbnail image. 1280px wide and 720px tall.
+def playlist_highest_thumbnail(playlist):
+	pl = playlist['snippet']['thumbnails']
+	if 'maxres' in pl:
+		return pl['maxres']['url']
+	elif 'standard' in pl:
+		return pl['standard']['url']
+	elif 'high' in pl:
+		return pl['high']['url']
+	elif 'medium' in pl:
+		return pl['medium']['url']
+	elif 'default' in pl:
+		return pl['default']['url']
+	else:
+		return ''#seems no thumbnail is found

@@ -176,7 +176,7 @@ def searched_playlist(result, type='', pagetoken=''):
           #videos.append(search_result)
           title = playlist['snippet']['title']
           url = dev.build_url({'mode': 'addPlaylist', 'id': playlist['id']['playlistId'], 'type': type})
-          dev.adddir(title, url, playlist['snippet']['thumbnails']['high']['url'], fanart=playlist['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
+          dev.adddir(title, url, dev.playlist_highest_thumbnail(playlist), fanart=dev.playlist_highest_thumbnail(playlist), description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
     
     
     if 'prevPageToken' in response:
@@ -202,12 +202,14 @@ def show_playlists_by_channel(Channelid, type='', pagetoken='default'):
         
         # Go through each playlist and display the playlist
         for key, value in playlists.iteritems():
+          if value == 'WL' or value == 'HL':
+             continue #The watch later and watch history playlists are not giving their normal id's, so skip them
           #Grab the number of videos to
           pl = ytube.yt_get_playlist_info(value)
           number_vids = str(pl['items'][0]['contentDetails']['itemCount'])
           #videos.append(search_result)
           url = dev.build_url({'mode': 'addPlaylist', 'id': value, 'type': type})
-          dev.adddir(key.capitalize()+' ('+number_vids+')', url, search_response['items'][0]['snippet']['thumbnails']['high']['url'], fanart=search_response['items'][0]['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+search_response['items'][0]['snippet']['description'])
+          dev.adddir(key.capitalize()+' ('+number_vids+')', url,  dev.playlist_highest_thumbnail(search_response['items'][0]), fanart=dev.playlist_highest_thumbnail(search_response['items'][0]), description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+search_response['items'][0]['snippet']['description'])
     
     # Grab other playlists this user has created to
     response = ytube.yt_get_playlists_by_channel(Channelid, pagetoken)
@@ -219,7 +221,7 @@ def show_playlists_by_channel(Channelid, type='', pagetoken='default'):
           #videos.append(search_result)
           title = playlist['snippet']['title']+' ('+str(playlist['contentDetails']['itemCount'])+')'
           url = dev.build_url({'mode': 'addPlaylist', 'id': playlist['id'], 'type': type})
-          dev.adddir(title, url, playlist['snippet']['thumbnails']['high']['url'], fanart=playlist['snippet']['thumbnails']['high']['url'], description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
+          dev.adddir(title, url, dev.playlist_highest_thumbnail(playlist), fanart= dev.playlist_highest_thumbnail(playlist), description=dev.lang(31010)+' '+dev.typeName(type)+' \n--------\nPlaylist Description:\n'+playlist['snippet']['description'])
     
     
     if 'prevPageToken' in response:

@@ -58,6 +58,8 @@ def yt_get_playlist_info(id):
     #Connect to youtube API
     youtube = build_youtube()
     #Retrieve the information from the youtube API
+    dev.log('GET yt_get_playlist_info: https://www.googleapis.com/youtube/v3/playlists?part=snippet%2C+id%2C+contentDetails&maxResults=50&channelId='+id+'&key='+vars.API_KEY)
+
     response = youtube.playlists().list(
       part="contentDetails,id,snippet",
       id=id,
