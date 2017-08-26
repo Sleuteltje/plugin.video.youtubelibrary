@@ -52,7 +52,7 @@ def my_hook(d):
 
 
 # Returns the filename (without .strm)
-def downloadYoutubeVid(name, fold, videoid, type='', season=None):
+def downloadYoutubeVid(name, fold, videoid, settings, type='', season=None):
 	#youtube-dl command to download best quality: -f bestvideo[ext!=webm]‌​+bestaudio[ext!=webm]‌​/best[ext!=webm]
 	#YDStreamExtractor.disableDASHVideo(True)
 	
@@ -76,7 +76,7 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 	full_file_path = os.path.join(folder, enc_name) #Set the file to maindir/name/name
 	
 	dev.log('Downloading '+videoid, 1)
-	vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
+	#vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
 	path = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
 	
 	
@@ -88,16 +88,25 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 		dev.log('Failed to retrieve video from url: '+url)
 		return False
 	
+	if settings.find('download_videos').text  == '720p':
+		dev.log('%%%%%%% QUALITY: 720p quality selected')
+		format = 'bestvideo[height<=?720]+bestaudio/best[height<=?720]'
+	elif settings.find('download_videos').text == '1080p':
+		dev.log('%%%%%%% QUALITY: 1080p quality selected')
+		format = 'bestvideo[height<=?1080]+bestaudio/best[height<=?1080]'
+	else:
+		dev.log('%%%%%%% QUALITY: best quality selected')
+		format = 'bestvideo+bestaudio/best'
 	
 	ydl_opts = {
-    'format': 'bestvideo+bestaudio/best',
+    'format': format,
     'logger': MyLogger(),
     'progress_hooks': [my_hook],
 	'outtmpl' : full_file_path+'.%(ext)s',
 	#'-o' : enc_name+'.%(ext)s',
 	}
 	with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-		ydl.download(['https://www.youtube.com/watch?v='+videoid])
+		return ydl.download(['https://www.youtube.com/watch?v='+videoid])
 	
 	"""
 	try:

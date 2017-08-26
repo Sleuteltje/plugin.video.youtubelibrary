@@ -13,6 +13,7 @@
     <string id="30103">Play videos from library with</string>	
     <string id="30104">Debug Mode</string>
 	<string id="30105">Mode</string>
+	<string id="30106">Max quality for downloads</string>
 	<!--Library Settings-->
 	<string id="30201">Run the service every X minutes</string>
     <string id="30202">Update Video Library after updating new youtube vids</string>

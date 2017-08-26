@@ -104,12 +104,15 @@ def setEditPlaylist(id, set, type=''):
         else:
             i = 'true'    
     elif set == 'download_videos':
-        #Display a yes/no dialog to enable / disable
-        i = xbmcgui.Dialog().yesno("Download Videos", "Download the videos instead of writing stream files (.strm)?")
+        i = xbmcgui.Dialog().select('Download Videos?', ['off', '720p', '1080p', 'best'])
         if i == 0:
-            i = 'false'
-        else:
-            i = 'true'
+            i = 'off'
+        elif i == 1:
+            i = '720p'
+        elif i == 2:
+            i = '1080p'
+        elif i == 3:
+            i = 'best'
     elif set == 'skip_lyrics':
         #Display a yes/no dialog to enable / disable
         i = xbmcgui.Dialog().yesno("Skip Lyrics", "Skip Lyric Videos?")
@@ -392,7 +395,7 @@ def editPlaylist(id, type=''):
         #Tags
         disp_setting('tags', 'Tags', 'Tags for Kodi. For multiple tags use tag1 / tag2 / tag3 (note the space between each / )')
         
-        disp_bool_setting('download_videos', 'Download Videos', 'If enabled, YTlibrary will download the videos instead of saving stream files (.strm)')
+        disp_setting('download_videos', 'Download Videos', 'If enabled, YTlibrary will download the videos instead of saving stream files (.strm)')
         
         #Genres & Stuff
         if type == 'musicvideo':
