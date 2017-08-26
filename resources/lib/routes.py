@@ -58,18 +58,7 @@ def update_all_playlists(type=''):
 #Force the updating of 1 playlist
 def update_playlist(type=''):
     id = vars.args['id'][0]
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating '+dev.typeName(type)+' Playlist '+id, vars.__icon__, 3000)
-    service.update_playlist(id, type=type)
-    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating '+dev.typeName(type)+' Playlist '+id, vars.__icon__, 3000)
-    #Should we also update the video library?
-    if vars.update_videolibrary == "true":
-        update_dir = vars.tv_folder_path
-        if type == 'musicvideo':
-            update_dir = vars.musicvideo_folder_path
-        elif type == 'movies':
-            update_dir = vars.movies_folder_path
-        dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
-        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
+    playlists.update_playlist(id, type=type)
 
 ##Index
 def index():
@@ -258,10 +247,12 @@ def manage_playlists(type=''):
             context_url = dev.build_url({'mode': 'updateplaylist', 'id': child.attrib['id'], 'type': type})
             context_url2 = dev.build_url({'mode': 'deletePlaylist', 'id': child.attrib['id'], 'type': type})
             context_url3 = dev.build_url({'mode': 'refreshPlaylist', 'id': child.attrib['id'], 'type': type})
+            context_url4 = dev.build_url({'mode': 'refreshArtwork', 'id': child.attrib['id'], 'type': type})
             commands = []
             commands.append(( dev.lang(31006), 'XBMC.RunPlugin('+context_url+')', ))
             commands.append(( dev.lang(31007), 'XBMC.RunPlugin('+context_url2+')', ))
             commands.append(( dev.lang(31029), 'XBMC.RunPlugin('+context_url3+')', ))
+            commands.append(( dev.lang(31030), 'XBMC.RunPlugin('+context_url4+')', ))
             dev.adddir(child.find('title').text, url, child.find('thumb').text, child.find('fanart').text, child.find('description').text, context=commands)
     xbmcplugin.endOfDirectory(vars.addon_handle)
     
@@ -290,7 +281,12 @@ def deletePlaylist(type=''):
 
 def refreshPlaylist(type=''):
     id = vars.args['id'][0]
-    playlists.refresh_playlist(id, type=type) #Remove this playlist
+    playlists.refresh_playlist(id, type=type) #Refresh this playlist
+    xbmc.executebuiltin("Container.Refresh")
+    
+def refreshArtwork(type=''):
+    id = vars.args['id'][0]
+    playlists.refresh_artwork(id, type=type) #Refresh the artwork of this playlist
     xbmc.executebuiltin("Container.Refresh")
     
 

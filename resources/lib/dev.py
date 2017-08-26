@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #    Kodi Addon: Youtube Library
-#    Copyright 2015 Sleuteltje
+#    Copyright 2015-2017 Sleuteltje
 #
 #    This file is part of plugin.video.youtubelibrary
 #    Description: Some functions that will ease up basic kodi functions
@@ -290,3 +290,21 @@ def playlist_highest_thumbnail(playlist):
 		return pl['default']['url']
 	else:
 		return ''#seems no thumbnail is found
+
+#determines the best thumbnail from the youtube response
+def best_thumbnail(res):    
+    thumbnail = False
+    #If this playlist has a thumbnail, use the best possible thumbnail for this playlist
+    if 'thumbnails' in res:
+        #if 'maxres' in res['thumbnails']:
+        #    thumbnail = res['thumbnails']['maxres']
+        if 'standard' in res['thumbnails']:
+            thumbnail = res['thumbnails']['standard']['url']
+        elif 'high' in res['thumbnails']:
+            thumbnail = res['thumbnails']['high']['url']
+        elif 'medium' in res['thumbnails']:
+            thumbnail = res['thumbnails']['medium']['url']
+        elif 'default' in res['thumbnails']:
+            thumbnail = res['thumbnails']['default']['url']
+        log('The thumbnail: '+thumbnail)
+    return thumbnail

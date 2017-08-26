@@ -25,6 +25,7 @@ from resources.lib import vars
 from resources.lib import dev
 from resources.lib import m_xml
 from resources.lib import ytube
+from resources.lib import service
 
 
 #Displays the editplaylist list item
@@ -390,7 +391,7 @@ def editPlaylist(id, type=''):
         #Tags
         disp_setting('tags', 'Tags', 'Tags for Kodi. For multiple tags use tag1 / tag2 / tag3 (note the space between each / )')
         
-        disp_bool_setting('download_videos', 'Download Videos', 'If enabled, YTlibrary will download the videos instead of saving streams')
+        disp_bool_setting('download_videos', 'Download Videos', 'If enabled, YTlibrary will download the videos instead of saving stream files (.strm)')
         
         #Genres & Stuff
         if type == 'musicvideo':
@@ -615,3 +616,49 @@ def refresh_playlist(id, type=''):
 
                 xbmcgui.Dialog().ok('Removed from library', 'Deleted the previous videos from your library (You should clean your library, otherwise they will still show in your library)')
             editPlaylist(id, type=type) #Load the editplaylist view
+
+def refresh_artwork(id, type=''):
+    response = ytube.yt_get_playlist_info(id)
+    res = response['items'][0]['snippet']
+    
+    thumbnail = dev.best_thumbnail(res)
+    #Grab the channel information 
+    response = ytube.yt_get_channel_info(res['channelId'])
+    snippet = response['items'][0]['snippet']
+    brand = response['items'][0]['brandingSettings']
+    
+    #Check if we can do a better thumbnail
+    better_thumbnail = dev.best_thumbnail(snippet)
+    if(better_thumbnail != False):
+        thumbnail = better_thumbnail
+    if thumbnail == False:
+        thumbnail = ''
+        
+    dev.log('The thumbnail now: '+thumbnail)
+    
+    bannerTv = brand['image']['bannerImageUrl']
+    if 'bannerTvImageUrl' in brand['image']:
+        bannerTv = brand['image']['bannerTvImageUrl']
+    
+    m_xml.xml_update_playlist_setting(id, 'thumb', thumbnail, type=type) #Save the new setting
+    m_xml.xml_update_playlist_setting(id, 'banner', brand['image']['bannerImageUrl'], type=type) #Save the new setting
+    m_xml.xml_update_playlist_setting(id, 'fanart', bannerTv, type=type) #Save the new setting
+    
+    settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
+
+    id = vars.args['id'][0]
+    update_playlist(id, type=type)
+	
+def update_playlist(id, type=''):
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Updating '+dev.typeName(type)+' Playlist '+id, vars.__icon__, 3000)
+    service.update_playlist(id, type=type)
+    xbmcgui.Dialog().notification(vars.__addonname__, 'Done updating '+dev.typeName(type)+' Playlist '+id, vars.__icon__, 3000)
+    #Should we also update the video library?
+    if vars.update_videolibrary == "true":
+        update_dir = vars.tv_folder_path
+        if type == 'musicvideo':
+            update_dir = vars.musicvideo_folder_path
+        elif type == 'movies':
+            update_dir = vars.movies_folder_path
+        dev.log('Updating video library is enabled. Updating librarys directory %s' % update_dir, True)
+        xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
