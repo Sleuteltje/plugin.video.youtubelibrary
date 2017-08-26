@@ -1,10 +1,10 @@
 0.9.9:
-- Added Feature: Ability to download youtube videos (no max quality) instead of creating stream files (.strm) (NOTE: install ffmpeg to be able to download in 1080p+ and more streams)
+- Added Feature: Ability to download youtube videos (upto 4k with sound!) instead of creating stream files (.strm) (NOTE: install ffmpeg to be able to download in 1080p+ and more streams)
 - Added Feature: Ability to regenerate artwork from youtube for playlists.
 - Bugfix: when adding a channel with playlists with incomplete metadata
 - Bugfix: Fixed the display of the poster thumbnail when streaming a youtube video
 - Bugfix: Unicode errors when playing videos with characters like ë
-- Fixed quite a few bugs concerning playback of videos
+- Bugfix: Blocked by country no longer blocks the updating of the playlist
 - Lots of other small fixes and adjustments
 
 0.9.8.1:
