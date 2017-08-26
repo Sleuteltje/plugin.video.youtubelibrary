@@ -21,6 +21,7 @@ from __future__ import division
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcplugin, xbmcvfs
 import sys
 import os
+import urllib
 
 from resources.lib import vars
 from resources.lib import dev
@@ -97,16 +98,21 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 ##### PLAY VIDEO 
 #Plays a youtube video by id
 def playYoutubeVid(id, meta=None, poster=None):
+    dev.log('poster: '+poster)
+    #Poster URL that hickups the addon: image://C%3a%5cKodi%5cportable_data%5cuserdata%5caddon_data%5cplugin.video.youtubelibrary%5cStreams%5cTV%5cSleuteltje%20-%20Bios%20Intros%5cfolder.jpg/
+    #poster = None
     if meta is None:
         #Create an empty meta, so we can fill it with the information grabbed from youtube
         meta = {}
-    if 'title' not in meta:
-        meta['title'] = v.title #Store the youtube title in the meta  
     if poster is None:
         poster = 'Default.png'
+    elif poster.startswith('image://'):
+        poster = poster[8:-1]
+        poster = urllib.unquote(urllib.unquote(poster))
+        dev.log('poster cleaned: '+poster)
     
     
-	YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
+	#YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
 	
 	try:
 		#url = id #a youtube ID will work as well and of course you could pass the url of another site
@@ -115,6 +121,9 @@ def playYoutubeVid(id, meta=None, poster=None):
 	except:
 		dev.log('Failed to get a valid stream_url!')
 		return False #Failed to grab a video title
+	
+	if 'title' not in meta:
+		meta['title'] = vid.title #Store the youtube title in the meta  
 	
 	
 	#xbmc.Player().play(v.getbest().url) #Play this video
@@ -136,6 +145,9 @@ def playMusicVid(id, filename=None, artist = None, song = None):
 def playVid(id, filename=None, season = None, episode = None, show = None, folder = None, type=''):    
     import time
     import json
+    diff = 0
+	
+    #return playYoutubeVid(id)
     
     #Check if its PseudoTV that's playing this file, if so, we shouldn't do anything else than play the video
     if xbmcgui.Window(10000).getProperty('PseudoTVRunning') == 'True':
@@ -238,7 +250,8 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
         except: pass
         xbmc.sleep(1000)
     
-    diff = currentTime / totalTime #Calculate how much of the video has been watched
+	if currentTime != 0 and totalTime != 0:
+		diff = currentTime / totalTime #Calculate how much of the video has been watched
     #The video has stopped playing
     dev.log('Ended Video Playback (%s) @ %s (percentage: %s)' % (totalTime, currentTime, diff))
     
