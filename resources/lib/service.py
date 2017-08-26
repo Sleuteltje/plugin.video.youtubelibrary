@@ -369,7 +369,7 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             season, episode, vid = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
             filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
             
-            if settings.find('download_videos').text == 'true':
+            if settings.find('download_videos') != None and settings.find('download_videos').text == 'true':
                 downloadSuccess = play.downloadYoutubeVid(filename, folder, vid['contentDetails']['videoId'], season=season) #Download the video for episode
                 if downloadSuccess == False:
                     dev.log('Skip this video, since the download has failed')

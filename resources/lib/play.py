@@ -18,6 +18,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
+from __future__ import unicode_literals
+
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcplugin, xbmcvfs
 import sys
 import os
@@ -30,11 +32,29 @@ from resources.lib import bookmarks
 import YDStreamExtractor
 import YDStreamUtils
 
+import youtube_dl
+
+
+class MyLogger(object):
+    def debug(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        dev.log('Error while downloading: '+msg)
+
+
+def my_hook(d):
+    if d['status'] == 'finished':
+        dev.log('Done downloading, now converting ...')
+
 
 # Returns the filename (without .strm)
 def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 	#youtube-dl command to download best quality: -f bestvideo[ext!=webm]‌​+bestaudio[ext!=webm]‌​/best[ext!=webm]
-	YDStreamExtractor.disableDASHVideo(True)
+	#YDStreamExtractor.disableDASHVideo(True)
 	
 	movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
 	if type=='musicvideo':
@@ -53,7 +73,7 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 		folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
 		xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
 
-	full_file_path = os.path.join(folder, enc_name + '.webm') #Set the file to maindir/name/name.strm
+	full_file_path = os.path.join(folder, enc_name) #Set the file to maindir/name/name
 	
 	dev.log('Downloading '+videoid, 1)
 	vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
@@ -67,7 +87,19 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 	if vid == None:
 		dev.log('Failed to retrieve video from url: '+url)
 		return False
-
+	
+	
+	ydl_opts = {
+    'format': 'bestvideo+bestaudio/best',
+    'logger': MyLogger(),
+    'progress_hooks': [my_hook],
+	'outtmpl' : full_file_path+'.%(ext)s',
+	#'-o' : enc_name+'.%(ext)s',
+	}
+	with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+		ydl.download(['https://www.youtube.com/watch?v='+videoid])
+	
+	"""
 	try:
 		#YDStreamExtractor.setOutputCallback(prog)
 		#result = YDStreamExtractor.downloadVideo(vid,folder)
@@ -89,7 +121,7 @@ def downloadYoutubeVid(name, fold, videoid, type='', season=None):
 		return True
 	except:
 		dev.log('Download failed for '+url)
-		return False
+		return False"""
 
 
 
