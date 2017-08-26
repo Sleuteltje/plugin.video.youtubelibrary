@@ -100,6 +100,13 @@ def setEditPlaylist(id, set, type=''):
         if i == 0:
             i = 'false'
         else:
+            i = 'true'    
+    elif set == 'download_videos':
+        #Display a yes/no dialog to enable / disable
+        i = xbmcgui.Dialog().yesno("Download Videos", "Download the videos instead of writing stream files (.strm)?")
+        if i == 0:
+            i = 'false'
+        else:
             i = 'true'
     elif set == 'skip_lyrics':
         #Display a yes/no dialog to enable / disable
@@ -254,7 +261,7 @@ def setEditPlaylist(id, set, type=''):
             i = 'video channelname'
         elif i == 3:
             i = 'do not add'
-    #album		
+    #album        
     elif set == 'album':
         i = xbmcgui.Dialog().select('Choose album Recognizition', ['video title and description', 'artist + published year', 'hardcoded'])
         if i == 0:
@@ -382,6 +389,9 @@ def editPlaylist(id, type=''):
         disp_setting('description', 'Description', 'The description as it will be displayed in '+extra_desc+' this Addon')
         #Tags
         disp_setting('tags', 'Tags', 'Tags for Kodi. For multiple tags use tag1 / tag2 / tag3 (note the space between each / )')
+        
+        disp_bool_setting('download_videos', 'Download Videos', 'If enabled, YTlibrary will download the videos instead of saving streams')
+        
         #Genres & Stuff
         if type == 'musicvideo':
             #Genres

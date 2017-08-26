@@ -23,6 +23,7 @@ from resources.lib import dev
 from resources.lib import m_xml
 from resources.lib import generators
 from resources.lib import ytube
+from resources.lib import play
 
 
 #Outputs the updatevery setting in normal 
@@ -362,12 +363,20 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
                 
         #dev.log('TEST duration '+str(duration[vid['contentDetails']['videoId']]))
         
+        downloadSuccess = True
         if type == '' or type == 'tv':
             #Grab the correct season and episode number from this vid
             season, episode, vid = generators.episode_season(vid, settings, resp['pageInfo']['totalResults'], id)
             filename = 's'+season+'e'+episode+' - '+vid['snippet']['title'] #Create the filename for the .strm & .nfo file
             
-            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode
+            if settings.find('download_videos').text == 'true':
+                downloadSuccess = play.downloadYoutubeVid(filename, folder, vid['contentDetails']['videoId'], season=season) #Download the video for episode
+                if downloadSuccess == False:
+                    dev.log('Skip this video, since the download has failed')
+                    continue #Skip this video, since it should have downloaded and failed
+            else:
+                generators.write_strm(filename, folder, vid['contentDetails']['videoId'], show=settings.find('title').text, episode=episode, season=season) #Write the strm file for this episode            
+            
             if settings.find('writenfo').text != 'no':
                 generators.write_nfo(filename, folder, vid, settings, season = season, episode = episode, duration = duration[vid['contentDetails']['videoId']]) #Write the nfo file for this episode
         ##Musicvideo
@@ -379,7 +388,14 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
             
             filename = vid['snippet']['title'] #Create the filename for the .strm & .nfo file
             
-            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], artist=musicvideo_info['artist'], song=musicvideo_info['title'], album=musicvideo_info['album'], year=musicvideo_info['year'], type=type) #Write the strm file for this episode
+            if settings.find('download_videos').text == '1':
+                downloadSuccess = play.downloadYoutubeVid(filename, folder, vid['contentDetails']['videoId'], type='musicvideo') #Download the video for episode
+                if downloadSuccess == False:
+                    dev.log('Skip this video, since the download has failed')
+                    continue #Skip this video, since it should have downloaded and failed
+            else:
+                generators.write_strm(filename, folder, vid['contentDetails']['videoId'], artist=musicvideo_info['artist'], song=musicvideo_info['title'], album=musicvideo_info['album'], year=musicvideo_info['year'], type=type) #Write the strm file for this episode
+            
             if settings.find('writenfo').text != 'no':
                 generators.write_nfo(filename, folder, vid, settings, musicvideo=musicvideo_info, duration = duration[vid['contentDetails']['videoId']], type=type) #Write the nfo file for this episode
             season = musicvideo_info['album']
@@ -404,7 +420,14 @@ def update_playlist_vids(id, folder, settings, nextpage=False, firstvid = False,
                     m_xml.playlist_add_episode(id, '1', vid['contentDetails']['videoId'], type=type) #Add it to the episode list, so it doesnt get picked up again
                     continue #Skip this video, it did not make it past the filters
             
-            generators.write_strm(filename, folder, vid['contentDetails']['videoId'], type=type) #Write the strm file for this episode
+            if settings.find('download_videos').text == 'true':
+                downloadSuccess = play.downloadYoutubeVid(filename, folder, vid['contentDetails']['videoId'], type='movies') #Download the video for episode
+                if downloadSuccess == False:
+                    dev.log('Skip this video, since the download has failed')
+                    continue #Skip this video, since it should have downloaded and failed
+            else:
+                generators.write_strm(filename, folder, vid['contentDetails']['videoId'], type=type) #Write the strm file for this episode
+            
             season = '1'
             
             

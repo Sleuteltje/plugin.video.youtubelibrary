@@ -40,6 +40,7 @@
     <string id="30316">Update every</string>
     <string id="30317">Update at HH:MM</string>
     <string id="30318">Timezone</string>
+    <string id="30319">Download Videos</string>
     <!--Default MusicVideo Settings-->
     <string id="30401">Default settings for Music Videos</string>
     <string id="30402">Generate NFO files</string>
@@ -71,6 +72,7 @@
     <string id="30463">Skip Live Videos</string>
     <string id="30464">Skip Album Videos</string>
     <string id="30465">Skip Audio Only Videos</string>
+    <string id="30466">Download Videos</string>
 	    <!--Default Movies Settings-->
     <string id="30501">Default settings for Movies</string>
     <string id="30502">Generate NFO files</string>
@@ -94,6 +96,7 @@
     <string id="30520">Use YT image</string>
     <string id="30521">Smart Search</string>
     <string id="30522">Reverse</string>
+    <string id="30523">Download Videos</string>
 
 	
 	

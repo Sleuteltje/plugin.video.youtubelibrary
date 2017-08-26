@@ -387,6 +387,7 @@ def xml_build_new_playlist(id, type=''):
         updateevery = dev.getAddonSetting("default_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_updateat", '23:59')
         update_gmt = dev.getAddonSetting("default_update_gmt", '99')
+        download_videos = dev.getAddonSetting("default_download_videos", '0')
         
         
         #Build the playlist
@@ -431,6 +432,7 @@ def xml_build_new_playlist(id, type=''):
                 #Scan Settings
                 'lastvideoId'       : '',
                 'reverse'           : '0',
+                'download_videos'    : download_videos,
             }
         }
         return playlist
@@ -457,7 +459,7 @@ def xml_build_new_playlist(id, type=''):
         update_gmt = dev.getAddonSetting("default_movies_update_gmt", '99')
         set = dev.getAddonSetting("default_movies_set", '')
         smart_search = dev.getAddonSetting("default_movies_smart_search", '1')
-        
+        download_videos = dev.getAddonSetting("default_movies_download_videos", '0')
         
         #Build the playlist
         playlist = {
@@ -503,7 +505,8 @@ def xml_build_new_playlist(id, type=''):
                 'removedescription' : removedescription,
                 #Scan Settings
                 'lastvideoId'       : '',
-                'reverse'           : ''
+                'reverse'           : '',
+                'download_videos'           : download_videos,
             }
         }
         return playlist
@@ -546,6 +549,7 @@ def xml_build_new_playlist(id, type=''):
         updateevery = dev.getAddonSetting("default_musicvideo_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_musicvideo_updateat", '23:59')
         update_gmt = dev.getAddonSetting("default_musicvideo_update_gmt", '99')
+        download_videos = dev.getAddonSetting("default_download_videos", '0')
         
         #Build the playlist
         playlist = {
@@ -607,6 +611,7 @@ def xml_build_new_playlist(id, type=''):
                 #Scan Settings
                 'lastvideoId'       : '',
                 'reverse'           : '',
+                'download_videos'   : download_videos,
             }
         }
         return playlist

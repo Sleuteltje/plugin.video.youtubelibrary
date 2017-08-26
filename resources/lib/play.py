@@ -18,14 +18,78 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
-import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcplugin
+import xbmc, xbmcgui, xbmcplugin, xbmcaddon, xbmcplugin, xbmcvfs
 import sys
+import os
 
 from resources.lib import vars
 from resources.lib import dev
 from resources.lib import bookmarks
 
 import YDStreamExtractor
+import YDStreamUtils
+
+
+# Returns the filename (without .strm)
+def downloadYoutubeVid(name, fold, videoid, type='', season=None):
+	#youtube-dl command to download best quality: -f bestvideo[ext!=webm]‌​+bestaudio[ext!=webm]‌​/best[ext!=webm]
+	YDStreamExtractor.disableDASHVideo(True)
+	
+	movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
+	if type=='musicvideo':
+		movieLibrary = vars.musicvideo_folder
+	if type=='movies':
+		movieLibrary = vars.movies_folder
+	
+	folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+	enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
+	
+	xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exist yet
+	xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    
+	xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+	if type == '' or type == 'tv':
+		folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
+		xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+
+	full_file_path = os.path.join(folder, enc_name + '.webm') #Set the file to maindir/name/name.strm
+	
+	dev.log('Downloading '+videoid, 1)
+	vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
+	path = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+	
+	
+	#url = "https://www.youtube.com/watch?v=YKSU82afy1w" #ducktales intro to test
+	url = "https://www.youtube.com/watch?v="+videoid
+	vid = YDStreamExtractor.getVideoInfo(url,quality=1)
+	
+	if vid == None:
+		dev.log('Failed to retrieve video from url: '+url)
+		return False
+
+	try:
+		#YDStreamExtractor.setOutputCallback(prog)
+		#result = YDStreamExtractor.downloadVideo(vid,folder)
+		#result = YDStreamExtractor.handleDownload(vid, bg=True, path=folder)
+		result = YDStreamExtractor.download(vid, folder, template=enc_name+'.%(ext)s')
+		if result:
+			#success
+			#full_path_to_file = result.filepath
+			dev.log('Success when downloading '+folder+enc_name, 1)
+		elif result.status != 'canceled':
+			#download failed
+			error_message = result.message
+	finally:
+		#YDStreamExtractor.setOutputCallback(None)
+		dev.log('Done downloading '+folder+enc_name, 1)
+		
+	try:
+		dev.log('Done downloading '+result.filepath, 1)
+		return True
+	except:
+		dev.log('Download failed for '+url)
+		return False
+
 
 
 
@@ -42,21 +106,22 @@ def playYoutubeVid(id, meta=None, poster=None):
         poster = 'Default.png'
     
     
-    #YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
-    try:
-        #url = id #a youtube ID will work as well and of course you could pass the url of another site
-        vid = YDStreamExtractor.getVideoInfo(id,quality=1) #quality is 0=SD, 1=720p, 2=1080p and is a maximum
-        stream_url = vid.streamURL() #This is what Kodi (XBMC) will play
-    except:
-        dev.log('Failed to get a valid stream_url!')
-        return False #Failed to grab a video title
-    
-    
-    #xbmc.Player().play(v.getbest().url) #Play this video
-    liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
-    liz.setInfo( type="Video", infoLabels=meta )
-    liz.setPath(stream_url)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
+	YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
+	
+	try:
+		#url = id #a youtube ID will work as well and of course you could pass the url of another site
+		vid = YDStreamExtractor.getVideoInfo(id,quality=1) #quality is 0=SD, 1=720p, 2=1080p and is a maximum
+		stream_url = vid.streamURL() #This is what Kodi (XBMC) will play
+	except:
+		dev.log('Failed to get a valid stream_url!')
+		return False #Failed to grab a video title
+	
+	
+	#xbmc.Player().play(v.getbest().url) #Play this video
+	liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
+	liz.setInfo( type="Video", infoLabels=meta )
+	liz.setPath(stream_url)
+	return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
             
 
 #Plays the requested Youtube Music Video
