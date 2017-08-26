@@ -187,14 +187,23 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
         return playYoutubeVid(id)
 
 
+	if str(type(filename)) == "<type 'unicode'>":
+		filename = filename.encode('utf-8')
+    filename = filename.decode('utf-8') 
+    
     #Prepare the information
     loadingTime = time.time()
     totalTime = 0 ; currentTime = 0
     folderPath = xbmc.getInfoLabel('Container.FolderPath')
     name = filename
+    dev.log('filename:')
+    dev.log(filename)
     filename = filename + '.strm'
-    filename = filename.translate(None, '\/:*?"<>|').strip('.')
-
+    try:
+        filename = filename.translate(None, '\/:*?"<>|').strip('.')
+    except:
+		filename = filename.translate('\/:*?"<>|').strip('.')
+		
     #Grab the metadata of this episode
     if type == 'movies':
         #meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"filter":{"field": "studio", "operator": "is", "value": "Youtube"}, "properties": ["title", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (filename))
@@ -212,10 +221,13 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
         else:
             meta = json.loads(meta)['result']['episodes']
         for i in meta:
-            dev.log('Meta: '+i['file'].encode('utf8'))
+            i['file'] = i['file'].encode('utf8')
+            i['file'] = i['file'].decode('utf8')
+            #dev.log('Meta: '+i['file'].encode('utf8'))
+            dev.log('Meta: '+i['file'])
             dev.log('Looking for :'+filename)
             dev.log('File :'+i['file'])
-            i['file'] = i['file'].encode('utf-8')
+            #i['file'] = i['file'].encode('utf-8')
             if i['file'].endswith(filename):
                 dev.log('Found the episode we are looking for')
                 meta = i

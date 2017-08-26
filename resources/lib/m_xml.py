@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #    Kodi Addon: Youtube Library
 #    Copyright 2015-2017 Sleuteltje
 #

@@ -1,4 +1,5 @@
-﻿#    Kodi Addon: Youtube Library
+﻿# -*- coding: utf-8 -*-
+#    Kodi Addon: Youtube Library
 #    Description: Makes it possible to add youtube channels / playlists as tv shows in your library
 #    Copyright 2015 Sleuteltje
 #
