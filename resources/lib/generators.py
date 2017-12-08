@@ -1397,6 +1397,7 @@ def download_img(thumbUrl, filename, overwrite=False):
     import urllib2
     import xbmcgui
     import os.path
+    import tempfile
     if os.path.isfile(filename) and overwrite is False:
         return False
     
@@ -1405,7 +1406,7 @@ def download_img(thumbUrl, filename, overwrite=False):
         target = filename
         if(filename.startswith('smb://')):
             #download file to local folder and copy it to smb path with xbmcvfs
-            target = os.path.join(os.path.getTempDir(), os.path.basename(filename))
+            target = os.path.join(tempfile.gettempdir(), os.path.basename(filename))
                                 
         req = urllib2.Request(thumbUrl)
         req.add_unredirected_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31')
