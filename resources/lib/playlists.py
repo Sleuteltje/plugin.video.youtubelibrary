@@ -182,7 +182,7 @@ def setEditPlaylist(id, set, type=''):
             i = dev.user_input('', 'Set a regular expression')
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
     elif set == 'onlygrab':
-        options = ['0', '50', '100', '250', '500', '1000', '5000', '10000']
+        options = ['0', '1', '50', '100', '250', '500', '1000', '5000', '10000']
         i = xbmcgui.Dialog().select('Choose max old videos to grab', options)
         i = options[i]
         #m_xml.xml_update_playlist_setting(id, set, i) #Save the new setting
@@ -652,7 +652,7 @@ def refresh_artwork(id, type=''):
 
     id = vars.args['id'][0]
     update_playlist(id, type=type)
-	
+    
 def update_playlist(id, type=''):
     xbmcgui.Dialog().notification(vars.__addonname__, 'Updating '+dev.typeName(type)+' Playlist '+id, vars.__icon__, 3000)
     service.update_playlist(id, type=type)

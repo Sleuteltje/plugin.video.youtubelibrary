@@ -404,11 +404,12 @@ def get_songinfo(vid, settings, duration):
         
     dev.log('Artist - Song determined: '+artist+' - '+song)
     
-    if song.lower().strip(' \t\n\r') == setting_artist_hardcoded.lower().strip(' \t\n\r'):
-        dev.log('Turn around Artist & song, since we got that the wrong way around')
-        #Assume we got the artist - song the wrong way around
-        artist = song
-        song = setting_artist_hardcoded
+    if song is not None and setting_artist_hardcoded is not None:
+        if song.lower().strip(' \t\n\r') == setting_artist_hardcoded.lower().strip(' \t\n\r'):
+            dev.log('Turn around Artist & song, since we got that the wrong way around')
+            #Assume we got the artist - song the wrong way around
+            artist = song
+            song = setting_artist_hardcoded
     
     vid_info = {
         'title': song,
@@ -1400,7 +1401,7 @@ def download_img(thumbUrl, filename, overwrite=False):
         return False
     
     # fetch thumbnail and save to filepath
-    try:					
+    try:                    
         target = filename
         if(filename.startswith('smb://')):
             #download file to local folder and copy it to smb path with xbmcvfs
@@ -1412,7 +1413,7 @@ def download_img(thumbUrl, filename, overwrite=False):
         f.write(urllib2.urlopen(req).read())
         f.close()
             
-        if(filename.startswith('smb://')):	
+        if(filename.startswith('smb://')):    
             xbmcvfs.copy(target, filename)
             xbmcvfs.delete(target)
             

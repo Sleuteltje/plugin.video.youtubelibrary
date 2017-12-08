@@ -164,8 +164,8 @@ else:
     elif mode[0] == "playmusicvideo":
         dev.log('Mode is PlayMusicVideo')
         id = vars.args['id'][0] #Grab the vid id which we should be playing
-        artist = vars.args['artist'][0] #Grab the artist
-        song = vars.args['song'][0] #Grab the song
+        artist = vars.args['artist'][0].decode('utf-8') #Grab the artist
+        song = vars.args['song'][0].decode('utf-8') #Grab the song
         filename = vars.args['filename'][0] #Grab the filename
         play.playMusicVid(id, filename, artist, song) #Play the video
     ## PLAY MOVIE

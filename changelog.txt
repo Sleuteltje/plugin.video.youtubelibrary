@@ -1,3 +1,9 @@
+0.9.9.1:
+- Fixed deprecated googleapiclient dependency
+- Added 1 to 'only grab X videos' option.
+- Fixed lower of None error when adding musicvideos.
+- Created fallback when poster of tv show is not found to just use the default.png instead of not playing the video at all.
+
 0.9.9:
 - Added Feature: Ability to download youtube videos (upto 4k with sound!) instead of creating stream files (.strm) (NOTE: install ffmpeg to be able to download in 1080p+ and more streams)
 - Added Feature: Ability to regenerate artwork from youtube for playlists.

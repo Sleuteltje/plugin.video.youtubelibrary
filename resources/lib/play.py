@@ -53,84 +53,84 @@ def my_hook(d):
 
 # Returns the filename (without .strm)
 def downloadYoutubeVid(name, fold, videoid, settings, type='', season=None):
-	#youtube-dl command to download best quality: -f bestvideo[ext!=webm]‌​+bestaudio[ext!=webm]‌​/best[ext!=webm]
-	#YDStreamExtractor.disableDASHVideo(True)
-	
-	movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
-	if type=='musicvideo':
-		movieLibrary = vars.musicvideo_folder
-	if type=='movies':
-		movieLibrary = vars.movies_folder
-	
-	folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
-	enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
-	
-	xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exist yet
-	xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    #youtube-dl command to download best quality: -f bestvideo[ext!=webm]‌​+bestaudio[ext!=webm]‌​/best[ext!=webm]
+    #YDStreamExtractor.disableDASHVideo(True)
     
-	xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
-	if type == '' or type == 'tv':
-		folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
-		xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    movieLibrary = vars.tv_folder #The path we should save in is the vars.tv_folder setting from the addon settings
+    if type=='musicvideo':
+        movieLibrary = vars.musicvideo_folder
+    if type=='movies':
+        movieLibrary = vars.movies_folder
+    
+    folder = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+    enc_name = dev.legal_filename(name) #Encode the filename to a legal filename
+    
+    xbmcvfs.mkdir(movieLibrary) #Create the maindirectory if it does not exist yet
+    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    
+    xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
+    if type == '' or type == 'tv':
+        folder = os.path.join(folder, 'Season '+season) #Set the folder to the maindir/dir
+        xbmcvfs.mkdir(folder) #Create this subfolder if it does not exist yet
 
-	full_file_path = os.path.join(folder, enc_name) #Set the file to maindir/name/name
-	
-	dev.log('Downloading '+videoid, 1)
-	#vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
-	path = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
-	
-	
-	#url = "https://www.youtube.com/watch?v=YKSU82afy1w" #ducktales intro to test
-	url = "https://www.youtube.com/watch?v="+videoid
-	vid = YDStreamExtractor.getVideoInfo(url,quality=1)
-	
-	if vid == None:
-		dev.log('Failed to retrieve video from url: '+url)
-		return False
-	
-	if settings.find('download_videos').text  == '720p':
-		dev.log('%%%%%%% QUALITY: 720p quality selected')
-		format = 'bestvideo[height<=?720]+bestaudio/best[height<=?720]'
-	elif settings.find('download_videos').text == '1080p':
-		dev.log('%%%%%%% QUALITY: 1080p quality selected')
-		format = 'bestvideo[height<=?1080]+bestaudio/best[height<=?1080]'
-	else:
-		dev.log('%%%%%%% QUALITY: best quality selected')
-		format = 'bestvideo+bestaudio/best'
-	
-	ydl_opts = {
+    full_file_path = os.path.join(folder, enc_name) #Set the file to maindir/name/name
+    
+    dev.log('Downloading '+videoid, 1)
+    #vid = YDStreamExtractor.getVideoInfo(videoid,quality=1)
+    path = os.path.join(movieLibrary, fold) #Set the folder to the maindir/dir
+    
+    
+    #url = "https://www.youtube.com/watch?v=YKSU82afy1w" #ducktales intro to test
+    url = "https://www.youtube.com/watch?v="+videoid
+    vid = YDStreamExtractor.getVideoInfo(url,quality=1)
+    
+    if vid == None:
+        dev.log('Failed to retrieve video from url: '+url)
+        return False
+    
+    if settings.find('download_videos').text  == '720p':
+        dev.log('%%%%%%% QUALITY: 720p quality selected')
+        format = 'bestvideo[height<=?720]+bestaudio/best[height<=?720]'
+    elif settings.find('download_videos').text == '1080p':
+        dev.log('%%%%%%% QUALITY: 1080p quality selected')
+        format = 'bestvideo[height<=?1080]+bestaudio/best[height<=?1080]'
+    else:
+        dev.log('%%%%%%% QUALITY: best quality selected')
+        format = 'bestvideo+bestaudio/best'
+    
+    ydl_opts = {
     'format': format,
     'logger': MyLogger(),
     'progress_hooks': [my_hook],
-	'outtmpl' : full_file_path+'.%(ext)s',
-	#'-o' : enc_name+'.%(ext)s',
-	}
-	with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-		return ydl.download(['https://www.youtube.com/watch?v='+videoid])
-	
-	"""
-	try:
-		#YDStreamExtractor.setOutputCallback(prog)
-		#result = YDStreamExtractor.downloadVideo(vid,folder)
-		#result = YDStreamExtractor.handleDownload(vid, bg=True, path=folder)
-		result = YDStreamExtractor.download(vid, folder, template=enc_name+'.%(ext)s')
-		if result:
-			#success
-			#full_path_to_file = result.filepath
-			dev.log('Success when downloading '+folder+enc_name, 1)
-		elif result.status != 'canceled':
-			#download failed
-			error_message = result.message
-	finally:
-		#YDStreamExtractor.setOutputCallback(None)
-		dev.log('Done downloading '+folder+enc_name, 1)
-		
-	try:
-		dev.log('Done downloading '+result.filepath, 1)
-		return True
-	except:
-		dev.log('Download failed for '+url)
-		return False"""
+    'outtmpl' : full_file_path+'.%(ext)s',
+    #'-o' : enc_name+'.%(ext)s',
+    }
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        return ydl.download(['https://www.youtube.com/watch?v='+videoid])
+    
+    """
+    try:
+        #YDStreamExtractor.setOutputCallback(prog)
+        #result = YDStreamExtractor.downloadVideo(vid,folder)
+        #result = YDStreamExtractor.handleDownload(vid, bg=True, path=folder)
+        result = YDStreamExtractor.download(vid, folder, template=enc_name+'.%(ext)s')
+        if result:
+            #success
+            #full_path_to_file = result.filepath
+            dev.log('Success when downloading '+folder+enc_name, 1)
+        elif result.status != 'canceled':
+            #download failed
+            error_message = result.message
+    finally:
+        #YDStreamExtractor.setOutputCallback(None)
+        dev.log('Done downloading '+folder+enc_name, 1)
+        
+    try:
+        dev.log('Done downloading '+result.filepath, 1)
+        return True
+    except:
+        dev.log('Download failed for '+url)
+        return False"""
 
 
 
@@ -153,25 +153,25 @@ def playYoutubeVid(id, meta=None, poster=None):
         dev.log('poster cleaned: '+poster)
     
     
-	#YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
-	
-	try:
-		#url = id #a youtube ID will work as well and of course you could pass the url of another site
-		vid = YDStreamExtractor.getVideoInfo(id,quality=1) #quality is 0=SD, 1=720p, 2=1080p and is a maximum
-		stream_url = vid.streamURL() #This is what Kodi (XBMC) will play
-	except:
-		dev.log('Failed to get a valid stream_url!')
-		return False #Failed to grab a video title
-	
-	if 'title' not in meta:
-		meta['title'] = vid.title #Store the youtube title in the meta  
-	
-	
-	#xbmc.Player().play(v.getbest().url) #Play this video
-	liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
-	liz.setInfo( type="Video", infoLabels=meta )
-	liz.setPath(stream_url)
-	return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
+    #YDStreamExtractor.disableDASHVideo(True) #Kodi (XBMC) only plays the video for DASH streams, so you don't want these normally. Of course these are the only 1080p streams on YouTube
+    
+    try:
+        #url = id #a youtube ID will work as well and of course you could pass the url of another site
+        vid = YDStreamExtractor.getVideoInfo(id,quality=1) #quality is 0=SD, 1=720p, 2=1080p and is a maximum
+        stream_url = vid.streamURL() #This is what Kodi (XBMC) will play
+    except:
+        dev.log('Failed to get a valid stream_url!')
+        return False #Failed to grab a video title
+    
+    if 'title' not in meta:
+        meta['title'] = vid.title #Store the youtube title in the meta  
+    
+    
+    #xbmc.Player().play(v.getbest().url) #Play this video
+    liz = xbmcgui.ListItem(meta['title'], iconImage=poster, thumbnailImage=poster)
+    liz.setInfo( type="Video", infoLabels=meta )
+    liz.setPath(stream_url)
+    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, liz)
             
 
 #Plays the requested Youtube Music Video
@@ -187,7 +187,7 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
     import time
     import json
     diff = 0
-	
+    
     #return playYoutubeVid(id)
     
     #Check if its PseudoTV that's playing this file, if so, we shouldn't do anything else than play the video
@@ -195,9 +195,9 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
         dev.log('PseudoTV is running, so just play the video')
         return playYoutubeVid(id)
 
-
-	if str(type(filename)) == "<type 'unicode'>":
-		filename = filename.encode('utf-8')
+    #if str(type(filename)) == "<type 'unicode'>":
+    if isinstance(filename, unicode):
+        filename = filename.encode('utf-8')
     filename = filename.decode('utf-8') 
     
     #Prepare the information
@@ -211,8 +211,8 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
     try:
         filename = filename.translate(None, '\/:*?"<>|').strip('.')
     except:
-		filename = filename.translate('\/:*?"<>|').strip('.')
-		
+        filename = filename.translate('\/:*?"<>|').strip('.')
+        
     #Grab the metadata of this episode
     if type == 'movies':
         #meta = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovies", "params": {"filter":{"field": "studio", "operator": "is", "value": "Youtube"}, "properties": ["title", "runtime", "rating", "director", "writer", "plot", "thumbnail", "file"]}, "id": 1}' % (filename))
@@ -252,12 +252,16 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
             #poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
         else:
             DBID = meta['episodeid'] ; thumb = meta['thumbnail'] ; showtitle = meta['showtitle']
+            dev.log('Showtitle: '+meta['showtitle'])
             
             meta = {'title': meta['title'].encode('utf-8'), 'season' : meta['season'], 'episode': meta['episode'], 'tvshowtitle': meta['showtitle'].encode('utf-8'), 'premiered' : meta['firstaired'].encode('utf-8'), 'duration' : meta['runtime'], 'rating': meta['rating'], 'director': str(' / '.join(meta['director']).encode('utf-8')), 'writer': str(' / '.join(meta['writer']).encode('utf-8')), 'plot': meta['plot'].encode('utf-8')}
 
-            poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
-            poster = unicode(poster, 'utf-8', errors='ignore')
-            poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+            try:
+                poster = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetTVShows", "params": {"filter": {"field": "title", "operator": "is", "value": "%s"}, "properties": ["thumbnail"]}, "id": 1}' % showtitle.encode('utf-8'))
+                poster = unicode(poster, 'utf-8', errors='ignore')
+                poster = json.loads(poster)['result']['tvshows'][0]['thumbnail']
+            except:
+                poster = 'Default.png'
 
         #If resume playback is set in the settings, display a resume menu
         try:
@@ -303,8 +307,8 @@ def playVid(id, filename=None, season = None, episode = None, show = None, folde
         except: pass
         xbmc.sleep(1000)
     
-	if currentTime != 0 and totalTime != 0:
-		diff = currentTime / totalTime #Calculate how much of the video has been watched
+    if currentTime != 0 and totalTime != 0:
+        diff = currentTime / totalTime #Calculate how much of the video has been watched
     #The video has stopped playing
     dev.log('Ended Video Playback (%s) @ %s (percentage: %s)' % (totalTime, currentTime, diff))
     

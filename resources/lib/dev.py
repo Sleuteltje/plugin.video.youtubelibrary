@@ -175,9 +175,9 @@ def get_setting(setting, settings):
     if setting is None:
         setting = ''
     return setting
-	
-	
-	
+    
+    
+    
 #Slugifies a string (thus also making it a valid filename) (borrowed from Django framework, All credits to Django)
 def slugify(value):
     import re
@@ -265,11 +265,11 @@ def timezones(convert = False):
 #Puts a string to maximum length
 def cap(s, l):
     return s if len(s)<=l else s[0:l-3]+'...'
-	
-	
+    
+    
 
 
-	
+    
 #Grabs the highest possible thumbnail, and if not found will try to fail gracefully
 #    default – playlist item or search result – is 120px wide and 90px tall. The default thumbnail for a channel is 88px wide and 88px tall.
 #    medium – 320px wide and 180px tall. For a channel, this image is 240px wide and 240px tall.
@@ -277,19 +277,19 @@ def cap(s, l):
 #    standard – 640px wide and 480px tall.
 #   maxres – The highest resolution version of the thumbnail image. 1280px wide and 720px tall.
 def playlist_highest_thumbnail(playlist):
-	pl = playlist['snippet']['thumbnails']
-	if 'maxres' in pl:
-		return pl['maxres']['url']
-	elif 'standard' in pl:
-		return pl['standard']['url']
-	elif 'high' in pl:
-		return pl['high']['url']
-	elif 'medium' in pl:
-		return pl['medium']['url']
-	elif 'default' in pl:
-		return pl['default']['url']
-	else:
-		return ''#seems no thumbnail is found
+    pl = playlist['snippet']['thumbnails']
+    if 'maxres' in pl:
+        return pl['maxres']['url']
+    elif 'standard' in pl:
+        return pl['standard']['url']
+    elif 'high' in pl:
+        return pl['high']['url']
+    elif 'medium' in pl:
+        return pl['medium']['url']
+    elif 'default' in pl:
+        return pl['default']['url']
+    else:
+        return ''#seems no thumbnail is found
 
 #determines the best thumbnail from the youtube response
 def best_thumbnail(res):    

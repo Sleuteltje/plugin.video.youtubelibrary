@@ -34,7 +34,7 @@
 		<setting id="default_striptitle" label="30312" type="text" default="" />
 		<setting id="default_removetitle" label="30313" type="text" default="" />
         <setting id="default_generate_nfo" label="30302" type="bool" default="true" />
-        <setting id="default_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+        <setting id="default_onlygrab" label="30315" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 12 hours" />
 		<setting id="default_updateat" type="time" label="30317" default="23:59"/>
 		<setting id="default_update_gmt" label="30318" type="select" values="Default|Systems Timezone|GMT (UTC)|GMT+1:00|GMT+2:00|GMT+3:00|GMT+3:30|GMT+4:00|GMT+5:00|GMT+5:30|GMT+6:00|GMT+7:00|GMT+8:00|GMT+9:00|GMT+9:30|GMT+10:00|GMT+11:00|GMT+12:00|GMT-11:00|GMT-10:00|GMT-9:00|GMT-8:00|GMT-7:00|GMT-6:00|GMT-5:00|GMT-4:00|GMT-3:30|GMT-3:00|GMT-2:00|GMT-1:00" default="Default" />
@@ -82,7 +82,7 @@
 		<setting id="default_musicvideo_striptitle" label="30312" type="text" default="" />
 		<setting id="default_musicvideo_removetitle" label="30313" type="text" default="" />
         <setting id="default_musicvideo_generate_nfo" label="30302" type="bool" default="true" />
-        <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+        <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_musicvideo_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
 		<setting id="default_musicvideo_updateat" type="time" label="30317" default="23:59"/>
 		<setting id="default_musicvideo_update_gmt" label="30318" type="select" values="Default|Systems Timezone|GMT (UTC)|GMT+1:00|GMT+2:00|GMT+3:00|GMT+3:30|GMT+4:00|GMT+5:00|GMT+5:30|GMT+6:00|GMT+7:00|GMT+8:00|GMT+9:00|GMT+9:30|GMT+10:00|GMT+11:00|GMT+12:00|GMT-11:00|GMT-10:00|GMT-9:00|GMT-8:00|GMT-7:00|GMT-6:00|GMT-5:00|GMT-4:00|GMT-3:30|GMT-3:00|GMT-2:00|GMT-1:00" default="Default" />
@@ -107,7 +107,7 @@
 		<setting id="default_movies_striptitle" label="30512" type="text" default="" />
 		<setting id="default_movies_removetitle" label="30513" type="text" default="" />
         <setting id="default_movies_generate_nfo" label="30502" type="bool" default="true" />
-        <setting id="default_movies_onlygrab" label="30515" type="select" values="0|50|100|250|500|1000|5000|10000" default="5000" />
+        <setting id="default_movies_onlygrab" label="30515" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_movies_updateevery" label="30516" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
 		<setting id="default_movies_updateat" type="time" label="30517" default="23:59"/>
 		<setting id="default_movies_update_gmt" label="30518" type="select" values="Default|Systems Timezone|GMT (UTC)|GMT+1:00|GMT+2:00|GMT+3:00|GMT+3:30|GMT+4:00|GMT+5:00|GMT+5:30|GMT+6:00|GMT+7:00|GMT+8:00|GMT+9:00|GMT+9:30|GMT+10:00|GMT+11:00|GMT+12:00|GMT-11:00|GMT-10:00|GMT-9:00|GMT-8:00|GMT-7:00|GMT-6:00|GMT-5:00|GMT-4:00|GMT-3:30|GMT-3:00|GMT-2:00|GMT-1:00" default="Default" />
