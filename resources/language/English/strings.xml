@@ -20,8 +20,8 @@
     <string id="30203">Add these directories to your Kodi Library</string>
     <string id="30204">TV Shows Directory</string>
     <string id="30205">Music Videos Directory</string>
-    <string id="30206">Notify on updating of playlist</string>
     <string id="30206">Movies Directory</string>
+    <string id="30207">Notify on updating of playlist</string>
     <!--Default TV Show Settings-->
     <string id="30301">Default settings for TV Shows</string>
     <string id="30302">Generate NFO files</string>
