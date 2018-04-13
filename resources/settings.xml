@@ -11,7 +11,7 @@
     <!--Library Settings-->
     <category label="30200">
 		<setting id="service_interval" type="select" label="30201" values="5|10|15|30|60|120|240|720|1440" default="30" />
-		<setting id="notify_update" type="bool" label="30206" default="true"/>
+		<setting id="notify_update" type="bool" label="30207" default="true"/>
 		<setting id="update_videolibrary" type="bool" label="30202" default="true"/>
 		<setting label="30203" type="lsep"/>
 		<setting id="tv_folder" type="folder" label="30204" default="special://profile/userdata/addon_data/plugin.video.youtubelibrary/Streams/TV" />
