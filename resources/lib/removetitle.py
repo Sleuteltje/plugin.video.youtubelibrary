@@ -16,6 +16,7 @@ import urllib
 #                               .88                                     #
 #                           d8888P                                      #
 #########################################################################
+#disabled dev.log where present.
 
 #Does a regex expression from the settings.xml. Will return None if it fails, the match otherwise    
 def reg(se, txt):
@@ -28,14 +29,14 @@ def reg(se, txt):
             #m = re.search( r'(\d+)', txt)
             if m:
                 #Found the thing we were looking for with the given user regex
-                dev.log('Regex '+ma+' found its match: '+m.group(0).encode('UTF-8')+' , '+m.group(1).encode('UTF-8'))
+                #dev.log('Regex '+ma+' found its match: '+m.group(0).encode('UTF-8')+' , '+m.group(1).encode('UTF-8'))
                 return m.group(1)
             else:
                 #Regex not found, return None
-                dev.log('Regex given by user has not found anything: '+ma+' on '+txt.encode('UTF-8'), True)
+                #dev.log('Regex given by user has not found anything: '+ma+' on '+txt.encode('UTF-8'), True)
                 return None #Return the fallback
         else:
-            dev.log('Regex given by user in settings.xml is not valid!'+se, True)
+            #dev.log('Regex given by user in settings.xml is not valid!'+se, True)
             return None
     else:
         return None #This is not a regex setting
