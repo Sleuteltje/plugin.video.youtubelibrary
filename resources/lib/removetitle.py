@@ -85,3 +85,31 @@ def striptitle(title, striptitle):
                 title = title[:title.index(striptitle)] #Strip everything to the point where the line was found
     return title  
 
+
+
+################################################################
+#    d888888P                     dP   oo                      #
+#       88                        88                           #
+#       88    .d8888b. .d8888b. d8888P dP 88d888b. .d8888b.    #
+#       88    88ooood8 Y8ooooo.   88   88 88'  `88 88'  `88    #
+#       88    88.  ...       88   88   88 88    88 88.  .88    #
+#       dP    `88888P' `88888P'   dP   dP dP    dP `8888P88    #
+#                                                       .88    #
+#                                                   d8888P     #
+################################################################
+import unittest
+class TestStringMethods(unittest.TestCase):
+    
+    def test_removetitle(self):
+        #print("TEST: (original) removetitle")
+        self.assertEqual("PUBG | Play Pals!",   removetitle("PUBG | Play Pals!", "foobar"))                         # No removal
+        self.assertEqual("PUBG | !",            removetitle("PUBG | Play Pals!", "Play Pals"))                      # Normal removal
+        self.assertEqual("PUBG |  !",           removetitle("PUBG | Play Pals!", "Pals|Play"))                      # Multiple removal
+        self.assertEqual("PUBG!",               removetitle("PUBG | Play Pals!", " \| Play Pals"))                  # Escaped delimiter removal
+        self.assertEqual("PUBG | Play Pals!",   removetitle("PUBG | Play Pals!", "...Pals"))                        # Not non-regex removal
+        self.assertEqual("PUBG | Pl!",          removetitle("PUBG | Play Pals!", "regex((...Pals))"))               # Regex removal
+        self.assertEqual("PUBG |  Pals!",       removetitle("PUBG | Play Pals!", "regex(P(l))|ay"))                 # Multiple removal, multiple regex  
+        self.assertEqual("PUBG |  !",           removetitle("PUBG | Play Pals!", "regex(P((l\|a)(a\|l))(y\|s))"))   # Regex removal with (escaped) delimiters
+  
+if __name__ == '__main__':
+    unittest.main() 
