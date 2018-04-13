@@ -90,6 +90,48 @@ def striptitle(title, striptitle):
 
 
 
+#################################################################################################################
+#     888888ba                    dP                                                           dP               #
+#     88    `8b                   88                                                           88               #
+#    a88aaaa8P' .d8888b. 88d888b. 88 .d8888b. .d8888b. .d8888b. 88d8b.d8b. .d8888b. 88d888b. d8888P .d8888b.    #
+#     88   `8b. 88ooood8 88'  `88 88 88'  `88 88'  `"" 88ooood8 88'`88'`88 88ooood8 88'  `88   88   Y8ooooo.    #
+#     88     88 88.  ... 88.  .88 88 88.  .88 88.  ... 88.  ... 88  88  88 88.  ... 88    88   88         88    #
+#     dP     dP `88888P' 88Y888P' dP `88888P8 `88888P' `88888P' dP  dP  dP `88888P' dP    dP   dP   `88888P'    #
+#                        88                                                                                     #
+#                        dP                                                                                     #
+#################################################################################################################   
+
+# Modified from https://stackoverflow.com/a/46547822/6739402
+#   which is modified from https://stackoverflow.com/a/21882672/6739402
+#       which is modified from https://stackoverflow.com/a/18092547/6739402
+def split_delimiter_escape(string: str, delimiter: str, escape: str) -> [str]:
+    result = []
+    current_element = []
+    iterator = iter(string)
+    for character in iterator:
+        if character == escape:
+            try:
+                next_character = next(iterator)
+                if next_character != escape and next_character != delimiter:
+                    # Do not copy the escape character if it is escaping itself.
+                    # Do not copy the escape character if it escaping a delimiter.
+                    # Do copy the escape character otherwise.
+                    current_element.append(escape)
+                current_element.append(next_character)
+            except StopIteration:
+                current_element.append(escape)
+        elif character == delimiter:
+            # split! (add current to the list and reset it)
+            result.append(''.join(current_element))
+            current_element = []
+        else:
+            current_element.append(character)
+    result.append(''.join(current_element))
+    #print(string, '\t', result)
+    return result  
+
+
+
 ################################################################
 #    d888888P                     dP   oo                      #
 #       88                        88                           #
@@ -114,7 +156,15 @@ class TestStringMethods(unittest.TestCase):
         #self.assertEqual("PUBG |  Pals!",       removetitle("PUBG | Play Pals!", "regex(P(l))|ay"))                 # Multiple removal, multiple regex         #FAIL see Problem 2  
         #self.assertEqual("PUBG |  !",           removetitle("PUBG | Play Pals!", "regex(P((l\|a)(a\|l))(y\|s))"))   # Regex removal with (escaped) delimiters  #FAIL see Problem 1
         
+    
+    def test_split_delimiter_escape(self):
+        #print("TEST: (replacement) split_delimiter_escape")
+        self.assertListEqual(['A', 'B'],    split_delimiter_escape('A+B', '+', '?'))        # Delimit
+        self.assertListEqual(['A+B'],       split_delimiter_escape('A?+B', '+', '?'))       # Escape the delimiter
+        self.assertListEqual(['A?', 'B'],   split_delimiter_escape('A??+B', '+', '?'))      # Escape the escape character
+        self.assertListEqual(['A?+B'],      split_delimiter_escape('A???+B', '+', '?'))     # Three escapes becomes ?? ?+ becomes ?+
+        self.assertListEqual(['A?B'],       split_delimiter_escape('A?B', '+', '?'))        # Escape character remains when preceeding neither delimiter nor escape character
   
 if __name__ == '__main__':
-    unittest.main() 
-    
+    unittest.main()
+
