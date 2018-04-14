@@ -101,40 +101,6 @@ def striptitle(title, striptitle):
 #                        88                                                                                     #
 #                        dP                                                                                     #
 #################################################################################################################   
-
-# Now returns list of matches, rather than the first match. Returns None on failure.
-# This allows supporting regex with multiple capture groups.
-# Adds the capture-all group automatically
-def reg2(pattern: str, text: str) -> [type(re.finditer('',''))]:
-    if pattern[:6] == 'regex(':
-        #print("INSIDE reg2 INSIDE", pattern, txt)
-        match = pattern[6:]
-        match = match[:-1]
-        match = '('+match+')'   #Ensure there's at least one capture group
-        #print(match)
-        if match is not None:
-            if match.count('(') != match.count(')'):
-                #This catches cases where the user attempted to use | within regex but did not escape it.
-                #Side effect: prevents user-constructed regexes that attmept to match an uneven number of parentheses
-                #dev.log("Regex number of parentheses mismatch! Did user forget to escape a '|'?")
-                return None
-            m = re.finditer(match, text)
-            if m:
-                #Found the thing we were looking for with the given user regex
-                l = list(m)
-                #print(l[0].group(1))
-                #dev.log('Regex '+match+' found its match: '+l[0].group(0).encode('UTF-8')+' , '+l[0].group(1).encode('UTF-8'))
-                return l
-            else:
-                #Regex not found, return None
-                #dev.log('Regex given by user has not found anything: '+match+' on '+txt.encode('UTF-8'), True)
-                return None #Return the fallback
-        else:
-            #dev.log('Regex given by user in settings.xml is not valid!'+pattern, True)
-            return None
-    else:
-        return None #This is not a regex setting
-
 # Modified from https://stackoverflow.com/a/46547822/6739402
 #   which is modified from https://stackoverflow.com/a/21882672/6739402
 #       which is modified from https://stackoverflow.com/a/18092547/6739402
@@ -164,29 +130,79 @@ def split_delimiter_escape(string: str, delimiter: str, escape: str) -> [str]:
     #print(string, '\t', result)
     return result
 
+#Returns pattern to run through regex
+def reg3(pattern: str, text: str) -> [type(re.finditer('',''))]:
+    if pattern[:6] == 'regex(':
+        if pattern[-1] != ')':
+            dev.log("Found 'Regex('' without closing ')' - did the user forget to escape a '|'?")
+            return None
+        else: 
+            return pattern[6:-1]
+    else:
+        return None #This is not a regex setting
+
 # Now supports escaped delimiters as literal characters
 # Now supports regex using the delimiter character (it must initially be escaped)
 # Now requires 'regex(...)' - no longer always treats a single pattern as a regex
-# Now supports regex with multiple capture groups (see reg2)
-# Adds the capture-all group automatically (see reg2)
-def removetext(original: str, pattern: str) -> str:
+# Now supports any valid regex expression, not merely a single capture group without | characters
+def removetext(original: str, pattern: str,) -> str:
     if pattern == None:
         pattern = ''
     if len(pattern) > 0:
         returntext = original
         split=split_delimiter_escape(pattern, '|', '\\') #splits on | using \ as escape character        
         for s in split:
-            #Check if we should do regex
-            rem = reg2(s, returntext)
-            if rem is not None:
-                for r in rem:
-                    #print("AND REM IS: ",r.group(1))
-                    s = r.group(1)  #Regex was successful, set s to the found string so it can be removed as normal            
-                    returntext = re.sub(s, '', returntext, flags=re.IGNORECASE) #Remove this line from the title
+            regexpattern=reg3(s,returntext)
+            if regexpattern is not None:
+                m=re.search(regexpattern,returntext)
+                while m:
+                    returntext=m.string[:m.start()]+m.string[m.end():]  #remove the instance of the regex pattern
+                    m=re.search(m.re.pattern,returntext)                #recurse for other instances
             else:
                 returntext = returntext.replace(s, '')
+    return returntext
+
+# WIP
+def truncatetext(original: str, pattern: str, keeplast: bool) -> str:     
+    if pattern == None:
+        pattern = ''
+    if len(pattern) > 0:
+        returntext = original
+        
+        split=split_delimiter_escape(pattern, '|', '\\') #splits on | using \ as escape character
+        for s in split:
+            #Check if we should do regex
+            print("ABOUT TO DO REG2 ON S:",s,"\tReturntext:",returntext)
+            rem = reg2(s, returntext)
+            if rem is not None:
+                print("AND REM IS: ",rem)               
+                for r in rem:
+                    s = r.group(1)  #Regex was successful, set s to the found string so it can be removed as normal
+                    print("S IS ",s," AND RETURNTEXT IS ",returntext)
+                    sections = re.split(s, returntext, 0, flags=re.IGNORECASE)
+                    returntext= sections[-1] if keeplast else sections[0]
+                    #returntext = re.sub(s, '', returntext, flags=re.IGNORECASE) #Remove this line from the title        <- no, truncate here.  Need different technique to ensure regex/case-insensitivity/multi-match still works
+            else:
+                if pattern in returntext:
+                    returntext = returntext[:returntext.index(pattern)]                                                                  #<- no, truncate here. Same technique from below should work.
     #print('\''+returntext+'\'')
     return returntext
+    
+    # #original below
+    #     #See if there are multiple lines
+    #     if '|' in pattern:
+    #         strip = pattern.split('|')
+    #         for s in strip:
+    #             if s in returntext:
+    #                 returntext = returntext[:returntext.index(s)] #Strip everything to the point where the line was found
+    #     else:
+    #         #Check if this is a regex var of what should be removed
+    #         rem = reg(returntext, pattern)                                ### PROBLEM 4: this is used backwards - should be reg(striptitle, title) - compare against removetitle
+    #         if rem is not None:
+    #             pattern = rem #Regex was succesfull, set striptitle to the found string so it can be stripped as normal
+    #         if pattern in returntext:
+    #             returntext = returntext[:returntext.index(pattern)] #Strip everything to the point where the line was found
+    # return returntext  
 
 
 
@@ -215,7 +231,6 @@ class TestStringMethods(unittest.TestCase):
         #self.assertEqual("PUBG |  ls!",         striptitle("PUBG | Play Pals!", "regex(P(l)(ay))|Pa"))              # Multiple removal, multiple regex         #FAIL see Problem 2
         #self.assertEqual("PUBG | ",             striptitle("PUBG | Play Pals!", "regex((P((l|a)(a|l))(y|s)))"))     # Regex truncation with delimiters          #FAIL see Problem 1
 
-
     def test_removetitle(self):
         #print("TEST: (original) removetitle")
         self.assertEqual("PUBG | Play Pals!",   removetitle("PUBG | Play Pals!", "foobar"))                         # No removal
@@ -227,6 +242,19 @@ class TestStringMethods(unittest.TestCase):
         #self.assertEqual("PUBG |  ls!",         removetitle("PUBG | Play Pals!", "regex((P(l)(ay)))|Pa"))           # Multiple removal, multi-in-one regex
         #self.assertEqual("PUBG |  ls!",         removetitle("PUBG | Play Pals!", "regex(P(l)(ay))|Pa"))             # Multiple removal, multiple regex         #FAIL see Problem 2
         #self.assertEqual("PUBG |  !",           removetitle("PUBG | Play Pals!", "regex((P((l|a)(a|l))(y|s)))"))    # Regex removal with (escaped) delimiters  #FAIL see Problem 1
+    
+    #def test_truncatetext(self):
+    #     #print("TEST: (replacement) truncatetext")       
+    #     print(truncatetext("PUBG | Play Pals!", "foobar", False))                         # No removal
+    #     print(truncatetext("PUBG | Play Pals!", "Play Pals", False))                      # Normal removal
+    #     print(truncatetext("PUBG | Play Pals!", "Pals|Play", False))                      # Multiple removal
+    #     print(truncatetext("PUBG | Play Pals!", " \| Play Pals", False))                  # Escaped delimiter removal
+    #     print(truncatetext("PUBG | Play Pals!", "...Pals", False))                        # Not non-regex removal 
+    #     print(truncatetext("PUBG | Play Pals!", "regex(...Pals)", False))                 # Regex removal
+    #     print(truncatetext("PUBG | Play Pals!", "regex((P(l)(ay)))|Pa", False))           # Multiple removal, multi-in-one regex      
+    #     print(truncatetext("PUBG | Play Pals!", "regex(P(l))|ay", False))                 # Multiple removal, multiple regex
+    #     print(truncatetext("PUBG | Play Pals!", "regex(P((l\|a)(a\|l))(y\|s))", False))   # Regex removal with delimiters
+    #     print(truncatetext("PUBG | Pals Play!", "regex(\\\\\|)", False))                  # Regex removal with delimiters
         
     def test_removetext(self):
         #print("TEST: (replacement) removetext")
@@ -239,6 +267,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual("PUBG |  ls!",          removetext("PUBG | Play Pals!", "regex((P(l)(ay)))|Pa"))           # Multiple removal, multi-in-one regex      
         self.assertEqual("PUBG |  Pals!",        removetext("PUBG | Play Pals!", "regex(P(l))|ay"))                 # Multiple removal, multiple regex
         self.assertEqual("PUBG |  !",            removetext("PUBG | Play Pals!", "regex(P((l\|a)(a\|l))(y\|s))"))   # Regex removal with delimiters
+        self.assertEqual("PUBG  Play Pals!",     removetext("PUBG | Play Pals!", "regex(\\\\\|)"))                  # Regex removal of escaped delimier / special regex character
     
     def test_split_delimiter_escape(self):
         #print("TEST: (replacement) split_delimiter_escape")
@@ -247,6 +276,12 @@ class TestStringMethods(unittest.TestCase):
         self.assertListEqual(['A?', 'B'],   split_delimiter_escape('A??+B', '+', '?'))      # Escape the escape character
         self.assertListEqual(['A?+B'],      split_delimiter_escape('A???+B', '+', '?'))     # Three escapes becomes ?? ?+ becomes ?+
         self.assertListEqual(['A?B'],       split_delimiter_escape('A?B', '+', '?'))        # Escape character remains when preceeding neither delimiter nor escape character
+                                                                                        
+        self.assertListEqual(['A', 'B'],    split_delimiter_escape('A+B', '+', '\\'))       # Repeat above tests using \ as escape character,
+        self.assertListEqual(['A+B'],       split_delimiter_escape('A\\+B', '+', '\\'))     #  which gets messy since it is also python's escape character.
+        self.assertListEqual(['A\\', 'B'],  split_delimiter_escape('A\\\\+B', '+', '\\'))      
+        self.assertListEqual(['A\\+B'],     split_delimiter_escape('A\\\\\\+B', '+', '\\'))     
+        self.assertListEqual(['A\\B'],      split_delimiter_escape('A\\B', '+', '\\'))        
   
 if __name__ == '__main__':
     unittest.main()
