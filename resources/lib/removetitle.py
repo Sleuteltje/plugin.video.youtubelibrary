@@ -155,13 +155,14 @@ def deletetext(text: str, pattern: str, keep_start: bool, keep_end: bool) -> str
     if pattern:
         splitpattern=split_delimiter_escape(pattern, '|', '\\') #splits pattern on | using \ as escape character        
         for s in splitpattern:
-            regexpattern=regularize(s) #get regex-safe version of pattern 
-            m=re.search(regexpattern,text)
-            while m:
-                start = m.string[:m.start()] if keep_start else ""  #keep text before the regex match?
-                end = m.string[m.end():] if keep_end else ""        #keep text after the regex match?
-                text=start+end                                      #remove the matching text, i.e. omit m.string[m.start():m.end()]
-                m=re.search(m.re.pattern,text)                      #recurse until no matches
+            if s:
+                regexpattern=regularize(s) #get regex-safe version of pattern 
+                m=re.search(regexpattern,text)
+                while m:
+                    start = m.string[:m.start()] if keep_start else ""  #keep text before the regex match?
+                    end = m.string[m.end():] if keep_end else ""        #keep text after the regex match?
+                    text=start+end                                      #remove the matching text, i.e. omit m.string[m.start():m.end()]
+                    m=re.search(m.re.pattern,text)                      #recurse until no matches
     return text
 
 
@@ -206,6 +207,8 @@ class TestStringMethods(unittest.TestCase):
     
     def test_tail_text(self):
         #print("TEST: (replacement) deletetext in 'keep-end' mode (false, true)")
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "",                                 False, True))    # Null pattern
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "|",                                False, True))    # Bare delimiter
         self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "foobar",                           False, True))    # No removal
         self.assertEqual("!",                   deletetext("PUBG | Play Pals!",     "Play Pals",                        False, True))    # Normal removal
         self.assertEqual("!",                   deletetext("PUBG | Play Pals!",     "Pals|Play",                        False, True))    # Multiple removal
@@ -223,6 +226,8 @@ class TestStringMethods(unittest.TestCase):
     
     def test_strip_text(self):
         #print("TEST: (replacement) deletetext in 'strip' or 'keep-start' mode (true, false)")
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "",                                 True, False))    # Null pattern
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "|",                                True, False))    # Bare delimiter
         self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "foobar",                           True, False))    # No removal
         self.assertEqual("PUBG | ",             deletetext("PUBG | Play Pals!",     "Play Pals",                        True, False))    # Normal removal
         self.assertEqual("PUBG | ",             deletetext("PUBG | Play Pals!",     "Pals|Play",                        True, False))    # Multiple removal
@@ -240,6 +245,8 @@ class TestStringMethods(unittest.TestCase):
 
     def test_remove_text(self):
         #print("TEST: (replacement) deletetext in 'remove' or 'keep-all' mode (true, true)")
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "",                                 True, True))     # Null pattern
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "|",                                True, True))     # Bare delimiter
         self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "foobar",                           True, True))     # No removal
         self.assertEqual("PUBG | !",            deletetext("PUBG | Play Pals!",     "Play Pals",                        True, True))     # Normal removal
         self.assertEqual("PUBG |  !",           deletetext("PUBG | Play Pals!",     "Pals|Play",                        True, True))     # Multiple removal
@@ -272,6 +279,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertListEqual(['A?', 'B'],   split_delimiter_escape('A??+B', '+', '?'))      # Escape the escape character
         self.assertListEqual(['A?+B'],      split_delimiter_escape('A???+B', '+', '?'))     # Three escapes becomes ?? ?+ becomes ?+
         self.assertListEqual(['A?B'],       split_delimiter_escape('A?B', '+', '?'))        # Escape character remains when preceeding neither delimiter nor escape character
+        self.assertListEqual(['',''],       split_delimiter_escape('+', '+', '?'))          # Bare delimiter
+        self.assertListEqual(['?'],         split_delimiter_escape('?', '+', '?'))          # Bare escape character
                                                                                         
         self.assertListEqual([''],          split_delimiter_escape('', '+', '\\'))          # Repeat above tests using \ as escape character,
         self.assertListEqual(['A', 'B'],    split_delimiter_escape('A+B', '+', '\\'))       #  which gets messy if you're not using raw strings
@@ -280,8 +289,9 @@ class TestStringMethods(unittest.TestCase):
         self.assertListEqual(['A\\+B'],     split_delimiter_escape('A\\\\\\+B', '+', '\\'))     
         self.assertListEqual([r'A\+B'],     split_delimiter_escape(r'A\\\+B', '+', '\\'))   # Note: identical to above. Note: can't do r'\' for last term; raw strings can't end in backslashes.
         self.assertListEqual(['A\\B'],      split_delimiter_escape('A\\B', '+', '\\'))
+        self.assertListEqual(['',''],       split_delimiter_escape('+', '+', '\\'))
+        self.assertListEqual(['\\'],        split_delimiter_escape('\\', '+', '\\'))
         
-               
   
 if __name__ == '__main__':
     unittest.main()
