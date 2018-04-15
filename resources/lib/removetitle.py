@@ -205,6 +205,25 @@ class TestStringMethods(unittest.TestCase):
         #self.assertEqual("PUBG |  ls!",         removetitle("PUBG | Play Pals!", "regex(P(l)(ay))|Pa"))             # Multiple removal, multiple regex         #FAIL see Problem 2
         #self.assertEqual("PUBG |  !",           removetitle("PUBG | Play Pals!", "regex((P((l|a)(a|l))(y|s)))"))    # Regex removal with (escaped) delimiters  #FAIL see Problem 1
     
+    def test_null_text(self):
+        #print("TEST: (replacement) deletetext in 'null' mode (false, false)")
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "",                                 False, False))    # Null pattern
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "|",                                False, False))    # Bare delimiter
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "foobar",                           False, False))    # No removal
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "Play Pals",                        False, False))    # Normal removal
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "Pals|Play",                        False, False))    # Multiple removal
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     " \| Play Pals",                    False, False))    # Escaped delimiter removal
+        self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "...Play",                          False, False))    # Not non-regex removal 
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "regex(...Play)",                   False, False))    # Regex removal
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "regex((P(l)(ay)))|Pa",             False, False))    # Multiple removal, multi-in-one regex      
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "regex(P(l))|ay",                   False, False))    # Multiple removal, multiple regex
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "regex(P((l\|a)(a\|l))(y\|s))",     False, False))    # Regex removal with delimiters
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "regex(\\\\\\|)",                   False, False))    # Regex removal of escaped delimier / special regex character
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     r"regex(\\\|)",                     False, False))    # Note: identical to above.
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "P",                                False, False))    # Multi-match
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "PUBG",                             False, False))    # Start of string
+        self.assertEqual("",                    deletetext("PUBG | Play Pals!",     "!",                                False, False))    # End of string 
+    
     def test_tail_text(self):
         #print("TEST: (replacement) deletetext in 'keep-end' mode (false, true)")
         self.assertEqual("PUBG | Play Pals!",   deletetext("PUBG | Play Pals!",     "",                                 False, True))    # Null pattern
