@@ -102,9 +102,8 @@ def striptitle(title, striptitle):
 #                        88                                                                                     #
 #                        dP                                                                                     #
 #################################################################################################################   
+
 # Modified from https://stackoverflow.com/a/46547822/6739402
-#   which is modified from https://stackoverflow.com/a/21882672/6739402
-#       which is modified from https://stackoverflow.com/a/18092547/6739402
 def split_delimiter_escape(string: str, delimiter: str, escape: str) -> [str]:
     result = []
     current_element = []
@@ -114,10 +113,7 @@ def split_delimiter_escape(string: str, delimiter: str, escape: str) -> [str]:
             try:
                 next_character = next(iterator)
                 if next_character != escape and next_character != delimiter:
-                    # Do not copy the escape character if it is escaping itself.
-                    # Do not copy the escape character if it escaping a delimiter.
-                    # Do copy the escape character otherwise.
-                    current_element.append(escape)
+                    current_element.append(escape)  # Copy the escape character unless it is escaping itself or a delimiter
                 current_element.append(next_character)
             except StopIteration:
                 current_element.append(escape)
@@ -128,12 +124,10 @@ def split_delimiter_escape(string: str, delimiter: str, escape: str) -> [str]:
         else:
             current_element.append(character)
     result.append(''.join(current_element))
-    #print(string, '\t', result)
     return result
 
 #Returns pattern suitable for using in regex search
-#Strips "regex(" and ")" from patterns marked that way
-#Otherwise, returns pattern with special characters escaped 
+#Strips "regex(" and ")" from patterns marked that way, otherwise escapes special characters
 def regularize(pattern: str) -> str:
     if pattern[:6] == 'regex(':
         if pattern[-1] == ')':
@@ -147,10 +141,12 @@ def regularize(pattern: str) -> str:
 
 
 # Supports escaped delimiters as literal characters
-# Supports regex using the delimiter character (it must initially be escaped)
+# Supports any valid regexes, including ones that use the delimiter character (it must initially be escaped)
 # Only treats patterns as regex if properly encased in "regex()" (see regularize)
-# Supports any valid regex expression, not merely a single capture group without | characters
-# Supports keeping all nonmatching text, text preceeding match, or text following match. (Or no text at all.)
+# USAGE:
+# "Remove" - keeping all nonmatching text - true, true
+# "Strip" - keeping all preceeding text - true, false
+# "Inverted strip" - keeping all following text - false, true
 def deletetext(text: str, pattern: str, keep_start: bool, keep_end: bool) -> str:
     if pattern:
         splitpattern=split_delimiter_escape(pattern, '|', '\\') #splits pattern on | using \ as escape character        
