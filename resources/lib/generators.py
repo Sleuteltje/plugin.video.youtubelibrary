@@ -772,6 +772,7 @@ def regularize(pattern):
 # Supports escaped delimiters as literal characters
 # Supports any valid regexes, including ones that use the delimiter character (it must initially be escaped)
 # Only treats patterns as regex if properly encased in "regex()" (see regularize)
+# USAGE: 
 # "Remove" - keeping all nonmatching text - true, true
 # "Strip" - keeping all preceeding text - true, false
 # "Inverted strip" - keeping all following text - false, true
@@ -904,13 +905,12 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     
      
     if usefilters is True:
-        info['title'] = deletetext(info['title'], settings.find('removetitle').text, True, True)
-        info['title'] = deletetext(info['title'], settings.find('striptitle').text, True, False)
-        info['description'] = deletetext(info['description'], settings.find('removedescription').text, True, True)
-        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, True, False)    
-                
-                
-
+        info['title'] = deletetext(info['title'], settings.find('removetitle').text, True, True)    #removetitle
+        info['title'] = deletetext(info['title'], settings.find('striptitle').text, True, False)    #striptitle
+        info['description'] = deletetext(info['description'], settings.find('removedescription').text, True, True)  #removedescription
+        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, True, False)  #stripdescription
+        #TODO: add option for inverse-strip title
+        #TODO: add option for inverse-strip description
    
    
     #Grab the best possible thumbnail
