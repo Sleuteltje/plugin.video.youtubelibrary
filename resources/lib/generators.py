@@ -775,19 +775,19 @@ def regularize(pattern):
 # USAGE: 
 # "Remove" - keeping all nonmatching text - true, true
 # "Strip" - keeping all preceeding text - true, false
-# "Inverted strip" - keeping all following text - false, true
+# "Skip" - keeping all following text - false, true
 def deletetext(text, pattern, keep_start, keep_end):
     if pattern:
         splitpattern=split_delimiter_escape(pattern, '|', '\\') #splits pattern on | using \ as escape character        
         for s in splitpattern:
             if s:
                 regexpattern=regularize(s) #get regex-safe version of pattern 
-                m=re.search(regexpattern,text)
+                m=re.search(regexpattern,text,flags=re.I|re.U|re.M)
                 while m:
                     start = m.string[:m.start()] if keep_start else ""  #keep text before the regex match?
                     end = m.string[m.end():] if keep_end else ""        #keep text after the regex match?
                     text=start+end                                      #remove the matching text, i.e. omit m.string[m.start():m.end()]
-                    m=re.search(m.re.pattern,text)                      #recurse until no matches
+                    m=re.search(m.re.pattern,text,flags=re.I|re.U|re.M) #recurse until no matches
     return text
 
 ## Movies
@@ -909,8 +909,8 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
         info['title'] = deletetext(info['title'], settings.find('striptitle').text, True, False)    #striptitle
         info['description'] = deletetext(info['description'], settings.find('removedescription').text, True, True)  #removedescription
         info['description'] = deletetext(info['description'], settings.find('stripdescription').text, True, False)  #stripdescription
-        #TODO: add option for inverse-strip title
-        #TODO: add option for inverse-strip description
+        #TODO: add option for skiptitle
+        #TODO: add option for skipdescription
    
    
     #Grab the best possible thumbnail
