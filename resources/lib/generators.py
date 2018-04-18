@@ -905,11 +905,11 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     
      
     if usefilters is True:
-        info['title'] = deletetext(info['title'], settings.find('removetitle').text, True, True)    #removetitle
-        info['title'] = deletetext(info['title'], settings.find('striptitle').text, True, False)    #striptitle
-        info['description'] = deletetext(info['description'], settings.find('removedescription').text, True, True)  #removedescription
-        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, True, False)  #stripdescription
+        info['title'] = deletetext(info['title'], settings.find('removetitle').text, keep_start=True, keep_end=True)    #removetitle
+        info['title'] = deletetext(info['title'], settings.find('striptitle').text, keep_start=True, keep_end=False)    #striptitle
         #TODO: add option for skiptitle
+        info['description'] = deletetext(info['description'], settings.find('removedescription').text, keep_start=True, keep_end=True)  #removedescription
+        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, keep_start=True, keep_end=False)  #stripdescription
         #TODO: add option for skipdescription
    
    
