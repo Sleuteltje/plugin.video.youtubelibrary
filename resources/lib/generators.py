@@ -480,7 +480,7 @@ def remove_extra_spaces(text):
     while '  ' in text:
         text = text.replace('  ', ' ')
     return text.strip(' \t\n\r"\'')
-        
+                      
     
 def get_hardcoded(setting, settings, vid):
     if settings.find(setting).text == 'hardcoded':
@@ -732,86 +732,63 @@ def write_strm(name, fold, videoid, show=None, season=None, episode=None, startp
 
         
 #### FILTERS ####
-def removetitle(title, removetitle):
-    if removetitle == None:
-        removetitle = ''
-    if len(removetitle) > 0:
-        #See if there are multiple lines
-        if '|' in removetitle:
-            strip = removetitle.split('|')
-            for s in strip:
-                #Check if we should do regex
-                r = reg(s, title)
-                if r is not None:
-                    s = r
-                if s in title:
-                    title = title.replace(s, '') #Remove this line from the title
-        else:
-            #Check if this is a regex var of what should be removed
-            rem = reg(removetitle, title)
-            if rem is not None:
-                removetitle = rem #Regex was succesfull, set removetitle to the found string so it can be removed as normal
-            title = re.sub(removetitle, '', title, flags=re.IGNORECASE)
-            #if removetitle in title:
-                #title = title.replace(removetitle, '')
-    return title
 
-def striptitle(title, striptitle):
-    if striptitle == None:
-        striptitle = ''
-    if len(striptitle) > 0:
-        #See if there are multiple lines
-        if '|' in striptitle:
-            strip = striptitle.split('|')
-            for s in strip:
-                if s in title:
-                    title = title[:title.index(s)] #Strip everything to the point where the line was found
+# Modified from https://stackoverflow.com/a/46547822/6739402
+def split_delimiter_escape(string, delimiter, escape):
+    result = []
+    current_element = []
+    iterator = iter(string)
+    for character in iterator:
+        if character == escape:
+            try:
+                next_character = next(iterator)
+                if next_character != escape and next_character != delimiter:                   
+                    current_element.append(escape)  # Copy the escape character unless it is escaping itself or a delimiter
+                current_element.append(next_character)
+            except StopIteration:
+                current_element.append(escape)
+        elif character == delimiter:
+            # split! (add current to the list and reset it)
+            result.append(''.join(current_element))
+            current_element = []
         else:
-            #Check if this is a regex var of what should be removed
-            rem = reg(title, striptitle)
-            if rem is not None:
-                striptitle = rem #Regex was succesfull, set striptitle to the found string so it can be stripped as normal
-            if striptitle in title:
-                title = title[:title.index(striptitle)] #Strip everything to the point where the line was found
-    return title
+            current_element.append(character)
+    result.append(''.join(current_element))
+    return result
 
-def removedescription(description, removedescription):
-    if removedescription == None:
-        removedescription = ''
-    if len(removedescription) > 0:
-        #See if there are multiple lines
-        if '|' in removedescription:
-            strip = removedescription.split('|')
-            for s in strip:
-                if s in description:
-                    description = description.replace(s, '') #Remove this line from the description
-        else:
-            #Check if this is a regex var of what should be removed
-            rem = reg(description, removedescription)
-            if rem is not None:
-                removedescription = rem #Regex was succesfull, set removedescription to the found string so it can be removed as normal
-            if removedescription in description:
-                description = description.replace(removedescription, '')
-    return description
+#Returns pattern suitable for using in regex search
+#Strips "regex(" and ")" from patterns marked that way, otherwise escapes special characters
+def regularize(pattern):
+    if pattern[:6] == 'regex(':
+        if pattern[-1] == ')':
+            return pattern[6:-1]    #substring is already regex-compatible, just return it
+        else: 
+            dev.log("Found 'Regex('' without closing ')' - did the user forget to escape a '|'?")
+            return re.escape(pattern) #don't want to return nothing, so treat it literally
+    else:
+        #pattern was not already structured for regex and must be sanitized before use
+        return re.escape(pattern)
 
-def stripdescription(description, stripdescription):
-    if stripdescription == None:
-        stripdescription = ''
-    if len(stripdescription) > 0:
-        #See if there are multiple lines
-        if '|' in stripdescription:
-            strip = stripdescription.split('|')
-            for s in strip:
-                if s in description:
-                    description = description[:description.index(s)] #Strip everything to the point where the line was found
-        else:
-            #Check if this is a regex var of what should be removed
-            rem = reg(description, stripdescription)
-            if rem is not None:
-                stripdescription = rem #Regex was succesfull, set stripdescription to the found string so it can be stripped as normal
-            if stripdescription in description:
-                description = description[:description.index(stripdescription)] #Strip everything to the point where the line was found
-    return description
+# Supports escaped delimiters as literal characters
+# Supports any valid regexes, including ones that use the delimiter character (it must initially be escaped)
+# Only treats patterns as regex if properly encased in "regex()" (see regularize)
+# USAGE: 
+# "Remove" - keeping all nonmatching text - true, true
+# "Strip" - keeping all preceeding text - true, false
+# "Skip" - keeping all following text - false, true
+def deletetext(text, pattern, keep_start, keep_end):
+    if pattern:
+        splitpattern=split_delimiter_escape(pattern, '|', '\\') #splits pattern on | using \ as escape character        
+        for s in splitpattern:
+            if s:
+                regexpattern=regularize(s) #get regex-safe version of pattern 
+                m=re.search(regexpattern,text,flags=re.I|re.U|re.M)
+                while m:
+                    start = m.string[:m.start()] if keep_start else ""  #keep text before the regex match?
+                    end = m.string[m.end():] if keep_end else ""        #keep text after the regex match?
+                    text=start+end                                      #remove the matching text, i.e. omit m.string[m.start():m.end()]
+                    m=re.search(m.re.pattern,text,flags=re.I|re.U|re.M) #recurse until no matches
+    return text
 
 ## Movies
 #Strip unwanted text from the text
@@ -928,13 +905,12 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     
      
     if usefilters is True:
-        info['title'] = removetitle(info['title'], settings.find('removetitle').text)
-        info['title'] = striptitle(info['title'], settings.find('striptitle').text)
-        info['description'] = removedescription(info['description'], settings.find('removedescription').text)
-        info['description'] = stripdescription(info['description'], settings.find('stripdescription').text)    
-                
-                
-
+        info['title'] = deletetext(info['title'], settings.find('removetitle').text, keep_start=True, keep_end=True)    #removetitle
+        info['title'] = deletetext(info['title'], settings.find('striptitle').text, keep_start=True, keep_end=False)    #striptitle
+        #TODO: add option for skiptitle
+        info['description'] = deletetext(info['description'], settings.find('removedescription').text, keep_start=True, keep_end=True)  #removedescription
+        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, keep_start=True, keep_end=False)  #stripdescription
+        #TODO: add option for skipdescription
    
    
     #Grab the best possible thumbnail
