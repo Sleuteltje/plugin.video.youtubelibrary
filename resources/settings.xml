@@ -33,6 +33,8 @@
 		<setting id="default_removedescription" label="30311" type="text" default="" />
 		<setting id="default_striptitle" label="30312" type="text" default="" />
 		<setting id="default_removetitle" label="30313" type="text" default="" />
+        <setting id="default_skipdescription" label="30320" type="text" default="" />
+        <setting id="default_skiptitle" label="30321" type="text" default="" />
         <setting id="default_generate_nfo" label="30302" type="bool" default="true" />
         <setting id="default_onlygrab" label="30315" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 12 hours" />
@@ -81,6 +83,8 @@
 		<setting id="default_musicvideo_removedescription" label="30311" type="text" default="" />
 		<setting id="default_musicvideo_striptitle" label="30312" type="text" default="" />
 		<setting id="default_musicvideo_removetitle" label="30313" type="text" default="" />
+		<setting id="default_musicvideo_skipdescription" label="30320" type="text" default="" />
+        <setting id="default_musicvideo_skiptitle" label="30321" type="text" default="" />
         <setting id="default_musicvideo_generate_nfo" label="30302" type="bool" default="true" />
         <setting id="default_musicvideo_onlygrab" label="30315" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_musicvideo_updateevery" label="30316" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />
@@ -106,6 +110,8 @@
 		<setting id="default_movies_removedescription" label="30511" type="text" default="" />
 		<setting id="default_movies_striptitle" label="30512" type="text" default="" />
 		<setting id="default_movies_removetitle" label="30513" type="text" default="" />
+		<setting id="default_movies_skipdescription" label="30524" type="text" default="" />
+        <setting id="default_movies_skiptitle" label="30525" type="text" default="" />
         <setting id="default_movies_generate_nfo" label="30502" type="bool" default="true" />
         <setting id="default_movies_onlygrab" label="30515" type="select" values="0|1|50|100|250|500|1000|5000|10000" default="5000" />
 		<setting id="default_movies_updateevery" label="30516" type="select" values="every 4 hours|every 8 hours|every 12 hours|every 24 hours|every 168 hours|every day|every sunday|every monday|every tuesday|every wednesday|every thursday|every friday|every saturday" default="every 168 hours" />

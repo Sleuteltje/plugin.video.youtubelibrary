@@ -928,12 +928,12 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     
      
     if usefilters is True:
-        info['title'] = removetitle(info['title'], settings.find('removetitle').text)
-        info['title'] = striptitle(info['title'], settings.find('striptitle').text)
-        info['description'] = removedescription(info['description'], settings.find('removedescription').text)
-        info['description'] = stripdescription(info['description'], settings.find('stripdescription').text)    
-                
-                
+        info['title'] = deletetext(info['title'], settings.find('removetitle').text, keep_start=True, keep_end=True)    #removetitle
+        info['title'] = deletetext(info['title'], settings.find('striptitle').text, keep_start=True, keep_end=False)    #striptitle
+        info['title'] = deletetext(info['title'], settings.find('skiptitle').text, keep_start=False, keep_end=True)     #skiptitle
+        info['description'] = deletetext(info['description'], settings.find('removedescription').text, keep_start=True, keep_end=True)  #removedescription
+        info['description'] = deletetext(info['description'], settings.find('stripdescription').text, keep_start=True, keep_end=False)  #stripdescription
+        info['description'] = deletetext(info['description'], settings.find('skipdescription').text, keep_start=False, keep_end=True)   #skipdescription
 
    
    
@@ -1417,7 +1417,7 @@ def download_img(thumbUrl, filename, overwrite=False):
             xbmcvfs.copy(target, filename)
             xbmcvfs.delete(target)
             
-    except Exception, (exc):
+    except Exception(exc):
         xbmcgui.Dialog().ok('ERROR', 'Could not create image!')
         dev.log("ERROR: Could not create file: '%s'. Error message: '%s'" %(str(filename), str(exc)))
         

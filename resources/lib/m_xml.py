@@ -136,8 +136,10 @@ def create_xml(file='settings.xml'):
             #Strip Stuff from NFO information
             'striptitle'            : 'Brought to you by',
             'removetitle'       : 'Example Youtube Channels|Always annoying part of title',
+            'skiptitle'            : 'Playlist Name - ',
             'stripdescription' : 'See our other channels|Subscribe to our channel',
             'removedescription' : 'Brought to you by our sponsors',
+            'skipdescription' : 'Hey guys, ',
             #Scan Settings
             'lastvideoId'       : 'Wixi28loswo',
             'scansince'        : '29 jun 2015 18:23:21'
@@ -251,8 +253,10 @@ def api_xml_build_new_playlist(api, type=''):
             #NFO information
             'striptitle'        : api['striptitle'],
             'removetitle'       : api['removetitle'],
+            'skiptitle'         : api['skiptitle'],
             'stripdescription' : api['stripdescription'],
             'removedescription' : api['removedescription'],
+            'skipdescription' : api['skipdescription'],
             #Scan Settings
             'lastvideoId'       : '',
         }
@@ -344,6 +348,8 @@ def xml_build_new_playlist(id, type=''):
     bannerTv = brand['image']['bannerImageUrl']
     if 'bannerTvImageUrl' in brand['image']:
         bannerTv = brand['image']['bannerTvImageUrl']
+        
+    
 
 
     #### Build new playlist (tv, musicvideo) ###
@@ -362,8 +368,10 @@ def xml_build_new_playlist(id, type=''):
         excludewords = dev.getAddonSetting("default_excludewords", '')
         stripdescription = dev.getAddonSetting("default_stripdescription", '')
         removedescription = dev.getAddonSetting("default_removedescription", '')
+        skipdescription = dev.getAddonSetting("default_skipdescription", '')
         striptitle = dev.getAddonSetting("default_striptitle", '')
         removetitle = dev.getAddonSetting("default_removetitle", '')
+        skiptitle = dev.getAddonSetting("default_skiptitle", '')
         updateevery = dev.getAddonSetting("default_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_updateat", '23:59')
         update_gmt = dev.getAddonSetting("default_update_gmt", '99')
@@ -405,10 +413,12 @@ def xml_build_new_playlist(id, type=''):
                 #NFO information
                 'season'            : season,
                 'episode'           : episode,
-                'striptitle'            : striptitle,
+                'striptitle'        : striptitle,
                 'removetitle'       : removetitle,
-                'stripdescription' : stripdescription,
+                'skiptitle'         : skiptitle,
+                'stripdescription'  : stripdescription,
                 'removedescription' : removedescription,
+                'skipdescription'   : skipdescription,
                 #Scan Settings
                 'lastvideoId'       : '',
                 'reverse'           : '0',
@@ -432,8 +442,10 @@ def xml_build_new_playlist(id, type=''):
         excludewords = dev.getAddonSetting("default_movies_excludewords", '')
         stripdescription = dev.getAddonSetting("default_movies_stripdescription", '')
         removedescription = dev.getAddonSetting("default_movies_removedescription", '')
+        skipdescription = dev.getAddonSetting("default_movies_skipdescription", '')
         striptitle = dev.getAddonSetting("default_movies_striptitle", '')
         removetitle = dev.getAddonSetting("default_movies_removetitle", '')
+        skiptitle = dev.getAddonSetting("default_movies_skiptitle", '')
         updateevery = dev.getAddonSetting("default_movies_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_movies_updateat", '23:59')
         update_gmt = dev.getAddonSetting("default_movies_update_gmt", '99')
@@ -481,8 +493,10 @@ def xml_build_new_playlist(id, type=''):
                 'smart_search'          : smart_search,
                 'striptitle'            : striptitle,
                 'removetitle'       : removetitle,
+                'skiptitle'            : skiptitle,
                 'stripdescription' : stripdescription,
                 'removedescription' : removedescription,
+                'skipdescription' : skipdescription,
                 #Scan Settings
                 'lastvideoId'       : '',
                 'reverse'           : '',
@@ -524,12 +538,14 @@ def xml_build_new_playlist(id, type=''):
         excludewords = dev.getAddonSetting("default_musicvideo_excludewords", '')
         stripdescription = dev.getAddonSetting("default_musicvideo_stripdescription", '')
         removedescription = dev.getAddonSetting("default_musicvideo_removedescription", '')
+        skipdescription = dev.getAddonSetting("default_musicvideo_skipdescription", '')
         striptitle = dev.getAddonSetting("default_musicvideo_striptitle", '')
         removetitle = dev.getAddonSetting("default_musicvideo_removetitle", '')
+        skiptitle = dev.getAddonSetting("default_musicvideo_skiptitle", '')
         updateevery = dev.getAddonSetting("default_musicvideo_updateevery", 'every 12 hours')
         updateat = dev.getAddonSetting("default_musicvideo_updateat", '23:59')
         update_gmt = dev.getAddonSetting("default_musicvideo_update_gmt", '99')
-        download_videos = dev.getAddonSetting("default_download_videos", '0')
+        download_videos = dev.getAddonSetting("default_download_videos", '0')   #this is probably a bug, this should probably be default_musicvideo_download_videos
         
         #Build the playlist
         playlist = {
@@ -586,8 +602,10 @@ def xml_build_new_playlist(id, type=''):
                 #NFO information
                 'striptitle'            : striptitle,
                 'removetitle'       : removetitle,
+                'skiptitle'            : skiptitle,
                 'stripdescription' : stripdescription,
                 'removedescription' : removedescription,
+                'skipdescription' : skipdescription,
                 #Scan Settings
                 'lastvideoId'       : '',
                 'reverse'           : '',

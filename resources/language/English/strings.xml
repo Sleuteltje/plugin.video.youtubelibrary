@@ -35,13 +35,15 @@
     <string id="30310">Strip Description</string>
     <string id="30311">Remove Description</string>
     <string id="30312">Strip Title</string>
-    <string id="30313">Remove Title</string>
+    <string id="30313">Remove Title</string>   
     <string id="30314">Tags</string>
     <string id="30315">Only grab the last X videos</string>
     <string id="30316">Update every</string>
     <string id="30317">Update at HH:MM</string>
     <string id="30318">Timezone</string>
     <string id="30319">Download Videos</string>
+    <string id="30320">Skip Description</string>
+    <string id="30321">Skip Title</string>
     <!--Default MusicVideo Settings-->
     <string id="30401">Default settings for Music Videos</string>
     <string id="30402">Generate NFO files</string>
@@ -98,7 +100,8 @@
     <string id="30521">Smart Search</string>
     <string id="30522">Reverse</string>
     <string id="30523">Download Videos</string>
-
+    <string id="30524">Skip Description</string>
+    <string id="30525">Skip Title</string>
 	
 	
 	
