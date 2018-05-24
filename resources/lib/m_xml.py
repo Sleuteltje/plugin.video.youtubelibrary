@@ -348,273 +348,207 @@ def xml_build_new_playlist(id, type=''):
     bannerTv = brand['image']['bannerImageUrl']
     if 'bannerTvImageUrl' in brand['image']:
         bannerTv = brand['image']['bannerTvImageUrl']
-        
+
+              
+    # Common initialization from default settings
+    playlist = {
+        'id'        : id,
+        'enabled'   : 'no',
+        'settings'  : default_settings(type)
+    }
     
+    if (playlist['settings'] == False):
+        return False
+    
+    # Common info from video
+    playlist['settings']['title']       = title
+    playlist['settings']['channel']     = snippet['title']
+    playlist['settings']['channelId']   = res['channelId']
+    playlist['settings']['description'] = description
+    playlist['settings']['published']   = snippet['publishedAt']
+    playlist['settings']['thumb']       = thumbnail
+    playlist['settings']['fanart']      = bannerTv
+    playlist['settings']['banner']      = brand['image']['bannerImageUrl']
+    
+    return playlist
 
 
-    #### Build new playlist (tv, musicvideo) ###
-    if type=='' or type=='tv':
-        ##Get the default settings from the addon settings
-        writenfo = 'Yes'
-        if dev.getAddonSetting("default_generate_nfo") == "false":
-            writenfo = 'no'
-        genre = dev.getAddonSetting("default_genre", '')
-        tags = dev.getAddonSetting("default_tags", 'Youtube')
-        season = dev.getAddonSetting("default_season", 'year')
-        episode = dev.getAddonSetting("default_episode", 'default')
-        minlength = dev.getAddonSetting("default_minlength", '')
-        maxlength = dev.getAddonSetting("default_maxlength", '')
-        onlyinclude = dev.getAddonSetting("default_onlyinclude", '')
-        excludewords = dev.getAddonSetting("default_excludewords", '')
-        stripdescription = dev.getAddonSetting("default_stripdescription", '')
-        removedescription = dev.getAddonSetting("default_removedescription", '')
-        skipdescription = dev.getAddonSetting("default_skipdescription", '')
-        striptitle = dev.getAddonSetting("default_striptitle", '')
-        removetitle = dev.getAddonSetting("default_removetitle", '')
-        skiptitle = dev.getAddonSetting("default_skiptitle", '')
-        updateevery = dev.getAddonSetting("default_updateevery", 'every 12 hours')
-        updateat = dev.getAddonSetting("default_updateat", '23:59')
-        update_gmt = dev.getAddonSetting("default_update_gmt", '99')
-        download_videos = dev.getAddonSetting("default_download_videos", '0')
-        
-        
-        #Build the playlist
-        playlist = {
-            'id'    : id,
-            'enabled'      : 'no',
-            'settings'      : {
-                'type'                  : 'TV',
-                'title'                   : title,
-                'channel'            : snippet['title'],
-                'channelId' : res['channelId'],
-                'description'        : description,
-                'genre'                : genre,
-                'tags'                  : tags,
-                'published'          : snippet['publishedAt'],
-                #Art
-                'thumb'               : thumbnail,
-                'fanart'                : bannerTv,
-                'banner'              : brand['image']['bannerImageUrl'],
-                'epsownfanart'    : 'No',
-                # STRM & NFO Settings
-                'writenfo'             : writenfo,
-                'delete'                : '',
-                'updateevery'       : updateevery,
-                'updateat'        : updateat,
-                'update_gmt'        : update_gmt,
-                'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
-                'keepvideos'        : '',
-                'overwritefolder'   : '',
-                #Filters
-                'minlength'         : minlength,
-                'maxlength'         : maxlength,
-                'excludewords'    : excludewords,
-                'onlyinclude'       : onlyinclude,
-                #NFO information
-                'season'            : season,
-                'episode'           : episode,
-                'striptitle'        : striptitle,
-                'removetitle'       : removetitle,
-                'skiptitle'         : skiptitle,
-                'stripdescription'  : stripdescription,
-                'removedescription' : removedescription,
-                'skipdescription'   : skipdescription,
-                #Scan Settings
-                'lastvideoId'       : '',
-                'reverse'           : '0',
-                'download_videos'    : download_videos,
-            }
+# Returns a dictionary containing the default settings for the specified type
+# Returns False if type is unrecognized
+def default_settings(type=''):
+    default_settings = False
+    # A default value of `None` means that the setting is ignored completely during validation
+    # A default value of '' means that the setting will be handled during validation and will default to an empty element (<somesetting />)
+    if type=='' or type=='tv':    
+        default_settings = {
+            'type'              : 'TV',    
+            'title'             : None,
+            'channel'           : None,
+            'channelId'         : None,
+            'description'       : None,
+            'genre'             : dev.getAddonSetting("default_genre", ''),
+            'tags'              : dev.getAddonSetting("default_tags", 'Youtube'),
+            'published'         : None,
+            #Art
+            'thumb'             : None,
+            'fanart'            : None,
+            'banner'            : None,
+            'epsownfanart'      : 'No',     #uppercase in m_xml    # QUESTION: Should this setting be removed, since it isn't actually used anywhere?  --Tofof 2018-04
+            # STRM & NFO Settings
+            'writenfo'          : "no" if dev.getAddonSetting("default_generate_nfo") == "false" else "Yes",    # QUESTION: Why is this converting between 'Yes/no' and 'true/false'? Also note mixed capitalizations. See original in m_xml.xml_build_new_playlist() --Tofof 2018-04
+            'delete'            : '',
+            'updateevery'       : dev.getAddonSetting("default_updateevery", 'every 12 hours'),
+            'updateat'          : dev.getAddonSetting("default_updateat", '23:59'),
+            'update_gmt'        : dev.getAddonSetting("default_update_gmt", '99'),
+            'onlygrab'          : dev.getAddonSetting("default_onlygrab", ''),
+            'keepvideos'        : '',
+            'overwritefolder'   : '',
+            #Filters      
+            'minlength'         : dev.getAddonSetting("default_minlength", ''),    
+            'maxlength'         : dev.getAddonSetting("default_maxlength", ''),
+            'excludewords'      : dev.getAddonSetting("default_excludewords", ''),
+            'onlyinclude'       : dev.getAddonSetting("default_onlyinclude", ''),
+            #NFO information
+            'season'            : dev.getAddonSetting("default_season", 'year'),
+            'episode'           : dev.getAddonSetting("default_episode", 'default'),
+            'striptitle'        : dev.getAddonSetting("default_striptitle", ''),
+            'removetitle'       : dev.getAddonSetting("default_removetitle", ''),
+            'skiptitle'         : dev.getAddonSetting("default_skiptitle", ''),
+            'stripdescription'  : dev.getAddonSetting("default_stripdescription", ''),
+            'removedescription' : dev.getAddonSetting("default_removedescription", ''),
+            'skipdescription'   : dev.getAddonSetting("default_skipdescription", ''),
+            #Scan Settings
+            'lastvideoId'       : '',
+            'reverse'           : '0',
+            'download_videos'   : dev.getAddonSetting("default_download_videos", '0'),
         }
-        return playlist
     elif type=='movies':
-        ##Get the default settings from the addon settings
-        writenfo = 'Yes'
-        if dev.getAddonSetting("default_movies_generate_nfo") == "false":
-            writenfo = 'no'
-        genre = dev.getAddonSetting("default_movies_genre", '')
-        tags = dev.getAddonSetting("default_movies_tags", 'Youtube')
-        search_imdb = dev.getAddonSetting("default_movies_search_imdb", '2')
-        imdb_match_cutoff = dev.getAddonSetting("default_movies_imdb_match_cutoff", '0.75')
-        use_ytimage = dev.getAddonSetting("default_movies_use_ytimage", '0')
-        minlength = dev.getAddonSetting("default_movies_minlength", '')
-        maxlength = dev.getAddonSetting("default_movies_maxlength", '')
-        onlyinclude = dev.getAddonSetting("default_movies_onlyinclude", '')
-        excludewords = dev.getAddonSetting("default_movies_excludewords", '')
-        stripdescription = dev.getAddonSetting("default_movies_stripdescription", '')
-        removedescription = dev.getAddonSetting("default_movies_removedescription", '')
-        skipdescription = dev.getAddonSetting("default_movies_skipdescription", '')
-        striptitle = dev.getAddonSetting("default_movies_striptitle", '')
-        removetitle = dev.getAddonSetting("default_movies_removetitle", '')
-        skiptitle = dev.getAddonSetting("default_movies_skiptitle", '')
-        updateevery = dev.getAddonSetting("default_movies_updateevery", 'every 12 hours')
-        updateat = dev.getAddonSetting("default_movies_updateat", '23:59')
-        update_gmt = dev.getAddonSetting("default_movies_update_gmt", '99')
-        set = dev.getAddonSetting("default_movies_set", '')
-        smart_search = dev.getAddonSetting("default_movies_smart_search", '1')
-        download_videos = dev.getAddonSetting("default_movies_download_videos", '0')
-        
-        #Build the playlist
-        playlist = {
-            'id'    : id,
-            'enabled'      : 'no',
-            'settings'      : {
-                'type'                  : 'movies',
-                'title'                   : title,
-                'channel'            : snippet['title'],
-                'channelId' : res['channelId'],
-                'description'        : description,
-                'genre'                : genre,
-                'tags'                  : tags,
-                'set'                   : set,
-                'published'          : snippet['publishedAt'],
-                #Art
-                'thumb'               : thumbnail,
-                'fanart'                : bannerTv,
-                'banner'              : brand['image']['bannerImageUrl'],
-                'epsownfanart'    : 'No',
-                # STRM & NFO Settings
-                'writenfo'             : writenfo,
-                'delete'                : '',
-                'updateevery'       : updateevery,
-                'updateat'        : updateat,
-                'update_gmt'        : update_gmt,
-                'onlygrab'          : dev.getAddonSetting("default_movies_onlygrab", ''),
-                'keepvideos'        : '',
-                'overwritefolder'   : '',
-                #Filters
-                'minlength'         : minlength,
-                'maxlength'         : maxlength,
-                'excludewords'    : excludewords,
-                'onlyinclude'       : onlyinclude,
-                #NFO information
-                'search_imdb'            : search_imdb,
-                'imdb_match_cutoff'           : imdb_match_cutoff,
-                'use_ytimage'           : use_ytimage,
-                'smart_search'          : smart_search,
-                'striptitle'            : striptitle,
-                'removetitle'       : removetitle,
-                'skiptitle'            : skiptitle,
-                'stripdescription' : stripdescription,
-                'removedescription' : removedescription,
-                'skipdescription' : skipdescription,
-                #Scan Settings
-                'lastvideoId'       : '',
-                'reverse'           : '',
-                'download_videos'           : download_videos,
+       default_settings = {
+            'type'              : 'movies',    
+            'title'             : None,
+            'channel'           : None,
+            'channelId'         : None,
+            'description'       : None,
+            'genre'             : dev.getAddonSetting("default_movies_genre", ''),
+            'tags'              : dev.getAddonSetting("default_movies_tags", 'Youtube'),
+            'set'               : dev.getAddonSetting("default_movies_set", ''),
+            'published'         : None,
+            #Art
+            'thumb'             : None,
+            'fanart'            : None,
+            'banner'            : None,
+            'epsownfanart'      : 'No',         # QUESTION: (As above) Should this be removed?  --Tofof 2018-05
+            # STRM & NFO Settings
+            'writenfo'          : "no" if dev.getAddonSetting("default_movies_generate_nfo") == "false" else "Yes",    # QUESTION: (as above) Why is this converting between 'yes/no' and 'true/false'? --Tofof 2018-05
+            'delete'            : '',
+            'updateevery'       : dev.getAddonSetting("default_movies_updateevery", 'every 12 hours'),
+            'updateat'          : dev.getAddonSetting("default_movies_updateat", '23:59'),
+            'update_gmt'        : dev.getAddonSetting("default_movies_update_gmt", '99'),
+            'onlygrab'          : dev.getAddonSetting("default_movies_onlygrab", ''),
+            'keepvideos'        : '',
+            'overwritefolder'   : '',
+            #Filters      
+            'minlength'         : dev.getAddonSetting("default_movies_minlength", ''),    
+            'maxlength'         : dev.getAddonSetting("default_movies_maxlength", ''),
+            'excludewords'      : dev.getAddonSetting("default_movies_excludewords", ''),
+            'onlyinclude'       : dev.getAddonSetting("default_movies_onlyinclude", ''),
+            #NFO information
+            'search_imdb'       : dev.getAddonSetting("default_movies_search_imdb", '2'),
+            'imdb_match_cutoff' : dev.getAddonSetting("default_movies_imdb_match_cutoff", '0.75'),
+            'use_ytimage'       : dev.getAddonSetting("default_movies_use_ytimage", '0'),
+            'smart_search'      : dev.getAddonSetting("default_movies_smart_search", '1'),
+            'striptitle'        : dev.getAddonSetting("default_movies_striptitle", ''),
+            'removetitle'       : dev.getAddonSetting("default_movies_removetitle", ''),
+            'skiptitle'         : dev.getAddonSetting("default_movies_skiptitle", ''),
+            'stripdescription'  : dev.getAddonSetting("default_movies_stripdescription", ''),
+            'removedescription' : dev.getAddonSetting("default_movies_removedescription", ''),
+            'skipdescription'   : dev.getAddonSetting("default_movies_skipdescription", ''),
+            #Scan Settings
+            'lastvideoId'       : '',
+            'reverse'           : '0',
+            'download_videos'   : dev.getAddonSetting("default_movies_download_videos", '0'),
             }
+    elif type=='musicvideo':
+        default_settings = {
+            'type'              : 'MusicVideo',
+            'title'             : None,
+            'channel'           : None,
+            'channelId'         : None,
+            'description'       : None,
+            'published'         : None,
+            #Library Info
+            'tags'              : dev.getAddonSetting("default_musicvideo_tags", 'Youtube'),
+            'genre'             : dev.getAddonSetting("default_musicvideo_genre", ''),
+            'genre_fallback'    : dev.getAddonSetting("default_musicvideo_genre_fallback", ''),
+            'genre_hardcoded'   : dev.getAddonSetting("default_musicvideo_genre_hardcoded", ''),
+            'artist'            : dev.getAddonSetting("default_musicvideo_artist", ''),
+            'artist_fallback'   : dev.getAddonSetting("default_musicvideo_artist_fallback", ''),
+            'artist_hardcoded'  : dev.getAddonSetting("default_musicvideo_artist_hardcoded", ''),
+            'song_fallback'     : dev.getAddonSetting("default_musicvideo_song_fallback", ''),
+            'album'             : dev.getAddonSetting("default_musicvideo_album", ''),
+            'album_fallback'    : dev.getAddonSetting("default_musicvideo_album_fallback", ''),
+            'album_hardcoded'   : dev.getAddonSetting("default_musicvideo_album_hardcoded", ''),
+            'plot'              : dev.getAddonSetting("default_musicvideo_plot", ''),
+            'plot_fallback'     : dev.getAddonSetting("default_musicvideo_plot_fallback", ''),
+            'plot_hardcoded'    : dev.getAddonSetting("default_musicvideo_plot_hardcoded", ''),
+            'year'              : dev.getAddonSetting("default_musicvideo_year", ''),
+            'year_fallback'     : dev.getAddonSetting("default_musicvideo_year_fallback", ''),
+            'year_hardcoded'    : dev.getAddonSetting("default_musicvideo_year_hardcoded", ''),
+            #Art
+            'thumb'             : None,
+            'fanart'            : None,
+            'banner'            : None,
+            # STRM & NFO Settings
+            'writenfo'          : "no" if dev.getAddonSetting("default_musicvideo_generate_nfo") == "false" else "Yes",    # QUESTION: (as above) Why is this converting between 'yes/no' and 'true/false'? --Tofof 2018-05
+            'updateevery'       : dev.getAddonSetting("default_musicvideo_updateevery", 'every 12 hours'),
+            'updateat'          : dev.getAddonSetting("default_musicvideo_updateat", '23:59'),
+            'update_gmt'        : dev.getAddonSetting("default_musicvideo_update_gmt", '99'),
+            'onlygrab'          : dev.getAddonSetting("default_musicvideo_onlygrab", ''),
+            'delete'            : '',
+            'keepvideos'        : '',
+            'overwritefolder'   : '',
+            #Filters
+            'minlength'         : dev.getAddonSetting("default_musicvideo_minlength", ''),
+            'maxlength'         : dev.getAddonSetting("default_musicvideo_maxlength", ''),
+            'excludewords'      : dev.getAddonSetting("default_musicvideo_excludewords", ''),
+            'onlyinclude'       : dev.getAddonSetting("default_musicvideo_onlyinclude", ''),
+            #Skip
+            'skip_audio'        : dev.getAddonSetting("default_musicvideo_skip_audio", 'false'),
+            'skip_lyrics'       : dev.getAddonSetting("default_musicvideo_skip_lyrics", 'false'),
+            'skip_live'         : dev.getAddonSetting("default_musicvideo_skip_live", 'false'),
+            'skip_albums'       : dev.getAddonSetting("default_musicvideo_skip_albums", 'false'),
+            #NFO information
+            'striptitle'        : dev.getAddonSetting("default_musicvideo_striptitle", ''),
+            'removetitle'       : dev.getAddonSetting("default_musicvideo_removetitle", ''),
+            'skiptitle'         : dev.getAddonSetting("default_musicvideo_skiptitle", ''),
+            'stripdescription'  : dev.getAddonSetting("default_musicvideo_stripdescription", ''),
+            'removedescription' : dev.getAddonSetting("default_musicvideo_removedescription", ''),
+            'skipdescription'   : dev.getAddonSetting("default_musicvideo_skipdescription", ''),
+            #Scan Settings
+            'lastvideoId'       : '',
+            'reverse'           : '',           # QUESTION: Is there a reason this isn't '0' like the other two?  --Tofof 2018-05
+            'download_videos'   : dev.getAddonSetting("default_musicvideo_download_videos", '0'),       # Note: Was 'default_download_videos' in m_xml, expect this was a copy/paste bug  --Tofof 2018-05
         }
-        return playlist
-    if type=='musicvideo':
-        ##Get the default settings from the addon settings
-        writenfo = 'Yes'
-        if dev.getAddonSetting("default_musicvideo_generate_nfo") == "false":
-            writenfo = 'no'
-        genre = dev.getAddonSetting("default_musicvideo_genre", '')
-        genre_fallback = dev.getAddonSetting("default_musicvideo_genre_fallback", '')
-        genre_hardcoded = dev.getAddonSetting("default_musicvideo_genre_hardcoded", '')
-        
-        artist = dev.getAddonSetting("default_musicvideo_artist", '')
-        artist_fallback = dev.getAddonSetting("default_musicvideo_artist_fallback", '')
-        artist_hardcoded = dev.getAddonSetting("default_musicvideo_artist_hardcoded", '')
-        
-        song_fallback = dev.getAddonSetting("default_musicvideo_song_fallback", '')
-        
-        album = dev.getAddonSetting("default_musicvideo_album", '')
-        album_fallback = dev.getAddonSetting("default_musicvideo_album_fallback", '')
-        album_hardcoded = dev.getAddonSetting("default_musicvideo_album_hardcoded", '')
-        
-        plot = dev.getAddonSetting("default_musicvideo_plot", '')
-        plot_fallback = dev.getAddonSetting("default_musicvideo_plot_fallback", '')
-        plot_hardcoded = dev.getAddonSetting("default_musicvideo_plot_hardcoded", '')
-        
-        year = dev.getAddonSetting("default_musicvideo_year", '')
-        year_fallback = dev.getAddonSetting("default_musicvideo_year_fallback", '')
-        year_hardcoded = dev.getAddonSetting("default_musicvideo_year_hardcoded", '')
-        
-        tags = dev.getAddonSetting("default_musicvideo_tags", 'Youtube')
-        minlength = dev.getAddonSetting("default_musicvideo_minlength", '')
-        maxlength = dev.getAddonSetting("default_musicvideo_maxlength", '')
-        onlyinclude = dev.getAddonSetting("default_musicvideo_onlyinclude", '')
-        excludewords = dev.getAddonSetting("default_musicvideo_excludewords", '')
-        stripdescription = dev.getAddonSetting("default_musicvideo_stripdescription", '')
-        removedescription = dev.getAddonSetting("default_musicvideo_removedescription", '')
-        skipdescription = dev.getAddonSetting("default_musicvideo_skipdescription", '')
-        striptitle = dev.getAddonSetting("default_musicvideo_striptitle", '')
-        removetitle = dev.getAddonSetting("default_musicvideo_removetitle", '')
-        skiptitle = dev.getAddonSetting("default_musicvideo_skiptitle", '')
-        updateevery = dev.getAddonSetting("default_musicvideo_updateevery", 'every 12 hours')
-        updateat = dev.getAddonSetting("default_musicvideo_updateat", '23:59')
-        update_gmt = dev.getAddonSetting("default_musicvideo_update_gmt", '99')
-        download_videos = dev.getAddonSetting("default_download_videos", '0')   #this is probably a bug, this should probably be default_musicvideo_download_videos
-        
-        #Build the playlist
-        playlist = {
-            'id'    : id,
-            'enabled'      : 'no',
-            'settings'      : {
-                'type'                  : 'MusicVideo',
-                'title'                   : title,
-                'channel'            : snippet['title'],
-                'channelId' : res['channelId'],
-                'description'        : description,
-                'published'          : snippet['publishedAt'],
-                #Library Info
-                'tags'                  : tags,
-                'genre'                : genre,
-                'genre_fallback'        : genre_fallback,
-                'genre_hardcoded'       : genre_hardcoded,
-                'artist'                : artist,
-                'artist_fallback'       : artist_fallback,
-                'artist_hardcoded'       : artist_hardcoded,
-                'song_fallback'         : song_fallback,
-                'album'                 : album,
-                'album_fallback'        : album_fallback,
-                'album_hardcoded'       : album_hardcoded,
-                'plot'                  : plot,
-                'plot_fallback'         : plot_fallback,
-                'plot_hardcoded'        : plot_hardcoded,
-                'year'                  : year,
-                'year_fallback'         : year_fallback,
-                'year_hardcoded'        : year_hardcoded,
-                #Art
-                'thumb'               : thumbnail,
-                'fanart'                : bannerTv,
-                'banner'              : brand['image']['bannerImageUrl'],
-                # STRM & NFO Settings
-                'writenfo'             : writenfo,
-                'updateevery'       : updateevery,
-                'updateat'        : updateat,
-                'update_gmt'        : update_gmt,
-                'onlygrab'          : dev.getAddonSetting("default_musicvideo_onlygrab", ''),
-                'delete'                : '',
-                'keepvideos'        : '',
-                'overwritefolder'   : '',
-                #Filters
-                'minlength'         : minlength,
-                'maxlength'         : maxlength,
-                'excludewords'    : excludewords,
-                'onlyinclude'       : onlyinclude,
-                #Skip
-                'skip_audio'   : dev.getAddonSetting("default_musicvideo_skip_audio", 'false'),
-                'skip_lyrics'   : dev.getAddonSetting("default_musicvideo_skip_lyrics", 'false'),
-                'skip_live'     : dev.getAddonSetting("default_musicvideo_skip_live", 'false'),
-                'skip_albums'   : dev.getAddonSetting("default_musicvideo_skip_albums", 'false'),
-                #NFO information
-                'striptitle'            : striptitle,
-                'removetitle'       : removetitle,
-                'skiptitle'            : skiptitle,
-                'stripdescription' : stripdescription,
-                'removedescription' : removedescription,
-                'skipdescription' : skipdescription,
-                #Scan Settings
-                'lastvideoId'       : '',
-                'reverse'           : '',
-                'download_videos'   : download_videos,
-            }
-        }
-        return playlist
-    return False
-    
+    return default_settings
+
+def validate_settings(id, type=''):
+    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
+    if settings is None:
+        return False
+    else:       
+        for default_key, default_value in default_settings(type).items():      #was iteritems py2, now items py3
+            setting = settings.find(default_key)
+            if setting is None:
+                if default_value is None:
+                    #print("IGNORING", default_key)
+                    pass
+                else:
+                    #print("UPDATING", default_key, "FROM", setting, "TO", "'"+default_value+"'", "FOR PLAYLIST ID", id)
+                    xml_update_playlist_setting(id, default_key, default_value, type)
+            else:
+                #print(default_key+':', setting.text)
+                pass
+    return True    
 
 # Updates a playlist that already exists
 def xml_update_playlist_attr(id, attr, val, type=''):

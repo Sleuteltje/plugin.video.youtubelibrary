@@ -200,6 +200,9 @@ def update_playlists(type=''):
 #Writes the nfo & strm files for the given playlist
 def update_playlist(id, type=''):
     xbmc.log("TOFOF1 id:"+id+" type:"+type, level=xbmc.LOGNOTICE)
+    
+    m_xml.validate_settings(id, type)
+    
     settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
     if settings is None:
         dev.log('Could not find playlist '+id+' in the '+dev.typeXml(type)+' file', True)
