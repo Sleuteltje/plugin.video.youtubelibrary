@@ -198,9 +198,7 @@ def update_playlists(type=''):
         xbmc.executebuiltin('xbmc.updatelibrary(Video,'+update_dir+')')
         
 #Writes the nfo & strm files for the given playlist
-def update_playlist(id, type=''):
-    xbmc.log("TOFOF1 id:"+id+" type:"+type, level=xbmc.LOGNOTICE)
-    
+def update_playlist(id, type=''):  
     #ensure no settings are missing in the variable we're about to create and pass around
     if not m_xml.validate_settings(id, type):
          dev.log('Could not validate settings for playlist '+id, True)
@@ -218,8 +216,6 @@ def update_playlist(id, type=''):
             folder = dev.legal_filename(settings.find('title').text) #Overwrite folder is not set in settings.xml, so set the folder to the title of the show
         else:
             folder = dev.legal_filename(folder)
-
-            xbmc.log("TOFOF2 id:"+id+" type:"+type, level=xbmc.LOGNOTICE)
         
         #Create the tvshow.nfo
         writenfo = settings.find('writenfo').text
@@ -228,8 +224,6 @@ def update_playlist(id, type=''):
                 generators.write_tvshow_nfo(folder, settings)
             elif type == 'musicvideo':
                 generators.write_artist_nfo(folder, settings)
-        
-            xbmc.log("TOFOF3 id:"+id+" type:"+type, level=xbmc.LOGNOTICE)
         
         if update_playlist_vids(id, folder, settings, type=type) == False:
             return False #something failed while updating the videos of the playlist
