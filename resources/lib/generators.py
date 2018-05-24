@@ -480,7 +480,6 @@ def remove_extra_spaces(text):
     while '  ' in text:
         text = text.replace('  ', ' ')
     return text.strip(' \t\n\r"\'')
-                      
     
 def get_hardcoded(setting, settings, vid):
     if settings.find(setting).text == 'hardcoded':
@@ -902,16 +901,15 @@ def write_nfo(name, fold, vid, settings, season='', episode='', duration='0', ov
     info['description'] = snippet['description']
     if overwrite_description != None:
         info['description'] = overwrite_description
-    
-     
+
+
     if usefilters is True:
         info['title'] = deletetext(info['title'], settings.find('removetitle').text, keep_start=True, keep_end=True)    #removetitle
         info['title'] = deletetext(info['title'], settings.find('striptitle').text, keep_start=True, keep_end=False)    #striptitle
-        #TODO: add option for skiptitle
+        info['title'] = deletetext(info['title'], settings.find('skiptitle').text, keep_start=False, keep_end=True)     #skiptitle
         info['description'] = deletetext(info['description'], settings.find('removedescription').text, keep_start=True, keep_end=True)  #removedescription
         info['description'] = deletetext(info['description'], settings.find('stripdescription').text, keep_start=True, keep_end=False)  #stripdescription
-        #TODO: add option for skipdescription
-   
+        info['description'] = deletetext(info['description'], settings.find('skipdescription').text, keep_start=False, keep_end=True)   #skipdescription   
    
     #Grab the best possible thumbnail
     #if 'maxres' in snippet['thumbnails']:

@@ -521,10 +521,14 @@ Use [COLOR blue]regex[/COLOR] to type in a regular expression. Please use regex(
             disp_setting('stripdescription', 'Strip Description', 'Deletes every text in the description from and including the text filled in here. For instance, if a channel always has a long text in its description thats always the same, like: Check out our website (..). You fill that line in here, and only the part before that line will be included in the description of episodes. For multiple lines to scan for put them between |')
             #removedescription
             disp_setting('removedescription', 'Remove Description', 'Removes this line from the description of episodes.')
+            #skipdescription
+            disp_setting('skipdescription', 'Skip Description', 'Deletes all text in the description from the beginning up to this point. Similar to stripdescription, but from the other direction.')
             #Striptitle
             disp_setting('striptitle', 'Strip Title', 'Same as stripdescription but for the title')
             #Removetitle
             disp_setting('removetitle', 'Remove Title', 'Same as removedescription but for the title')
+            #Removetitle
+            disp_setting('skiptitle', 'Skip Title', 'Same as skipdescription but for the title')
         if vars.mode > 1: #Expert mode or higher
             #Overwritefolder
             disp_setting('overwritefolder', 'Folder', 'Use this directory to write the strm & nfo files to. If this is not filled in it will use the title as it will be displayed in the Addon and the Kodi Library')
