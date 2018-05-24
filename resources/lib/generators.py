@@ -1391,7 +1391,7 @@ def download_img(thumbUrl, filename, overwrite=False):
             xbmcvfs.copy(target, filename)
             xbmcvfs.delete(target)
             
-    except Exception(exc):
+    except Exception, (exc):
         xbmcgui.Dialog().ok('ERROR', 'Could not create image!')
         dev.log("ERROR: Could not create file: '%s'. Error message: '%s'" %(str(filename), str(exc)))
         
