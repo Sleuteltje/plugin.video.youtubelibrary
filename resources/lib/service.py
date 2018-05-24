@@ -201,7 +201,10 @@ def update_playlists(type=''):
 def update_playlist(id, type=''):
     xbmc.log("TOFOF1 id:"+id+" type:"+type, level=xbmc.LOGNOTICE)
     
-    m_xml.validate_settings(id, type)
+    #ensure no settings are missing in the variable we're about to create and pass around
+    if not m_xml.validate_settings(id, type):
+         dev.log('Could not validate settings for playlist '+id, True)
+         return False
     
     settings = m_xml.xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
     if settings is None:

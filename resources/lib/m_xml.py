@@ -377,7 +377,7 @@ def xml_build_new_playlist(id, type=''):
 # Returns False if type is unrecognized
 def default_settings(type=''):
     default_settings = False
-    # CAUTION: These values have effects during validate_settings  --Tofof 2018-05    
+    # CAUTION: These values have effects during validation  --Tofof 2018-05    
         # **All** settings that can appear for a given type **must be included here**
         # A default value of `None` means that the setting is ignored completely during validation
         # A default value of '' means that the setting will be handled during validation and will default to an empty element (<somesetting />)
@@ -549,6 +549,7 @@ def validate_settings(id, type=''):
                     pass
                 else:
                     #Missing setting should be updated from defaults
+                    dev.log('XML: Missing setting '+default_key+' updated with default value '+default_value+' in playlist '+id)
                     xml_update_playlist_setting(id, default_key, default_value, type)
             else:
                 #Setting is not missing
