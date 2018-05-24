@@ -377,8 +377,10 @@ def xml_build_new_playlist(id, type=''):
 # Returns False if type is unrecognized
 def default_settings(type=''):
     default_settings = False
-    # A default value of `None` means that the setting is ignored completely during validation
-    # A default value of '' means that the setting will be handled during validation and will default to an empty element (<somesetting />)
+    # CAUTION: These values have effects during validate_settings  --Tofof 2018-05    
+        # **All** settings that can appear for a given type **must be included here**
+        # A default value of `None` means that the setting is ignored completely during validation
+        # A default value of '' means that the setting will be handled during validation and will default to an empty element (<somesetting />)
     if type=='' or type=='tv':    
         default_settings = {
             'type'              : 'TV',    
@@ -395,7 +397,7 @@ def default_settings(type=''):
             'banner'            : None,
             'epsownfanart'      : 'No',     #uppercase in m_xml    # QUESTION: Should this setting be removed, since it isn't actually used anywhere?  --Tofof 2018-04
             # STRM & NFO Settings
-            'writenfo'          : "no" if dev.getAddonSetting("default_generate_nfo") == "false" else "Yes",    # QUESTION: Why is this converting between 'Yes/no' and 'true/false'? Also note mixed capitalizations. See original in m_xml.xml_build_new_playlist() --Tofof 2018-04
+            'writenfo'          : "no" if dev.getAddonSetting("default_generate_nfo") == "false" else "Yes",    # QUESTION: Why is this converting between 'Yes/no' and 'true/false'? Also note mixed capitalizations. Behavior originally from m_xml.xml_build_new_playlist(). --Tofof 2018-04
             'delete'            : '',
             'updateevery'       : dev.getAddonSetting("default_updateevery", 'every 12 hours'),
             'updateat'          : dev.getAddonSetting("default_updateat", '23:59'),
@@ -531,22 +533,25 @@ def default_settings(type=''):
         }
     return default_settings
 
+#Checks playlist's settings, adding from default values if a setting is missing
+#Returns False for error
+#Otherwise returns True, indicating all non-None settings from default_settings are now present
 def validate_settings(id, type=''):
-    settings = xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml settings for this playlist
-    if settings is None:
+    settingsTree = xml_get_elem('playlists/playlist', 'playlist', {'id': id}, type=type) #Grab the xml/ElemenTree of settings for this playlist
+    if settingsTree is None:
         return False
     else:       
-        for default_key, default_value in default_settings(type).items():      #was iteritems py2, now items py3
-            setting = settings.find(default_key)
+        for default_key, default_value in default_settings(type).items():      
+            setting = settingsTree.find(default_key) #returns None if no match
             if setting is None:
                 if default_value is None:
-                    #print("IGNORING", default_key)
+                    #Missing setting is explicitly optional
                     pass
                 else:
-                    #print("UPDATING", default_key, "FROM", setting, "TO", "'"+default_value+"'", "FOR PLAYLIST ID", id)
+                    #Missing setting should be updated from defaults
                     xml_update_playlist_setting(id, default_key, default_value, type)
             else:
-                #print(default_key+':', setting.text)
+                #Setting is not missing
                 pass
     return True    
 
